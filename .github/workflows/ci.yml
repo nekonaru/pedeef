@@ -26,14 +26,15 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Install Android 36 platform and build tools
-        run: yes | sdkmanager --licenses > /dev/null; sdkmanager "platforms;android-36" "build-tools;36.0.0" > /dev/null
+      - name: Set up Android SDK packages
+        run: |
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -f "$SDKMANAGER" ]; then SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/16.0/bin/sdkmanager"; fi
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" > /dev/null
 
       - name: Check for secrets
         uses: gitleaks/gitleaks-action@v2
@@ -41,10 +42,10 @@ jobs:
           GITLEAKS_ENABLE_COMMENTS: "false"
 
       - name: Unit tests
-        run: ./gradlew :app:testDebugUnitTest --console=plain
+        run: chmod +x gradlew && ./gradlew :app:testDebugUnitTest --console=plain
 
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug --console=plain
+        run: chmod +x gradlew && ./gradlew :app:assembleDebug --console=plain
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
