@@ -167,6 +167,8 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
 
   fun run() {
     if (picked.isEmpty()) { error = s.pickFiles; return }
+    val total = picked.sumOf { it.bytes.size.toLong() }
+    if (total > 256L * 1024 * 1024) { error = s.fileTooLarge; return }
     scope.launch {
       busy = true
       error = null
@@ -182,6 +184,9 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
       } catch (e: UserError) {
         error = e.message
       } catch (e: Exception) {
+        error = s.genericError
+      } catch (e: Throwable) {
+        // e.g. OutOfMemoryError on a hostile file
         error = s.genericError
       } finally {
         busy = false

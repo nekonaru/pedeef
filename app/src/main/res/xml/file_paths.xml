@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-  <files-path name="files" path="." />
-  <cache-path name="cache" path="." />
+  <!-- Only the folders other apps may ever see: exports and shares. Internal data stays out. -->
+  <cache-path name="share" path="share/" />
+  <files-path name="files" path="Pedeef/" />
 </paths>

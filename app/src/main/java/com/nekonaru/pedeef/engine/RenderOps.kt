@@ -28,6 +28,7 @@ import java.io.FileOutputStream
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlin.math.max
 
 // File- and render-based operations: need android.graphics or PdfRenderer.
 
@@ -84,7 +85,11 @@ private fun renderBitmap(path: String, index: Int, maxWidth: Int): Bitmap {
     PdfRenderer(fd).use { r ->
       r.openPage(index).use { p ->
         val k = minOf(maxWidth.toFloat() / p.width, 3f)
-        val bmp = Bitmap.createBitmap(maxOf(1, (p.width * k).toInt()), maxOf(1, (p.height * k).toInt()), Bitmap.Config.ARGB_8888)
+        // Cap the longest side too: a page with extreme geometry must not ask for a gigapixel bitmap.
+        val w0 = maxOf(1, (p.width * k).toInt())
+        val h0 = maxOf(1, (p.height * k).toInt())
+        val shrink = minOf(1f, 3200f / max(w0, h0).toFloat())
+        val bmp = Bitmap.createBitmap(maxOf(1, (w0 * shrink).toInt()), maxOf(1, (h0 * shrink).toInt()), Bitmap.Config.ARGB_8888)
         bmp.eraseColor(Color.WHITE)
         p.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
         return bmp
@@ -142,8 +147,9 @@ fun redactPdf(bytes: ByteArray, boxes: Map<String, List<Box>>, cacheDir: File): 
             val i = key.toIntOrNull() ?: continue
             if (list.isEmpty() || i !in 0 until r.pageCount) continue
             r.openPage(i).use { p ->
-              val bw = minOf(p.width * 3, 3000)
-              val bh = (p.height * bw.toFloat() / p.width).toInt().coerceAtLeast(1)
+              val bw = minOf(p.width * 3, 3000) // ~216 dpi: enough to paint out text
+              // Cap the longest side: extreme page geometry must not ask for a gigapixel bitmap.
+              val bh = minOf((p.height * bw.toFloat() / p.width).toInt().coerceAtLeast(1), 3200)
               val bitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
               bitmap.eraseColor(Color.WHITE)
               p.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
@@ -174,8 +180,9 @@ fun redactPdf(bytes: ByteArray, boxes: Map<String, List<Box>>, cacheDir: File): 
       }
       if (redacted.isNotEmpty()) {
         val catalog = doc.documentCatalog.cosObject
-        // The document's title, author, subject and keywords (and their XMP copy) can repeat what was redacted.
-        listOf("AcroForm", "StructTreeRoot", "MarkInfo", "Metadata").forEach { catalog.removeItem(COSName.getPDFName(it)) }
+        // The document's title, author, subject, keywords, bookmarks and embedded files (and the XMP copy) can
+        // repeat what was redacted.
+        listOf("AcroForm", "StructTreeRoot", "MarkInfo", "Metadata", "Outlines", "Names").forEach { catalog.removeItem(COSName.getPDFName(it)) }
         doc.documentInformation = com.tom_roush.pdfbox.pdmodel.PDDocumentInformation()
         // Annotations elsewhere can still point at the removed ones, which would keep them in the file.
         for ((i, page) in doc.pages.withIndex()) {
@@ -229,7 +236,7 @@ fun ocrPdf(bytes: ByteArray, cacheDir: File): ByteArray {
               if (chars >= (if (scanned) 300 else 50)) { searchable++; continue }
               val lines = r.openPage(i).use { p ->
                 val bw = minOf(p.width * 3, 3000)
-                val bh = (p.height * bw.toFloat() / p.width).toInt().coerceAtLeast(1)
+                val bh = minOf((p.height * bw.toFloat() / p.width).toInt().coerceAtLeast(1), 3200)
                 val bitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
                 bitmap.eraseColor(Color.WHITE)
                 p.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
@@ -292,10 +299,12 @@ fun recompressJpeg(bytes: ByteArray, quality: Int, maxSide: Int): ByteArray? {
   BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
   val long = maxOf(bounds.outWidth, bounds.outHeight)
   if (long <= 0) return null
+  // Never decode more than 4096 px on the long side, whatever the caller asked for.
+  val cap = if (maxSide > 0) minOf(maxSide, 4096) else 4096
   var sample = 1 // decode near the target size rather than whole: a 6000 px scan is ~140 MB as pixels
-  while (maxSide > 0 && long / (sample * 2) >= maxSide) sample *= 2
+  while (long / (sample * 2) >= cap) sample *= 2
   val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample }) ?: return null
-  val k = if (maxSide > 0) minOf(1f, maxSide.toFloat() / maxOf(decoded.width, decoded.height)) else 1f
+  val k = minOf(1f, cap.toFloat() / maxOf(decoded.width, decoded.height))
   val scaled = if (k < 1f) Bitmap.createScaledBitmap(decoded, maxOf(1, (decoded.width * k).toInt()), maxOf(1, (decoded.height * k).toInt()), true) else decoded
   val out = ByteArrayOutputStream()
   scaled.compress(Bitmap.CompressFormat.JPEG, quality, out)

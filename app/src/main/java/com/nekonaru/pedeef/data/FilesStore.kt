@@ -80,10 +80,12 @@ object FilesStore {
     val targetDir = dir ?: root
     check(insideRoot(root, targetDir))
     targetDir.mkdirs()
-    var target = File(targetDir, "$baseName.$ext")
+    val base = sanitizeName(baseName).ifEmpty { "output" }
+    var target = File(targetDir, "$base.$ext")
+    check(insideRoot(root, target)) { "Target would escape the app files." }
     var n = 2
     while (target.exists()) {
-      target = File(targetDir, "$baseName ($n).$ext")
+      target = File(targetDir, "$base ($n).$ext")
       n++
     }
     target.writeBytes(bytes)

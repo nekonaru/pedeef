@@ -146,6 +146,7 @@ fun Options(defs: List<OptDef>, value: Opts, indonesian: Boolean, onChange: (Opt
             },
             placeholder = { Text(def.placeholder) },
             singleLine = true,
+            visualTransformation = if (def.isPassword) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
           )
         }
@@ -197,7 +198,13 @@ fun PasswordDialog(title: String, error: String?, onSubmit: (String) -> Unit, on
     title = { Text(title) },
     text = {
       Column {
-        OutlinedTextField(value = text, onValueChange = { text = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+          value = text,
+          onValueChange = { text = it },
+          singleLine = true,
+          visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+          modifier = Modifier.fillMaxWidth(),
+        )
         if (error != null) Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
       }
     },

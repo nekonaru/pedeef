@@ -22,22 +22,27 @@ suspend fun pageSizesOf(bytes: ByteArray, cacheDir: File): List<Pair<Int, Int>> 
   }
 }
 
-/** Renders page `index` of a PDF in memory at `widthPx`. */
+/** Renders page `index` of a PDF in memory at `widthPx`, or null if the page cannot be rendered. */
 suspend fun renderPage(bytes: ByteArray, index: Int, widthPx: Int, cacheDir: File): Bitmap? = withContext(Dispatchers.IO) {
-  withTempPdf(bytes, cacheDir, "page") { tmp ->
-    val pfd = android.os.ParcelFileDescriptor.open(tmp, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
-    pfd.use { fd ->
-      android.graphics.pdf.PdfRenderer(fd).use { r ->
-        r.openPage(index).use { p ->
-          val k = widthPx.toFloat() / p.width
-          val bmp = Bitmap.createBitmap(maxOf(1, (p.width * k).toInt()), maxOf(1, (p.height * k).toInt()), Bitmap.Config.ARGB_8888)
-          bmp.eraseColor(android.graphics.Color.WHITE)
-          p.render(bmp, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-          bmp
+  runCatching {
+    withTempPdf(bytes, cacheDir, "page") { tmp ->
+      val pfd = android.os.ParcelFileDescriptor.open(tmp, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
+      pfd.use { fd ->
+        android.graphics.pdf.PdfRenderer(fd).use { r ->
+          r.openPage(index).use { p ->
+            val k = minOf(widthPx.toFloat() / p.width, 3f)
+            val w0 = maxOf(1, (p.width * k).toInt())
+            val h0 = maxOf(1, (p.height * k).toInt())
+            val shrink = minOf(1f, 3200f / maxOf(w0, h0))
+            val bmp = Bitmap.createBitmap(maxOf(1, (w0 * shrink).toInt()), maxOf(1, (h0 * shrink).toInt()), Bitmap.Config.ARGB_8888)
+            bmp.eraseColor(android.graphics.Color.WHITE)
+            p.render(bmp, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            bmp
+          }
         }
       }
     }
-  }
+  }.getOrNull()
 }
 
 @Composable
