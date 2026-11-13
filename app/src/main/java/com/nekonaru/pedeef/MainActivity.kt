@@ -16,6 +16,10 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     PDFBoxResourceLoader.init(applicationContext)
     ToolContext.cacheDir = cacheDir
+    // Clear temp files left by a kill: they hold plaintext document content.
+    cacheDir.listFiles()?.forEach { f ->
+      if (f.isFile && listOf("ocr-", "redact-", "export-", "viewer-", "page-", "pagetext-", "search-", "sizes-", "thread").any { f.name.startsWith(it) }) f.delete()
+    }
     FilesStore.root(applicationContext) // make sure the tree exists before any screen reads it
     Pins.load(applicationContext)
     enableEdgeToEdge()

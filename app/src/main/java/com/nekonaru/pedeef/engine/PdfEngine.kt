@@ -186,8 +186,8 @@ fun compress(bytes: ByteArray, quality: Int, maxSide: Int = MAX_SIDE[quality] ?:
         st.setInt(COSName.HEIGHT, h)
         st.removeItem(COSName.DECODE)
         st.removeItem(COSName.DECODE_PARMS) // a ColorTransform meant for the old JPEG would skew the new one's colors
-      } catch (_: Exception) {
-        // unusual JPEG flavor: keep the original image
+      } catch (_: Throwable) {
+        // unusual JPEG flavor, or a hostile image: keep the original image
       }
     }
     doc.documentCatalog.cosObject.removeItem(COSName.METADATA)
@@ -256,6 +256,7 @@ fun splitBySize(bytes: ByteArray, maxMB: String): List<Named> {
   val limit = (maxMB.toFloatOrNull() ?: 0f) * 1024 * 1024
   if (limit <= 0f) fail("Enter a size limit in MB.")
   return loadPdf(bytes).use { src ->
+    if (src.numberOfPages > 400) fail("This PDF is too long for Split by Size. Use Split instead.")
     val parts = ArrayList<ByteArray>()
     var cur = mutableListOf<Int>()
     var last: ByteArray? = null
@@ -271,6 +272,7 @@ fun splitBySize(bytes: ByteArray, maxMB: String): List<Named> {
       }
     }
     last?.let { parts.add(it) }
+
     parts.mapIndexed { k, b -> Named("part-${k + 1}", b) }
   }
 }
@@ -289,6 +291,7 @@ private class Shown(val form: PDFormXObject, val w: Float, val h: Float, val rot
 
 private fun PDDocument.embedShown(p: PDPage): Shown {
   val cb = p.cropBox
+  if (cb.width <= 0f || cb.height <= 0f) fail("This page has no usable size.")
   val form = PDFormXObject(PDStream(this, p.contents, COSName.FLATE_DECODE))
   form.resources = p.resources ?: PDResources()
   form.bBox = PDRectangle(cb.lowerLeftX, cb.lowerLeftY, cb.width, cb.height)
@@ -591,11 +594,15 @@ fun fillSign(bytes: ByteArray, items: List<SignItem>, images: Map<String, ByteAr
     doc.bytes()
   }
 
+private fun zipEntryName(name: String): String =
+  name.replace(Regex("[\\\\/]"), "_").replace("..", "_").filter { it.code in 0x20..0x7E }.trim().ifEmpty { "file" }
+
 fun zipFiles(files: List<Named>): ByteArray = ByteArrayOutputStream().use { bos ->
   ZipOutputStream(bos).use { zip ->
     val seen = HashSet<String>()
     files.forEachIndexed { i, f ->
-      val name = if (f.name in seen) "${i + 1}-${f.name}" else f.name
+      val safe = zipEntryName(f.name)
+      val name = if (safe in seen) "${i + 1}-$safe" else safe
       seen.add(name)
       zip.putNextEntry(ZipEntry(name))
       zip.write(f.bytes)

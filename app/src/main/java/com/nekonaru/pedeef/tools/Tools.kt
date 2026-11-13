@@ -28,7 +28,10 @@ sealed class OptDef(val key: String, val en: String, val id: String, val visible
   class Seg(key: String, en: String, id: String, val choices: List<Triple<String, String, String>>, val def: String, visible: ((Opts) -> Boolean)? = null) :
     OptDef(key, en, id, visible)
   class Text(key: String, en: String, id: String, val def: String, val placeholder: String = "", val keyboard: Int = 0, val strip: Regex? = null, visible: ((Opts) -> Boolean)? = null) :
-    OptDef(key, en, id, visible)
+    OptDef(key, en, id, visible) {
+  /** keyboard == 1 renders as a password field (masked). */
+  val isPassword get() = keyboard == 1
+}
   class Toggle(key: String, en: String, id: String, val def: Boolean, visible: ((Opts) -> Boolean)? = null) :
     OptDef(key, en, id, visible)
 }
@@ -288,6 +291,8 @@ val TOOLS: List<Tool> = listOf(
     for (item in items) {
       if (item.kind != "image" || item.uri in images) continue
       val f = File(item.uri)
+      val signDir = File(ToolContext.cacheDir, "sign-images").canonicalFile
+      if (!f.canonicalFile.toPath().startsWith(signDir.toPath())) fail("A picture added on page ${item.page + 1} is not a signature image created by this app.")
       if (!f.exists()) fail("A picture added on page ${item.page + 1} is no longer available. Remove it and add it again.")
       images[item.uri] = f.readBytes()
     }
@@ -348,7 +353,7 @@ val TOOLS: List<Tool> = listOf(
     "Set Password", "Setel Kata Sandi",
     "Lock a PDF so it asks for a password before it opens.", "Kunci PDF agar meminta kata sandi saat dibuka.",
     "Set password", "Setel kata sandi", "Encrypting", "Mengenkripsi", Input.Pdf, noPreview = true,
-    opts = listOf(text("password", "Password", "Kata sandi", "", "Type a password")),
+    opts = listOf(OptDef.Text("password", "Password", "Kata sandi", "", "Type a password", 1)),
   ) { files, o ->
     val pw = o.str("password")
     if (pw.isEmpty()) fail("Enter a password.")
