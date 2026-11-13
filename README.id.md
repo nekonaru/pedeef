@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/pedeef-mark.png" alt="Logo Pedeef" width="120" />
+  <img src="assets/pedeef-icon-512.png" alt="Logo Pedeef" width="120" />
 
   <h1>Pedeef: Peralatan PDF Offline untuk Android</h1>
 
