@@ -1,0 +1,31 @@
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+.kotlin/
+
+# Local machine config
+local.properties
+
+# Signing keys and secrets
+*.keystore
+*.jks
+*.p12
+keystore.properties
+.env
+
+# Build outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+captures/
+
+# OS junk
+.DS_Store
+Thumbs.db
