@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Pedeef mark reversed: for dark backgrounds such as the app icon tile. -->
+  <path d="M92 22 H152 L190 60 V212 Q190 228 174 228 H92 Q74 228 74 212 V44 Q74 22 92 22 Z"
+        fill="none" stroke="#F6F2EE" stroke-width="15" stroke-linejoin="round"/>
+  <path d="M152 22 V60 H190 Z" fill="none" stroke="#F6F2EE" stroke-width="15" stroke-linejoin="round"/>
+  <rect x="100" y="76" width="52" height="11" rx="5.5" fill="#F6F2EE"/>
+  <rect x="100" y="166" width="52" height="11" rx="5.5" fill="#F6F2EE"/>
+  <rect x="34" y="115" width="188" height="17" rx="8.5" fill="#FF8A5C"/>
+</svg>
