@@ -108,20 +108,20 @@ fun renderPageJpeg(path: String, index: Int, maxWidth: Int, quality: Int = 85): 
 }
 
 /** Every page as a JPEG at 144 dpi (at most 2400 px wide). One page: a .jpg. More: a .zip of page-XXX.jpg. */
-fun pdfToJpegs(bytes: ByteArray, cacheDir: File): List<Output> = withTempPdf(bytes, cacheDir, "export") { tmp ->
+fun pdfToJpegs(bytes: ByteArray, cacheDir: File, maxWidth: Int = 2400, quality: Int = 90): List<Output> = withTempPdf(bytes, cacheDir, "export") { tmp ->
   val pfd = android.os.ParcelFileDescriptor.open(tmp, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
   pfd.use { fd ->
     PdfRenderer(fd).use { r ->
       val n = r.pageCount
       if (n == 1) {
-        return@withTempPdf listOf(Output("page-1", renderPageJpeg(tmp.path, 0, 2400, 90), ext = "jpg"))
+        return@withTempPdf listOf(Output("page-1", renderPageJpeg(tmp.path, 0, maxWidth, quality), ext = "jpg"))
       }
       val out = ByteArrayOutputStream()
       ZipOutputStream(BufferedOutputStream(out)).use { zip ->
         zip.setLevel(Deflater.NO_COMPRESSION) // JPEGs do not shrink any further
         for (i in 0 until n) {
           zip.putNextEntry(ZipEntry("page-%03d.jpg".format(i + 1)))
-          zip.write(renderPageJpeg(tmp.path, i, 2400, 90))
+          zip.write(renderPageJpeg(tmp.path, i, maxWidth, quality))
           zip.closeEntry()
         }
       }

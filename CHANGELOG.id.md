@@ -2,6 +2,27 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.3.0
+
+Update besar: perbaikan audit, strip thumbnail di viewer, tanda tangan yang bisa dipakai berulang, dan pengatur ekspor yang lebih baik.
+
+### Fitur baru
+
+- **Thumbnail halaman di viewer.** Ketuk ikon kisi di viewer untuk lompat ke halaman mana pun sekilas; halaman aktif diberi sorotan.
+
+- **Tanda tangan dapat dipakai ulang.** Gambar sekali di Isi & Tanda Tangan; tanda tanganmu tersimpan dan ditawarkan di setiap halaman yang kamu tandatangani.
+
+- **Kualitas ekspor.** PDF ke Gambar kini membiarkanmu memilih ukuran gambar (1600 atau 2400 px) dan kualitas JPEG (75, 90 atau 100).
+
+### Peningkatan
+
+- **Perbaikan audit.** Daftar file membatasi hasil pencarian; penyimpanan gambar tanda tangan dipindah dari cache ke internal files supaya proyek Isi & Tanda Tangan bertahan; pelacakan halaman di viewer memakai snapshot-derived state sehingga tidak recompose pada setiap frame gulir.
+- **Lebih banyak tes.** Unit test kini mencakup pemeriksa pembaruan dan penyanitasi nama file.
+
+### Perbaikan bug
+
+- **Gambar Isi & Tanda Tangan bisa rusak.** Referensi tanda tangan dan gambar berada di cache yang mudah hilang; sekarang di internal files aplikasi.
+
 ## v1.2.0
 
 Segarkan tampilan menyeluruh: token desain konsisten, tata letak lebih rapi dan animasi halus yang ringan.

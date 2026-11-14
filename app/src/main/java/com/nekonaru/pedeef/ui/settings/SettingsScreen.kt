@@ -70,7 +70,7 @@ import com.nekonaru.pedeef.ui.theme.Dimens
 import kotlinx.coroutines.launch
 import java.io.File
 
-const val PEDEEF_VERSION = "1.2.0"
+const val PEDEEF_VERSION = "1.3.0"
 
 private const val PRIVACY_EN = """Pedeef is built to be private:
 
