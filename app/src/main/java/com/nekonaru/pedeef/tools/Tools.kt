@@ -291,8 +291,8 @@ val TOOLS: List<Tool> = listOf(
     for (item in items) {
       if (item.kind != "image" || item.uri in images) continue
       val f = File(item.uri)
-      val signDir = File(ToolContext.cacheDir, "sign-images").canonicalFile
-      if (!f.canonicalFile.toPath().startsWith(signDir.toPath())) fail("A picture added on page ${item.page + 1} is not a signature image created by this app.")
+      val signDir = File(ToolContext.cacheDir, "sign-images").canonicalFile.path
+      if (!f.canonicalFile.path.startsWith(signDir + File.separator)) fail("A picture added on page ${item.page + 1} is not a signature image created by this app.")
       if (!f.exists()) fail("A picture added on page ${item.page + 1} is no longer available. Remove it and add it again.")
       images[item.uri] = f.readBytes()
     }

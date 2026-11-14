@@ -79,7 +79,8 @@ fun ScannerScreen(onBack: () -> Unit, onOpenViewer: (ByteArray, String) -> Unit)
         busyLabel = s.ocrInProgress
         out = withContext(Dispatchers.Default) { runCatching { ocrPdf(bytes, ToolContext.cacheDir) }.getOrDefault(bytes) }
       }
-      val file = withContext(Dispatchers.IO) { FilesStore.saveBytes(root, null, baseName, "pdf", out) }
+      val public = com.nekonaru.pedeef.data.PublicFiles.root(context)
+      val file = withContext(Dispatchers.IO) { FilesStore.saveBytes(public ?: root, null, baseName, "pdf", out) }
       savedName = file.name
       savedBytes = out
       busy = false

@@ -60,15 +60,24 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.nekonaru.pedeef.data.FilesStore
 import com.nekonaru.pedeef.data.FileEntry
+import com.nekonaru.pedeef.data.PublicFiles
 import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.tools.ToolContext
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.Lifecycle
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-private fun relPath(root: File, dir: File): String =
-  if (dir == root) "" else root.toPath().relativize(dir.toPath()).joinToString(" / ") { it.toString() }
+private fun relPath(root: File, dir: File): String {
+  val r = root.canonicalFile.path
+  val d = dir.canonicalFile.path
+  if (d == r) return ""
+  return d.removePrefix(r + File.separator).replace(File.separatorChar, '/')
+}
 
 private fun iconFor(entry: FileEntry) = when {
   entry.isDir -> Icons.Default.Folder
@@ -84,9 +93,22 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   val indonesian = s === com.nekonaru.pedeef.i18n.Id
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
-  val root = remember { FilesStore.root(context) }
+  val privateRoot = remember { FilesStore.root(context) }
+  var granted by remember { mutableStateOf(PublicFiles.hasAccess(context)) }
+  var usePrivate by remember { mutableStateOf(false) }
+  val root = remember(granted, usePrivate) {
+    if (granted && !usePrivate) PublicFiles.root(context) ?: privateRoot else privateRoot
+  }
+  LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+    granted = PublicFiles.hasAccess(context)
+    if (granted) PublicFiles.migrateOnce(context)
+  }
+  val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { grantedPerm ->
+    granted = grantedPerm || PublicFiles.hasAccess(context)
+    if (granted) PublicFiles.migrateOnce(context)
+  }
 
-  var currentDir by remember { mutableStateOf(root) }
+  var currentDir by remember(root) { mutableStateOf(root) }
   var query by remember { mutableStateOf("") }
   var refreshTick by remember { mutableStateOf(0) }
   var showNewFolder by remember { mutableStateOf(false) }
@@ -137,6 +159,39 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
       return
     }
     shareFile(entry)
+  }
+
+  // Storage gate: without it, files land in Download/Pedeef and the user can find them.
+  if (!granted && !usePrivate) {
+    Scaffold(
+      topBar = { TopAppBar(title = { Text(s.storageAccessTitle) }, navigationIcon = {}) },
+    ) { padding ->
+      Column(
+        Modifier
+          .fillMaxSize()
+          .padding(padding)
+          .padding(28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+      ) {
+        Icon(Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+        Text(s.storageAccessTitle, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 16.dp))
+        Text(s.storageAccessBody, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+        Text(s.storageAccessDenied, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 20.dp))
+        androidx.compose.material3.Button(
+          onClick = {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+              PublicFiles.requestManageAllFilesAccess(context)
+            } else {
+              permLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+          },
+          modifier = Modifier.fillMaxWidth(),
+        ) { Text(s.storageAccessButton) }
+        TextButton(onClick = { usePrivate = true }) { Text(s.storagePrivateFallback) }
+      }
+    }
+    return
   }
 
   Scaffold(
