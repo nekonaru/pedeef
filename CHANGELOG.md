@@ -2,6 +2,23 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.2.0
+
+A full visual refresh: consistent design tokens, tidier layouts and smooth, cheap animations.
+
+### Improvements
+
+- **Visual refresh.** One spacing scale, unified radii and elevation across every screen: Home, Files, Settings, tool screens, dialogs and onboarding.
+- **Cleaner Home.** App icon next to the wordmark, scanner hero with a subtle gradient and chevron, pinned tools with animated pin state, consistent tool cards.
+- **Cleaner Settings.** Header card with the app icon, grouped sections, full-width segmented controls. Fixes the broken "Mode" and "Bahasa" label wrapping.
+- **Cleaner Files.** Consistent list rows with tinted circular icons, centered empty state, better storage permission gate.
+- **Smooth tab transitions.** Crossfade between Home, Files and Settings, fast and lightweight.
+
+### Bug fixes
+
+- **Settings label overflow.** Mode and Language labels no longer wrap vertically in cramped rows.
+- **Scanner hero contrast.** Text on the scanner card keeps full contrast in every theme.
+
 ## v1.1.0
 
 Files now live in the public Download/Pedeef folder, plus update checks and a settings redesign.
@@ -25,3 +42,18 @@ Files now live in the public Download/Pedeef folder, plus update checks and a se
 ### Bug fixes
 
 - **Portrait lock removed.** Pedeef no longer forces portrait orientation.
+
+## v1.0.0
+
+The first public release. Pedeef rebuilds the PDF toolkit idea as a fully offline, bilingual Android app.
+
+### New features
+
+- **Offline PDF toolkit.** 26 tools: merge, alternate and mix, split (every page, ranges, text, bookmarks, half, size), organize, rotate, flip, multiple pages per sheet, crop and resize, watermark, page numbers, redact, fill and sign, metadata editor, compress, OCR, set and remove password, PDF to ZIP, workflow builder, and batch mode.
+- **New tools.** Images to PDF, PDF to Images, Extract Text.
+- **Camera scanner.** Edge detection and deskew on-device (ML Kit Document Scanner), gallery import fallback, optional OCR text layer.
+- **Built-in viewer.** Scrolling, zoom, search with match navigation, copy page text. Works from Android 7.0 up.
+- **Files tree.** Save, folders, search, rename, move, share, delete, export copies. Everything stays in the app's private storage.
+- **Bilingual UI.** English and Bahasa Indonesia, switchable in Settings.
+- **Three themes.** Ember, Black Cherry, Arctic Blue, plus dynamic color on Android 12+.
+- **Privacy by design.** No network permission, no broad storage permission, allowBackup off.

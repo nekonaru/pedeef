@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
 import com.nekonaru.pedeef.R
 import com.nekonaru.pedeef.data.SettingsState
 
@@ -24,6 +25,19 @@ val Poppins = FontFamily(
   Font(R.font.poppins_semibold, FontWeight.SemiBold),
 )
 val Caveat = FontFamily(Font(R.font.caveat, FontWeight.Medium))
+
+/** Shared design tokens: one spacing scale, radii, and elevation rules for the whole app. */
+object Dimens {
+  val Xs = 4.dp
+  val Sm = 8.dp
+  val Md = 12.dp
+  val Lg = 16.dp
+  val Xl = 24.dp
+  val CardRadius = 22.dp
+  val ControlRadius = 14.dp
+  val LabelTop = 22.dp // gap above each section label
+  val LabelBottom = 8.dp
+}
 
 private fun typography() = Typography(
   displayLarge = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 32.sp, letterSpacing = (-0.5).sp),

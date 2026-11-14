@@ -24,6 +24,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.navigation.navArgument
 import com.nekonaru.pedeef.data.Settings
 import com.nekonaru.pedeef.data.SettingsState
@@ -113,17 +118,23 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
       }
       NavHost(navController = nav, startDestination = "shell") {
         composable("shell") {
-          when (tab) {
-            Tab.Tools -> HomeScreen(
-              onOpenTool = { nav.navigate("tool/$it") },
-              onScan = { nav.navigate("scan") },
-            )
-            Tab.Files -> FilesScreen(onOpenViewer = { bytes, name ->
-              ViewerPayload.bytes = bytes
-              ViewerPayload.name = name
-              nav.navigate("viewer")
-            })
-            Tab.Settings -> SettingsScreen(settings = settings, update = update)
+          AnimatedContent(
+            targetState = tab,
+            transitionSpec = { fadeIn(tween(160)) togetherWith fadeOut(tween(110)) },
+            label = "tab",
+          ) { current ->
+            when (current) {
+              Tab.Tools -> HomeScreen(
+                onOpenTool = { nav.navigate("tool/$it") },
+                onScan = { nav.navigate("scan") },
+              )
+              Tab.Files -> FilesScreen(onOpenViewer = { bytes, name ->
+                ViewerPayload.bytes = bytes
+                ViewerPayload.name = name
+                nav.navigate("viewer")
+              })
+              Tab.Settings -> SettingsScreen(settings = settings, update = update)
+            }
           }
         }
         composable("tool/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
