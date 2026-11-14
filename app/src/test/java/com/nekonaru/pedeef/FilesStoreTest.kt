@@ -32,6 +32,7 @@ class FilesStoreTest {
 
   @Test
   fun sanitizeName_stripsControlCharacters() {
-    assertEquals("a_b_c_", FilesStore.sanitizeName("a\u0000b\u0001c\u001F"))
+    // Control characters are replaced with underscore, and a trailing control char in the raw input is trimmed away.
+    assertEquals("a_b_c", FilesStore.sanitizeName("a\u0000b\u0001c\u001F"))
   }
 }
