@@ -291,8 +291,12 @@ val TOOLS: List<Tool> = listOf(
     for (item in items) {
       if (item.kind != "image" || item.uri in images) continue
       val f = File(item.uri)
-      val signDir = File(ToolContext.cacheDir, "sign-images").canonicalFile.path
-      if (!f.canonicalFile.path.startsWith(signDir + File.separator)) fail("A picture added on page ${item.page + 1} is not a signature image created by this app.")
+      val signDirs = listOf(
+        File(ToolContext.filesDir, "sign-images").canonicalFile.path, // current save location
+        File(ToolContext.cacheDir, "sign-images").canonicalFile.path, // legacy cache location
+      )
+      val inSignDir = signDirs.any { f.canonicalFile.path.startsWith(it + File.separator) }
+      if (!inSignDir) fail("A picture added on page ${item.page + 1} is not a signature image created by this app.")
       if (!f.exists()) fail("A picture added on page ${item.page + 1} is no longer available. Remove it and add it again.")
       images[item.uri] = f.readBytes()
     }
@@ -371,7 +375,11 @@ val TOOLS: List<Tool> = listOf(
     "PDF to Images", "PDF ke Gambar",
     "Export every page as a JPEG image, or a ZIP for many pages.", "Ekspor setiap halaman sebagai JPEG, atau ZIP untuk banyak halaman.",
     "Export images", "Ekspor gambar", "Rendering pages", "Merender halaman", Input.Pdf, noPreview = true,
-    run = { files, _ -> pdfToJpegs(files[0].bytes, ToolContext.cacheDir) },
+    opts = listOf(
+      seg("res", "Image size", "Ukuran gambar", listOf(Triple("1600", "Standard 1600px", "Standar 1600px"), Triple("2400", "High 2400px", "Tinggi 2400px")), "1600"),
+      seg("quality", "JPEG quality", "Kualitas JPEG", listOf(Triple("75", "Standard", "Standar"), Triple("90", "High", "Tinggi"), Triple("100", "Maximum", "Maksimum")), "90"),
+    ),
+    run = { files, o -> pdfToJpegs(files[0].bytes, ToolContext.cacheDir, o.str("res").toIntOrNull() ?: 1600, o.str("quality").toIntOrNull() ?: 90) },
   ),
   Tool(
     "extractText", SECTION_NEW,
@@ -388,7 +396,8 @@ val TOOLS: List<Tool> = listOf(
 
 fun toolById(id: String?) = TOOLS.find { it.id == id }
 
-/** Cache directory shared with the catalog (set once at app start). */
+/** Directories shared with the catalog (set once at app start). */
 object ToolContext {
   lateinit var cacheDir: File
+  lateinit var filesDir: File
 }

@@ -42,6 +42,7 @@ object FilesStore {
       .filter { it != root && it.name.lowercase().contains(q) }
       .map { FileEntry(it.name, it, it.isDirectory, if (it.isDirectory) dirSize(it) else it.length(), it.lastModified()) }
       .sortedByDescending { it.modified }
+      .take(120)
       .toList()
   }
 

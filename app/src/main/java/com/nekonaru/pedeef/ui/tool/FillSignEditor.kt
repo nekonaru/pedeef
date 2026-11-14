@@ -33,6 +33,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Image
@@ -95,10 +96,15 @@ fun FillSignEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opt
   val image = rememberPageImage(bytes, page, 900, cacheDir)
   val ratio = sizes[page].let { it.first.toFloat() / it.second.toFloat() }
 
+  val savedSignature = remember(page) { File(context.filesDir, "signature.png") }
+
   fun saveTempImage(b: android.graphics.Bitmap): String {
-    val dir = File(cacheDir, "sign-images").apply { mkdirs() }
+    // Persist in filesDir/sign-images: cached items would break saved Fill & Sign projects.
+    val dir = File(context.filesDir, "sign-images").apply { mkdirs() }
     val f = File(dir, "item-${UUID.randomUUID()}.png")
     f.outputStream().use { out -> b.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out) }
+    // Keep a reusable copy of the last signature too.
+    runCatching { File(context.filesDir, "signature.png").outputStream().use { out -> b.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out) } }
     return f.absolutePath
   }
 
@@ -130,6 +136,12 @@ fun FillSignEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opt
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       FilledTonalButton(onClick = { showTextDialog = true }) { Icon(Icons.Default.TextFields, contentDescription = null, modifier = Modifier.size(16.dp)); Text(if (indonesian) " Teks" else " Text") }
       FilledTonalButton(onClick = { showSignaturePad = true }) { Icon(Icons.Default.Draw, contentDescription = null, modifier = Modifier.size(16.dp)); Text(if (indonesian) " TTD" else " Sign") }
+      if (savedSignature.exists()) {
+        FilledTonalButton(onClick = {
+          val b = BitmapFactory.decodeFile(savedSignature.absolutePath)
+          if (b != null) { pendingImage = b; pendingUri = savedSignature.absolutePath; pendingKind = "signature" }
+        }) { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)); Text(if (indonesian) " TTD tersimpan" else " My signature") }
+      }
       FilledTonalButton(onClick = { picturePicker.launch("image/*") }) { Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(16.dp)); Text(if (indonesian) " Gambar" else " Picture") }
     }
     if (pendingKind != null) {

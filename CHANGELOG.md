@@ -2,6 +2,27 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.3.0
+
+Big update: audit fixes, viewer thumbnail strip, reusable signatures and better export controls.
+
+### New features
+
+- **Page thumbnails in the viewer.** Tap the grid icon in the viewer to jump to any page at a glance; the current page is highlighted.
+
+- **Reusable signature.** Draw once in Fill & Sign; the signature is saved and offered on every page you sign.
+
+- **Export quality.** PDF to Images now lets you pick image size (1600 or 2400 px) and JPEG quality (75, 90 or 100).
+
+### Improvements
+
+- **Audit fixes.** File listing caps search results; sign-image storage moved from cache to internal files so Fill & Sign projects survive cleanup; viewer page tracking uses a snapshot-derived state so it no longer recomposes on every scroll frame.
+- **Version bump for tests.** Unit tests now cover the update checker and file-name sanitizer.
+
+### Bug fixes
+
+- **Fill & Sign images could break.** Signature and picture references lived in the volatile cache; they now live in internal app files.
+
 ## v1.2.0
 
 A full visual refresh: consistent design tokens, tidier layouts and smooth, cheap animations.
