@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -25,16 +26,11 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PrivacyTip
-import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -43,17 +39,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -63,7 +58,6 @@ import com.nekonaru.pedeef.data.PublicFiles
 import com.nekonaru.pedeef.data.SettingsState
 import com.nekonaru.pedeef.data.UpdateCheck
 import com.nekonaru.pedeef.data.UpdateResult
-import com.nekonaru.pedeef.i18n.En
 import com.nekonaru.pedeef.i18n.Id
 import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.ui.kit.ConfirmDialog
@@ -72,10 +66,11 @@ import com.nekonaru.pedeef.ui.kit.GroupLabel
 import com.nekonaru.pedeef.ui.kit.InfoDialog
 import com.nekonaru.pedeef.ui.kit.ListRow
 import com.nekonaru.pedeef.ui.kit.fmtSize
+import com.nekonaru.pedeef.ui.theme.Dimens
 import kotlinx.coroutines.launch
 import java.io.File
 
-const val PEDEEF_VERSION = "1.1.0"
+const val PEDEEF_VERSION = "1.2.0"
 
 private const val PRIVACY_EN = """Pedeef is built to be private:
 
@@ -168,69 +163,85 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
       Modifier
         .verticalScroll(rememberScrollState())
         .padding(padding)
-        .padding(horizontal = 16.dp),
-      verticalArrangement = Arrangement.spacedBy(4.dp),
+        .padding(horizontal = Dimens.Lg),
+      verticalArrangement = Arrangement.spacedBy(Dimens.Xs),
     ) {
-      // Header card
-      ElevatedCard(shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(16.dp)) {
+      // Header card: app identity
+      ElevatedCard(
+        shape = RoundedCornerShape(Dimens.CardRadius),
+        modifier = Modifier.fillMaxWidth().padding(top = Dimens.Sm, bottom = Dimens.Lg),
+      ) {
+        Column(
+          horizontalAlignment = Alignment.CenterHorizontally,
+          modifier = Modifier.padding(Dimens.Xl),
+        ) {
           Image(
             painter = androidx.compose.ui.res.painterResource(com.nekonaru.pedeef.R.drawable.ic_launcher_foreground),
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.size(64.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp)),
+            modifier = Modifier.size(72.dp).clip(RoundedCornerShape(18.dp)),
           )
-          Column(Modifier.padding(start = 14.dp)) {
-            Text("Pedeef", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-            Text(s.homeTagline, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("v$PEDEEF_VERSION", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
-          }
+          Text("Pedeef", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = Dimens.Md))
+          Text(
+            s.homeTagline,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = Dimens.Xs),
+          )
+          Text("v$PEDEEF_VERSION", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = Dimens.Xs))
         }
       }
 
       GroupLabel(s.appearance)
       Group {
-        Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-          Text(if (indonesian) "Mode" else "Mode", modifier = Modifier.weight(1f))
-          SingleChoiceSegmentedButtonRow {
-            listOf("system" to s.themeSystem, "light" to s.themeLight, "dark" to s.themeDark).forEachIndexed { i, (modeKey, label) ->
-              SegmentedButton(
-                selected = settings.themeMode == modeKey,
-                onClick = { update { it.copy(themeMode = modeKey) } },
-                shape = SegmentedButtonDefaults.itemShape(i, 3),
-              ) { Text(label) }
+        Column(Modifier.padding(Dimens.Lg), verticalArrangement = Arrangement.spacedBy(Dimens.Lg)) {
+          Column {
+            Text(if (indonesian) "Mode" else "Mode", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = Dimens.Sm)) {
+              listOf("system" to s.themeSystem, "light" to s.themeLight, "dark" to s.themeDark).forEachIndexed { i, (modeKey, label) ->
+                SegmentedButton(
+                  selected = settings.themeMode == modeKey,
+                  onClick = { update { it.copy(themeMode = modeKey) } },
+                  shape = SegmentedButtonDefaults.itemShape(i, 3),
+                  modifier = Modifier.weight(1f),
+                ) { Text(label) }
+              }
             }
           }
-        }
-        Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-          Text(s.scheme, modifier = Modifier.weight(1f))
-          Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            SchemeDot(0xFFB8471F.toInt(), settings.scheme == "ember") { update { it.copy(scheme = "ember") } }
-            SchemeDot(0xFF8E2A3E.toInt(), settings.scheme == "cherry") { update { it.copy(scheme = "cherry") } }
-            SchemeDot(0xFF17567E.toInt(), settings.scheme == "arctic") { update { it.copy(scheme = "arctic") } }
-          }
-        }
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-          Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-              Text(s.dynamicColor)
-              Text(s.dynamicColorHint, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+          Column {
+            Text(s.scheme, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+            Row(
+              horizontalArrangement = Arrangement.spacedBy(20.dp),
+              modifier = Modifier.fillMaxWidth().padding(top = Dimens.Md),
+            ) {
+              SchemeDot(0xFFB8471F.toInt(), s.schemeEmber, settings.scheme == "ember") { update { it.copy(scheme = "ember") } }
+              SchemeDot(0xFF8E2A3E.toInt(), s.schemeCherry, settings.scheme == "cherry") { update { it.copy(scheme = "cherry") } }
+              SchemeDot(0xFF17567E.toInt(), s.schemeArctic, settings.scheme == "arctic") { update { it.copy(scheme = "arctic") } }
             }
-            Switch(checked = settings.dynamicColor, onCheckedChange = { v -> update { it.copy(dynamicColor = v) } })
+          }
+          if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Column(Modifier.weight(1f)) {
+                Text(s.dynamicColor, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                Text(s.dynamicColorHint, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+              Switch(checked = settings.dynamicColor, onCheckedChange = { v -> update { it.copy(dynamicColor = v) } })
+            }
           }
         }
       }
 
       GroupLabel(s.language)
       Group {
-        Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-          Text(s.language, modifier = Modifier.weight(1f))
-          SingleChoiceSegmentedButtonRow {
+        Column(Modifier.padding(Dimens.Lg)) {
+          Text(s.language, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+          SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = Dimens.Sm)) {
             listOf("system" to s.themeSystem, "en" to "English", "id" to "Indonesia").forEachIndexed { i, (langKey, label) ->
               SegmentedButton(
                 selected = settings.language == langKey,
                 onClick = { update { it.copy(language = langKey) } },
                 shape = SegmentedButtonDefaults.itemShape(i, 3),
+                modifier = Modifier.weight(1f),
               ) { Text(label) }
             }
           }
@@ -247,7 +258,7 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
         if (!granted) {
           ListRow(Icons.Default.FolderOpen, s.storageAccessButton, s.storageAccessBody, onClick = { PublicFiles.requestManageAllFilesAccess(context) })
         }
-        ListRow(Icons.Default.Delete, s.clearAppData, null, onClick = { showClear = true })
+        ListRow(Icons.Default.Delete, s.clearAppData, null, onClick = { showClear = true }, danger = true)
       }
 
       GroupLabel(s.about)
@@ -262,7 +273,7 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
             is UpdateResult.Failed -> s.checkFailed
           },
           onClick = { if (!checking) checkUpdate() },
-          trailing = { if (checking) androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp) },
+          trailing = { if (checking) CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp) },
         )
         ListRow(
           Icons.Default.AccountCircle,
@@ -284,7 +295,7 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
         ListRow(Icons.Default.PrivacyTip, s.privacyPolicy, null, onClick = { showPrivacy = true })
         ListRow(Icons.Default.Description, s.openSource, null, onClick = { showLicenses = true })
       }
-      Box(Modifier.padding(bottom = 32.dp))
+      Box(Modifier.padding(bottom = Dimens.Xl))
     }
   }
 
@@ -310,23 +321,29 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
   if (showSponsor) {
     AlertDialog(
       onDismissRequest = { showSponsor = false },
-      title = { Text(s.sponsor) },
+      title = { Text(s.sponsor, fontWeight = FontWeight.SemiBold) },
       text = {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Xs)) {
           Text(s.sponsorBody)
-          Box(Modifier.padding(top = 8.dp))
+          Box(Modifier.size(Dimens.Xs))
           for ((name, short, url) in SPONSORS) {
-            ListRow(
-              Icons.Default.Favorite,
-              name,
-              short,
-              onClick = { openUrl(url) },
-              trailing = { Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(16.dp)) },
-            )
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(Dimens.ControlRadius)).clickable { openUrl(url) }.padding(Dimens.Md),
+            ) {
+              Box(Modifier.size(36.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Favorite, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(18.dp))
+              }
+              Column(Modifier.padding(start = Dimens.Md).weight(1f)) {
+                Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                Text(short, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+              Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
           }
         }
       },
-      confirmButton = { TextButton(onClick = { showSponsor = false }) { Text(s.ok) } },
+      confirmButton = { TextButton(onClick = { showSponsor = false }) { Text(s.ok, fontWeight = FontWeight.SemiBold) } },
     )
   }
 }
@@ -334,14 +351,18 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
 private val File.depth: Int get() = absolutePath.count { it == '/' || it == '\\' }
 
 @Composable
-private fun SchemeDot(color: Int, selected: Boolean, onClick: () -> Unit) {
-  Box(
-    Modifier
-      .size(34.dp)
-      .background(androidx.compose.ui.graphics.Color(color), CircleShape)
-      .clip(CircleShape)
-      .clickable(onClick = onClick),
-  ) {
-    if (selected) Icon(androidx.compose.material.icons.Icons.Default.Check, contentDescription = null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(18.dp).align(Alignment.Center))
+private fun SchemeDot(color: Int, name: String, selected: Boolean, onClick: () -> Unit) {
+  Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Box(
+      Modifier
+        .size(44.dp)
+        .background(androidx.compose.ui.graphics.Color(color), CircleShape)
+        .clip(CircleShape)
+        .clickable(onClick = onClick),
+      contentAlignment = Alignment.Center,
+    ) {
+      if (selected) Icon(androidx.compose.material.icons.Icons.Default.Check, contentDescription = null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(20.dp))
+    }
+    Text(name, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = Dimens.Xs))
   }
 }

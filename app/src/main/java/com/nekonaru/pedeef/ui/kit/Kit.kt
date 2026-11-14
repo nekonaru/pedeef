@@ -10,13 +10,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.AssistChip
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,8 +32,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.AlertDialog
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -34,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.nekonaru.pedeef.i18n.LocalPedeefStrings
@@ -42,6 +48,7 @@ import com.nekonaru.pedeef.tools.Opts
 import com.nekonaru.pedeef.tools.with
 import com.nekonaru.pedeef.tools.str
 import com.nekonaru.pedeef.tools.bool
+import com.nekonaru.pedeef.ui.theme.Dimens
 
 fun fmtSize(bytes: Long): String = when {
   bytes < 1024 -> "$bytes B"
@@ -55,38 +62,78 @@ fun GroupLabel(text: String) {
   Text(
     text.uppercase(),
     style = MaterialTheme.typography.labelMedium,
+    fontWeight = FontWeight.SemiBold,
+    letterSpacing = androidx.compose.ui.unit.TextUnit(1.2f, androidx.compose.ui.unit.TextUnitType.Sp),
     color = MaterialTheme.colorScheme.onSurfaceVariant,
-    modifier = Modifier.padding(start = 4.dp, top = 18.dp, bottom = 8.dp),
+    modifier = Modifier.padding(start = Dimens.Xs, top = Dimens.LabelTop, bottom = Dimens.LabelBottom),
   )
 }
 
 @Composable
 fun Group(content: @Composable () -> Unit) {
-  Surface(tonalElevation = 1.dp, shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)) {
-    Column(Modifier.padding(4.dp)) { content() }
+  Surface(tonalElevation = 2.dp, shape = RoundedCornerShape(Dimens.CardRadius)) {
+    Column(Modifier.padding(Dimens.Xs)) { content() }
   }
 }
 
+/** Row with a tinted circular icon, title, optional subtitle and optional trailing slot. */
 @Composable
-fun ListRow(icon: ImageVector?, title: String, subtitle: String? = null, onClick: (() -> Unit)? = null, trailing: (@Composable () -> Unit)? = null) {
+fun ListRow(
+  icon: ImageVector?,
+  title: String,
+  subtitle: String? = null,
+  onClick: (() -> Unit)? = null,
+  trailing: (@Composable () -> Unit)? = null,
+  danger: Boolean = false,
+) {
   Row(
     verticalAlignment = Alignment.CenterVertically,
     modifier = Modifier
       .fillMaxWidth()
       .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-      .padding(horizontal = 12.dp, vertical = 12.dp),
+      .padding(horizontal = Dimens.Lg, vertical = Dimens.Md),
   ) {
     if (icon != null) {
-      Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-      Box(Modifier.width(12.dp))
+      Box(
+        Modifier.size(38.dp).background(
+          if (danger) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
+          CircleShape,
+        ),
+        contentAlignment = Alignment.Center,
+      ) {
+        Icon(
+          icon,
+          contentDescription = null,
+          tint = if (danger) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
+          modifier = Modifier.size(20.dp),
+        )
+      }
+      Box(Modifier.width(Dimens.Md))
     }
     Column(Modifier.weight(1f)) {
-      Text(title, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-      if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+      Text(
+        title,
+        style = MaterialTheme.typography.bodyLarge,
+        fontWeight = FontWeight.Medium,
+        color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      if (subtitle != null) {
+        Text(
+          subtitle,
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          maxLines = 2,
+          overflow = TextOverflow.Ellipsis,
+        )
+      }
     }
     if (trailing != null) {
-      Box(Modifier.width(8.dp))
+      Box(Modifier.width(Dimens.Sm))
       trailing()
+    } else if (onClick != null) {
+      Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
   }
 }
@@ -97,15 +144,15 @@ fun Btn(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enable
   val on = if (danger) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimary
   Surface(
     onClick = { if (enabled && !busy) onClick() },
-    shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+    shape = RoundedCornerShape(Dimens.ControlRadius),
     color = container.copy(alpha = if (enabled) 1f else 0.5f),
-    modifier = modifier,
+    modifier = modifier.height(52.dp),
   ) {
-    Box(Modifier.padding(horizontal = 20.dp, vertical = 13.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.padding(horizontal = 20.dp), contentAlignment = Alignment.Center) {
       if (busy) {
         CircularProgressIndicator(color = on, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
       } else {
-        Text(text, style = MaterialTheme.typography.labelLarge, color = on)
+        Text(text, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = on)
       }
     }
   }
@@ -117,27 +164,35 @@ fun Spinner() { CircularProgressIndicator(strokeWidth = 2.dp) }
 /** The generic form renderer for a tool's options. */
 @Composable
 fun Options(defs: List<OptDef>, value: Opts, indonesian: Boolean, onChange: (Opts) -> Unit) {
-  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+  Column(verticalArrangement = Arrangement.spacedBy(Dimens.Md)) {
     for (def in defs) {
       val visible = def.visible?.invoke(value) ?: true
       if (!visible) continue
       when (def) {
         is OptDef.Seg -> {
-          Text(if (indonesian) def.id else def.en, style = MaterialTheme.typography.labelMedium)
-          Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
+          Text(
+            if (indonesian) def.id else def.en,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Medium,
+          )
+          Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Sm), modifier = Modifier.padding(top = Dimens.Xs)) {
             for ((v, en, id) in def.choices) {
               val selected = value.str(def.key) == v
-              AssistChip(
+              FilterChip(
+                selected = selected,
                 onClick = { onChange(value.with(def.key, v)) },
                 label = { Text(if (indonesian) id else en) },
-                leadingIcon = if (selected) { { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null,
                 border = androidx.compose.foundation.BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
               )
             }
           }
         }
         is OptDef.Text -> {
-          Text(if (indonesian) def.id else def.en, style = MaterialTheme.typography.labelMedium)
+          Text(
+            if (indonesian) def.id else def.en,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Medium,
+          )
           OutlinedTextField(
             value = value.str(def.key),
             onValueChange = { raw ->
@@ -146,8 +201,9 @@ fun Options(defs: List<OptDef>, value: Opts, indonesian: Boolean, onChange: (Opt
             },
             placeholder = { Text(def.placeholder) },
             singleLine = true,
+            shape = RoundedCornerShape(Dimens.ControlRadius),
             visualTransformation = if (def.isPassword) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
-            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = Dimens.Xs),
           )
         }
         is OptDef.Toggle -> {
@@ -165,10 +221,10 @@ fun Options(defs: List<OptDef>, value: Opts, indonesian: Boolean, onChange: (Opt
 fun ConfirmDialog(title: String, body: String, confirm: String, dismiss: String, danger: Boolean = false, onConfirm: () -> Unit, onDismiss: () -> Unit) {
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text(title) },
+    title = { Text(title, fontWeight = FontWeight.SemiBold) },
     text = { Text(body) },
     confirmButton = {
-      TextButton(onClick = onConfirm) { Text(confirm, color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary) }
+      TextButton(onClick = onConfirm) { Text(confirm, fontWeight = FontWeight.SemiBold, color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary) }
     },
     dismissButton = { TextButton(onClick = onDismiss) { Text(dismiss) } },
   )
@@ -180,11 +236,11 @@ fun PromptDialog(title: String, initial: String, placeholder: String, onConfirm:
   var text by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(initial) }
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text(title) },
+    title = { Text(title, fontWeight = FontWeight.SemiBold) },
     text = {
-      OutlinedTextField(value = text, onValueChange = { text = it }, placeholder = { Text(placeholder) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+      OutlinedTextField(value = text, onValueChange = { text = it }, placeholder = { Text(placeholder) }, singleLine = true, shape = RoundedCornerShape(Dimens.ControlRadius), modifier = Modifier.fillMaxWidth())
     },
-    confirmButton = { TextButton(onClick = { when { text.isNotBlank() -> onConfirm(text.trim()) }; Unit }) { Text(confirm ?: s.ok) } },
+    confirmButton = { TextButton(onClick = { if (text.isNotBlank()) onConfirm(text.trim()) }) { Text(confirm ?: s.ok, fontWeight = FontWeight.SemiBold) } },
     dismissButton = { TextButton(onClick = onDismiss) { Text(s.cancel) } },
   )
 }
@@ -195,20 +251,21 @@ fun PasswordDialog(title: String, error: String?, onSubmit: (String) -> Unit, on
   var text by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text(title) },
+    title = { Text(title, fontWeight = FontWeight.SemiBold) },
     text = {
       Column {
         OutlinedTextField(
           value = text,
           onValueChange = { text = it },
           singleLine = true,
+          shape = RoundedCornerShape(Dimens.ControlRadius),
           visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
           modifier = Modifier.fillMaxWidth(),
         )
         if (error != null) Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
       }
     },
-    confirmButton = { TextButton(onClick = { if (text.isNotBlank()) onSubmit(text) }) { Text(s.unlock) } },
+    confirmButton = { TextButton(onClick = { if (text.isNotBlank()) onSubmit(text) }) { Text(s.unlock, fontWeight = FontWeight.SemiBold) } },
     dismissButton = { TextButton(onClick = onDismiss) { Text(s.cancel) } },
   )
 }
@@ -218,8 +275,8 @@ fun InfoDialog(title: String, body: String, onDismiss: () -> Unit) {
   val s = LocalPedeefStrings.current
   AlertDialog(
     onDismissRequest = onDismiss,
-    title = { Text(title) },
+    title = { Text(title, fontWeight = FontWeight.SemiBold) },
     text = { Text(body, modifier = Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState())) },
-    confirmButton = { TextButton(onClick = onDismiss) { Text(s.ok) } },
+    confirmButton = { TextButton(onClick = onDismiss) { Text(s.ok, fontWeight = FontWeight.SemiBold) } },
   )
 }

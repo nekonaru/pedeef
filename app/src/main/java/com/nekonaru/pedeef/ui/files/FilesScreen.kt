@@ -174,8 +174,8 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
       ) {
-        Icon(Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
-        Text(s.storageAccessTitle, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 16.dp))
+        Icon(Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(88.dp).background(MaterialTheme.colorScheme.primaryContainer, androidx.compose.foundation.shape.CircleShape).padding(18.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+        Text(s.storageAccessTitle, style = MaterialTheme.typography.headlineSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, modifier = Modifier.padding(top = 16.dp))
         Text(s.storageAccessBody, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
         Text(s.storageAccessDenied, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 20.dp))
         androidx.compose.material3.Button(
@@ -233,8 +233,10 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
       }
       if (items.isEmpty()) {
         Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-          Icon(Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-          Text(s.filesEmpty, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 12.dp))
+          Box(Modifier.size(88.dp).background(MaterialTheme.colorScheme.surfaceVariant, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+            Icon(Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(44.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+          }
+          Text(s.filesEmpty, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp))
         }
         return@Box
       }
@@ -245,9 +247,14 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable { openEntry(entry) }.padding(horizontal = 10.dp, vertical = 10.dp),
           ) {
-            Icon(iconFor(entry), contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
+            Box(
+              Modifier.size(40.dp).background(MaterialTheme.colorScheme.primaryContainer, androidx.compose.foundation.shape.CircleShape),
+              contentAlignment = Alignment.Center,
+            ) {
+              Icon(iconFor(entry), contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(22.dp))
+            }
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-              Text(entry.name, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge)
+              Text(entry.name, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
               Text(
                 (if (entry.isDir) (FilesStore.countIn(entry.file).toString() + if (indonesian) " file" else " files") else com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)),
                 style = MaterialTheme.typography.bodyMedium,

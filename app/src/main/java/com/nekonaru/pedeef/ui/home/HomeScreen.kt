@@ -2,24 +2,25 @@ package com.nekonaru.pedeef.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.width
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.Bookmarks
@@ -27,8 +28,6 @@ import androidx.compose.material.icons.filled.CallSplit
 import androidx.compose.material.icons.filled.Compress
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Crop
-import androidx.compose.material.icons.filled.DocumentScanner
-import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.FlipToBack
 import androidx.compose.material.icons.filled.FormatColorFill
 import androidx.compose.material.icons.filled.FormatColorText
@@ -40,6 +39,8 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Reorder
 import androidx.compose.material.icons.filled.Rotate90DegreesCw
 import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.Lock
@@ -50,13 +51,13 @@ import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.VerticalSplit
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,17 +69,22 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import android.graphics.BitmapFactory
 import com.nekonaru.pedeef.data.Pins
-import com.nekonaru.pedeef.i18n.En
 import com.nekonaru.pedeef.i18n.Id
 import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.tools.SECTIONS
 import com.nekonaru.pedeef.tools.TOOLS
 import com.nekonaru.pedeef.tools.Tool
-import com.nekonaru.pedeef.tools.SECTION_AUTOMATE
 import kotlinx.coroutines.launch
 
 internal val TOOL_ICONS: Map<String, androidx.compose.ui.graphics.vector.ImageVector> = mapOf(
@@ -110,9 +116,6 @@ internal val TOOL_ICONS: Map<String, androidx.compose.ui.graphics.vector.ImageVe
   "extractText" to Icons.Default.ContentCopy,
 )
 
-private fun sectionName(index: Int, indonesian: Boolean): String =
-  SECTIONS.getOrNull(index)?.let { if (indonesian) it.second.second else it.second.first } ?: ""
-
 @Composable
 fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit) {
   val s = LocalPedeefStrings.current
@@ -121,7 +124,7 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit) {
   val scope = rememberCoroutineScope()
   val pinnedIds by Pins.ids.collectAsState()
   var query by remember { mutableStateOf("") }
-  var section by remember { mutableStateOf(-1) } // -1 = all
+  var section by remember { mutableStateOf(-1) }
 
   val q = query.trim().lowercase()
   fun matches(t: Tool): Boolean {
@@ -133,21 +136,29 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit) {
   val pinned = filtered.filter { it.id in pinnedIds }.sortedBy { pinnedIds.indexOf(it.id) }
   val pinnedSet = pinned.map { it.id }.toSet()
   val rest = filtered.filterNot { it.id in pinnedSet }
-  // Also show unpinned tools from other sections when pinned section filter is active
-  val visible = if (section == -1 && q.isEmpty()) rest else rest
 
   LazyVerticalGrid(
     columns = GridCells.Fixed(2),
-    contentPadding = PaddingValues(16.dp),
+    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
     horizontalArrangement = Arrangement.spacedBy(12.dp),
     verticalArrangement = Arrangement.spacedBy(12.dp),
-    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+    modifier = Modifier.fillMaxWidth(),
   ) {
+    // Header: app identity + search
     item(span = { GridItemSpan(maxLineSpan) }) {
-      Column(Modifier.padding(bottom = 4.dp)) {
-        Text("Pedeef", style = MaterialTheme.typography.displayMedium)
-        Text(s.homeTagline, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Box(Modifier.height(8.dp))
+      Column(Modifier.padding(bottom = 2.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(com.nekonaru.pedeef.R.drawable.ic_launcher_foreground),
+            contentDescription = null,
+            modifier = Modifier.size(46.dp).clip(RoundedCornerShape(12.dp)),
+          )
+          Column(Modifier.padding(start = 12.dp)) {
+            Text("Pedeef", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+            Text(s.homeTagline, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+          }
+        }
+        Box(Modifier.height(14.dp))
         OutlinedTextField(
           value = query,
           onValueChange = { query = it },
@@ -158,23 +169,33 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit) {
           modifier = Modifier.fillMaxWidth(),
         )
         Box(Modifier.height(12.dp))
-        // Scanner hero
+        // Scanner hero card
         Surface(
           onClick = onScan,
-          color = MaterialTheme.colorScheme.primaryContainer,
-          contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
           shape = RoundedCornerShape(22.dp),
           modifier = Modifier.fillMaxWidth(),
         ) {
-          Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(16.dp)) {
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+              .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primary.copy(red = MaterialTheme.colorScheme.primary.red * 0.55f, green = MaterialTheme.colorScheme.primary.green * 0.55f, blue = MaterialTheme.colorScheme.primary.blue * 0.55f))))
+              .padding(16.dp),
+          ) {
             Box(
-              Modifier.size(52.dp).background(MaterialTheme.colorScheme.primary, CircleShape),
+              Modifier.size(54.dp).background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.22f), CircleShape),
               contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Default.DocumentScanner, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp)) }
-            Column(Modifier.padding(start = 14.dp).weight(1f)) {
-              Text(s.scan, style = MaterialTheme.typography.titleMedium)
-              Text(s.onboardingBody.take(80) + "…", style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            ) {
+              Icon(Icons.Default.DocumentScanner, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
             }
+            Column(Modifier.padding(start = 14.dp).weight(1f)) {
+              Text(s.scan, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimary)
+              Text(
+                if (indonesian) "Pindai, rapikan, dan dapat dicari otomatis." else "Scan, clean up and make searchable.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
+              )
+            }
+            Icon(Icons.Default.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
           }
         }
         Box(Modifier.height(12.dp))
@@ -192,20 +213,24 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit) {
 
     if (pinned.isNotEmpty()) {
       item(span = { GridItemSpan(maxLineSpan) }) {
-        Text(s.pinned.uppercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 4.dp))
+        Text(s.pinned.uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 2.dp))
       }
-      items(pinned, key = { "pin-${it.id}" }) { tool -> ToolCard(tool, indonesian, pinnedIds, onOpenTool, onTogglePin = { scope.launch { Pins.toggle(context, tool.id) } }) }
+      items(pinned, key = { "pin-${it.id}" }) { tool ->
+        ToolCard(tool, indonesian, pinnedIds, onOpenTool, onTogglePin = { scope.launch { Pins.toggle(context, tool.id) } })
+      }
       item(span = { GridItemSpan(maxLineSpan) }) {
-        Text(s.allTools.uppercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 4.dp))
+        Text(s.allTools.uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 2.dp))
       }
     }
 
-    if (visible.isEmpty() && pinned.isEmpty()) {
+    if (rest.isEmpty() && pinned.isEmpty()) {
       item(span = { GridItemSpan(maxLineSpan) }) {
-        Text(s.noMatches, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
+        Text(s.noMatches, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 24.dp))
       }
     } else {
-      items(visible, key = { it.id }) { tool -> ToolCard(tool, indonesian, pinnedIds, onOpenTool, onTogglePin = { scope.launch { Pins.toggle(context, tool.id) } }) }
+      items(rest, key = { it.id }) { tool ->
+        ToolCard(tool, indonesian, pinnedIds, onOpenTool, onTogglePin = { scope.launch { Pins.toggle(context, tool.id) } })
+      }
     }
   }
 }
@@ -214,6 +239,10 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit) {
 private fun ToolCard(tool: Tool, indonesian: Boolean, pinnedIds: List<String>, onOpen: (String) -> Unit, onTogglePin: () -> Unit) {
   val pinned = tool.id in pinnedIds
   val icon = TOOL_ICONS[tool.id] ?: Icons.Default.Description
+  val pinTint by animateColorAsState(
+    if (pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+    label = "pinTint",
+  )
   Surface(
     onClick = { onOpen(tool.id) },
     shape = RoundedCornerShape(18.dp),
@@ -231,12 +260,12 @@ private fun ToolCard(tool: Tool, indonesian: Boolean, pinnedIds: List<String>, o
           Icon(
             if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
             contentDescription = if (pinned) "Unpin" else "Pin",
-            tint = if (pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = pinTint,
           )
         }
       }
-      Text(tool.title(indonesian), style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 10.dp))
-      Text(tool.desc(indonesian), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
+      Text(tool.title(indonesian), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 10.dp))
+      Text(tool.desc(indonesian), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
     }
   }
 }
