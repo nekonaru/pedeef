@@ -3,7 +3,7 @@
 
   <h1>Pedeef: Peralatan PDF Offline untuk Android</h1>
 
-  <p><b>Semua alat PDF yang kamu butuhkan dalam satu aplikasi gratis.<br/>Semuanya berjalan di ponselmu. Tanpa akun, tanpa jaringan, tanpa iklan.</b></p>
+  <p><b>Semua alat PDF yang kamu butuhkan dalam satu aplikasi gratis.<br/>Semuanya berjalan di ponselmu, file tetap di Download/Pedeef.</b></p>
 
   <a href="https://github.com/nekonaru/pedeef/releases/latest">
     <img alt="Rilis" src="https://img.shields.io/github/v/release/nekonaru/pedeef?style=flat-square&color=C2410C" />
@@ -118,7 +118,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **PDF ke Gambar** | Ekspor halaman sebagai JPEG (ZIP untuk dokumen multi-halaman). |
 | **Ekstrak Teks** | Salin semua teks dari PDF ke file `.txt` biasa. |
 | **UI dwibahasa** | English dan Bahasa Indonesia, bisa diganti di Pengaturan. |
-| **Privasi lebih baik** | Tanpa izin jaringan, tanpa izin penyimpanan luas, tidak ada yang perlu diaudit selain filemu sendiri. |
+| **Download/Pedeef** | Setiap file yang kamu simpan masuk ke folder Download/Pedeef publik, terlihat di file manager mana pun. Satu-satunya panggilan jaringan adalah cek pembaruan opsional. |
 | **Penampil bawaan** | Gulir halus, zoom, cari dengan navigasi hasil, salin teks halaman, di semua versi Android yang didukung. |
 
 ---
@@ -154,9 +154,9 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.0.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-1.1.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
-4. Buka Pedeef.
+4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
 > [!IMPORTANT]
 > APK ini ditandatangani dengan key debug bawaan aplikasi, belum dengan key upload toko. Jika kamu nanti memasang versi Google Play, kamu mungkin perlu menghapus build ini lebih dulu.
@@ -214,9 +214,9 @@ Kamu butuh JDK 17 dan Android SDK (platform 36). Android Studio membawa keduanya
 
 ### Pemakaian sehari-hari
 
-- **Jalankan alat**: ketuk, pilih PDF-mu, atur opsinya, ketuk tombol aksinya. Hasilnya bisa dipratinjau, dibagikan, dibuka di penampil bawaan, atau disimpan ke pohon Files di dalam aplikasi.
+- **Jalankan alat**: ketuk, pilih PDF-mu, atur opsinya, ketuk tombol aksinya. Hasilnya bisa dipratinjau, dibagikan, dibuka di penampil bawaan, atau disimpan ke Download/Pedeef di ponselmu.
 - **Pindai dokumen**: ketuk kartu pindai di Home. Halaman terdeteksi dan dirapikan otomatis; pindaian dapat dicari jika OCR dibiarkan aktif.
-- **Temukan filemu**: tab Files menampilkan semua yang disimpan Pedeef, dengan folder, pencarian, ganti nama, pindah, bagikan dan hapus. Pedeef tidak pernah menyentuh file aplikasi lain.
+- **Temukan filemu**: tab Files menampilkan semua yang ada di Download/Pedeef, dengan folder, pencarian, ganti nama, pindah, bagikan dan hapus. Izinkan akses file saat diminta, semuanya lewat situ.
 - **PDF terkunci?**: file dengan kata sandi menanyakan kata sandi saat kamu memilihnya; kata sandi tidak pernah disimpan.
 
 ---
@@ -287,6 +287,7 @@ pedeef/
 ```bash
 ./gradlew :app:testDebugUnitTest
 ./gradlew :app:assembleDebug
+./gradlew :app:lintDebug
 ```
 
 | Pengecekan | Persyaratan |
@@ -294,6 +295,7 @@ pedeef/
 | Kompilasi Kotlin | Nol error |
 | Unit test | Semua lulus (26 test) |
 | APK debug | Berhasil dibangun |
+| Lint | Nol error |
 | Pemindaian rahasia | gitleaks melaporkan nol temuan |
 
 ---
@@ -302,7 +304,7 @@ pedeef/
 
 | Workflow | Tujuan |
 |----------|--------|
-| `ci.yml` | Unit test, build APK debug, pemindaian rahasia gitleaks pada setiap push, PR dan tag `v*` |
+| `ci.yml` | Unit test, lint, build APK debug, pemindaian rahasia gitleaks pada setiap push, PR dan tag `v*` |
 
 ---
 
@@ -317,7 +319,7 @@ Ya. Pedeef tidak punya izin jaringan sama sekali. Semua alat, pemindai dan OCR b
 <details>
 <summary><b>Di mana file saya?</b></summary>
 
-Di dalam penyimpanan privat Pedeef. Pakai tab Files untuk membuka, ganti nama, pindah, bagikan, hapus atau ekspor salinan lewat file picker sistem.
+Di Download/Pedeef, terlihat oleh file manager mana pun. Jika akses penyimpanan ditolak, file tetap di dalam aplikasi dan tab Files memberitahu cara memberikannya.
 </details>
 
 <details>
