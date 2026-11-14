@@ -120,6 +120,8 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Bilingual UI** | English and Bahasa Indonesia, switchable in Settings. |
 | **Download/Pedeef** | Every file you save lands in the public Download/Pedeef folder, visible in any file manager. The only network call is the optional update check. |
 | **Built-in viewer** | Smooth scrolling, zoom, search with match navigation, copy page text, on every supported Android version. |
+| **Check for updates** | On-demand update check against GitHub releases, in Settings. |
+| **Sponsor** | Support the developer via GitHub Sponsors, Saweria, SociaBuzz or BagiBagi. |
 
 ---
 
