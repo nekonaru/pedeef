@@ -3,7 +3,7 @@
 
   <h1>Pedeef: Offline PDF Toolkit for Android</h1>
 
-  <p><b>All your PDF tools in one free app.<br/>Everything runs on your phone. No account, no network, no ads.</b></p>
+  <p><b>All your PDF tools in one free app.<br/>Everything runs on your phone, your files stay in Download/Pedeef.</b></p>
 
   <a href="https://github.com/nekonaru/pedeef/releases/latest">
     <img alt="Release" src="https://img.shields.io/github/v/release/nekonaru/pedeef?style=flat-square&color=C2410C" />
@@ -118,7 +118,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **PDF to Images** | Export pages as JPEG (a ZIP for multi-page documents). |
 | **Extract Text** | Copy all text from a PDF into a plain `.txt` file. |
 | **Bilingual UI** | English and Bahasa Indonesia, switchable in Settings. |
-| **Better privacy** | No network permission, no broad storage permission, nothing to audit but your own files. |
+| **Download/Pedeef** | Every file you save lands in the public Download/Pedeef folder, visible in any file manager. The only network call is the optional update check. |
 | **Built-in viewer** | Smooth scrolling, zoom, search with match navigation, copy page text, on every supported Android version. |
 
 ---
@@ -154,9 +154,9 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 ### Option A: Download the APK (easiest)
 
 1. Open the [latest release](https://github.com/nekonaru/pedeef/releases/latest).
-2. Download `pedeef-1.0.0.apk` (signed with the app's built-in debug key).
+2. Download `pedeef-1.1.0.apk` (signed with the app's built-in debug key).
 3. Tap the file to install. If Android warns about unknown sources, allow installing from your browser or file manager.
-4. Open Pedeef.
+4. Open Pedeef. On first use of the Files tab, allow the file access it asks for so your files land in Download/Pedeef.
 
 > [!IMPORTANT]
 > These APKs are signed with the app's built-in debug key, not a store upload key yet. If you use Google Play later, you may need to uninstall this build first.
@@ -214,9 +214,9 @@ You need JDK 17 and the Android SDK (platform 36). Android Studio bundles both.
 
 ### Everyday use
 
-- **Run a tool**: tap it, pick your PDFs, set the options, tap the action button. The result can be previewed, shared, opened in the built-in viewer, or saved into your Files tree inside the app.
+- **Run a tool**: tap it, pick your PDFs, set the options, tap the action button. The result can be previewed, shared, opened in the built-in viewer, or saved to Download/Pedeef on your phone.
 - **Scan a document**: tap the scan card on Home. Pages are detected and cleaned automatically; scans are searchable if you leave OCR on.
-- **Find your files**: the Files tab lists everything Pedeef saved, with folders, search, rename, move, share and delete. Pedeef never touches other apps' files.
+- **Find your files**: the Files tab lists everything in Download/Pedeef, with folders, search, rename, move, share and delete. Allow file access when asked, everything works through it.
 - **Locked PDF?**: password-protected files ask for their password when you pick them; the password is never stored.
 
 ---
@@ -287,6 +287,7 @@ pedeef/
 ```bash
 ./gradlew :app:testDebugUnitTest
 ./gradlew :app:assembleDebug
+./gradlew :app:lintDebug
 ```
 
 | Check | Requirement |
@@ -294,6 +295,7 @@ pedeef/
 | Kotlin compile | Zero errors |
 | Unit tests | All pass (26 tests) |
 | Debug APK | Builds successfully |
+| Lint | Zero errors |
 | Secret scan | gitleaks reports zero findings |
 
 ---
@@ -302,7 +304,7 @@ pedeef/
 
 | Workflow | Purpose |
 |----------|---------|
-| `ci.yml` | Unit tests, debug APK build, gitleaks secret scan on every push, PR and tag `v*` |
+| `ci.yml` | Unit tests, lint, debug APK build, gitleaks secret scan on every push, PR and tag `v*` |
 
 ---
 
@@ -317,7 +319,7 @@ Yes. It has no network permission at all. Every tool, the scanner and OCR run on
 <details>
 <summary><b>Where are my files?</b></summary>
 
-Inside Pedeef's private storage. Use the Files tab to open, rename, move, share, delete or export copies through the system file picker.
+In Download/Pedeef, visible to any file manager. If you deny storage access, they stay inside the app and the Files tab tells you how to grant it.
 </details>
 
 <details>

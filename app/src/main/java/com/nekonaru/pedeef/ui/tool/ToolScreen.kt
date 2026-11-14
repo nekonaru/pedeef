@@ -197,14 +197,15 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
   fun saveAll() {
     val outs = results ?: return
     scope.launch {
-      val root = FilesStore.root(context)
+      val public = com.nekonaru.pedeef.data.PublicFiles.root(context)
+      val root = public ?: FilesStore.root(context)
       var saved = 0
       for (o in outs) {
         val base = FilesStore.sanitizeName(o.name.removeSuffix(".pdf").ifEmpty { "output" })
         FilesStore.saveBytes(root, null, base, o.ext, o.bytes)
         saved++
       }
-      savedMessage = "${s.savedTo}: $saved"
+      savedMessage = if (public != null) "$saved → ${s.savedToDownload}" else "$saved → ${s.savedToApp}"
     }
   }
 

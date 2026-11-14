@@ -14,9 +14,10 @@ object FilesStore {
     File(appContext.filesDir, "Pedeef").apply { mkdirs() }
 
   private fun insideRoot(root: File, f: File): Boolean {
-    val r = root.canonicalFile.toPath()
-    val t = f.canonicalFile.toPath()
-    return t == r || t.startsWith(r)
+    val r = root.canonicalFile.path
+    val t = f.canonicalFile.path
+    val sep = File.separator
+    return t == r || t.startsWith(r + sep)
   }
 
   fun list(dir: File): List<FileEntry> {

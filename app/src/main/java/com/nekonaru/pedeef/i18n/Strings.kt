@@ -40,6 +40,14 @@ class Strings(
   val scanSave: String, val scanEmpty: String, val buildingPdf: String, val ocrInProgress: String,
   // errors
   val genericError: String, val cannotOpenPdf: String, val fileTooLarge: String,
+  // storage access
+  val storageAccessTitle: String, val storageAccessBody: String, val storageAccessButton: String,
+  val storageAccessHint: String, val storageAccessDenied: String, val storagePrivateFallback: String,
+  val savedToDownload: String, val savedToApp: String,
+  // update check and sponsor
+  val versionRow: String, val checkingUpdates: String, val upToDate: String, val updateAvailable: String,
+  val checkFailed: String, val sponsor: String, val sponsorBody: String,
+  val developer: String, val viewOnGithub: String,
 )
 
 val En = Strings(
@@ -77,6 +85,14 @@ val En = Strings(
   "Save PDF", "Add pages to scan or import first.", "Building PDF…", "Reading text…",
   // errors
   "Something went wrong. Try again.", "Could not open this PDF.", "This file is too large to process.",
+  // storage access
+  "File access", "Pedeef stores your PDFs and scans in Download/Pedeef so you can find them.", "Allow file access",
+  "You can find every file Pedeef saves in Download/Pedeef with your file manager.", "Without access, files stay inside the app.", "Use app storage instead",
+  "Download/Pedeef", "app storage",
+  // update check and sponsor
+  "Check for updates", "Checking…", "You are on the latest version.", "Version %1\$s is available.",
+  "Could not check. Check your connection.", "Sponsor", "Pedeef is free and always will be. If it is useful to you, you can support the developer:",
+  "Developer", "View on GitHub",
 )
 
 val Id = Strings(
@@ -114,6 +130,14 @@ val Id = Strings(
   "Simpan PDF", "Tambahkan halaman untuk memindai atau mengimpor dulu.", "Membuat PDF…", "Membaca teks…",
   // errors
   "Terjadi kesalahan. Coba lagi.", "Tidak bisa membuka PDF ini.", "File ini terlalu besar untuk diproses.",
+  // storage access
+  "Akses file", "Pedeef menyimpan PDF dan pindaianmu di Download/Pedeef supaya mudah ditemukan.", "Izinkan akses file",
+  "Kamu bisa menemukan semua file yang disimpan Pedeef di Download/Pedeef lewat file manager.", "Tanpa akses, file tersimpan di dalam aplikasi.", "Pakai penyimpanan aplikasi saja",
+  "Download/Pedeef", "penyimpanan aplikasi",
+  // update check and sponsor
+  "Periksa pembaruan", "Memeriksa…", "Kamu memakai versi terbaru.", "Versi %1\$s tersedia.",
+  "Tidak bisa memeriksa. Periksa koneksimu.", "Sponsor", "Pedeef gratis dan akan selalu gratis. Kalau kamu merasa terbantu, kamu bisa mendukung pengembangnya:",
+  "Pengembang", "Lihat di GitHub",
 )
 
 val LocalPedeefStrings = staticCompositionLocalOf { En }

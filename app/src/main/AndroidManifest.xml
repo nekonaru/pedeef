@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-  <!-- Pedeef asks for no permissions at all. ML Kit runs in Google Play services, which has its own network
-       access; dropping the injected tags keeps Pedeef offline by construction. -->
-  <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
-  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+  <!-- Pedeef stores files in Download/Pedeef for easy access. On Android 11+ that needs "All files access",
+       on older versions the legacy storage permission (with requestLegacyExternalStorage). INTERNET is used only to
+       check GitHub for a newer release; the update check is a single GET request and never runs without the user tapping it. -->
+  <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+  <uses-permission android:name="android.permission.INTERNET" />
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW" />
@@ -18,14 +21,15 @@
     android:roundIcon="@mipmap/ic_launcher_round"
     android:label="Pedeef"
     android:supportsRtl="true"
+    android:requestLegacyExternalStorage="true"
     android:enableOnBackInvokedCallback="false"
+    android:dataExtractionRules="@xml/backup_rules"
     android:theme="@style/AppTheme">
 
     <activity
       android:name=".MainActivity"
       android:exported="true"
       android:launchMode="singleTask"
-      android:screenOrientation="portrait"
       android:windowSoftInputMode="adjustResize">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />

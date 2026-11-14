@@ -45,6 +45,9 @@ jobs:
       - name: Unit tests
         run: chmod +x gradlew && ./gradlew :app:testDebugUnitTest --console=plain
 
+      - name: Lint
+        run: chmod +x gradlew && ./gradlew :app:lintDebug --console=plain
+
       - name: Build debug APK
         run: chmod +x gradlew && ./gradlew :app:assembleDebug --console=plain
 

@@ -23,6 +23,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.nekonaru.pedeef.data.Settings
 import com.nekonaru.pedeef.data.SettingsState
@@ -74,10 +75,12 @@ private enum class Tab { Tools, Files, Settings }
 private fun AppShell(nav: NavHostController, strings: Strings, settings: SettingsState, update: ((SettingsState) -> SettingsState) -> Unit) {
   var tab by remember { mutableStateOf(Tab.Tools) }
   val onTab: (Tab) -> Unit = { tab = it }
+  val backStack by nav.currentBackStackEntryAsState()
+  val showBar = backStack?.destination?.route == "shell"
   androidx.compose.material3.Scaffold(
     modifier = Modifier.safeDrawingPadding(),
     bottomBar = {
-      NavigationBar {
+      if (showBar) NavigationBar {
         NavigationBarItem(
           selected = tab == Tab.Tools,
           onClick = { onTab(Tab.Tools) },

@@ -17,12 +17,12 @@ Please include: what you found, how to reproduce it, and the possible impact. Ex
 
 ## Scope
 
-Pedeef stores your files inside its own private storage and has no network access. Findings that matter most:
+Pedeef has exactly one network call: an optional "Check for updates" GET request to GitHub, made only when you tap it. It stores your files in the public Download/Pedeef folder (or inside its private storage if you deny access). Findings that matter most:
 
-- Ways to read or modify files outside Pedeef's private storage.
+- Ways to read or modify files outside Pedeef's storage areas.
 - Ways to leak a file to another app without consent.
 - Crashes or data corruption in the PDF engine triggered by a malicious file.
-- Any way the app could gain a network permission or exfiltrate data.
+- Any way the app could send data off the device beyond the update check.
 
 ## Out of scope
 
