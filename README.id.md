@@ -120,6 +120,8 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **UI dwibahasa** | English dan Bahasa Indonesia, bisa diganti di Pengaturan. |
 | **Download/Pedeef** | Setiap file yang kamu simpan masuk ke folder Download/Pedeef publik, terlihat di file manager mana pun. Satu-satunya panggilan jaringan adalah cek pembaruan opsional. |
 | **Penampil bawaan** | Gulir halus, zoom, cari dengan navigasi hasil, salin teks halaman, di semua versi Android yang didukung. |
+| **Periksa pembaruan** | Cek pembaruan sesuai permintaan ke rilis GitHub, di Pengaturan. |
+| **Sponsor** | Dukung pengembang lewat GitHub Sponsors, Saweria, SociaBuzz atau BagiBagi. |
 
 ---
 
