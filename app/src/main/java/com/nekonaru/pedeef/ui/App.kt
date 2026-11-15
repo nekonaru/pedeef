@@ -127,6 +127,11 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
               Tab.Tools -> HomeScreen(
                 onOpenTool = { nav.navigate("tool/$it") },
                 onScan = { nav.navigate("scan") },
+                onOpenViewer = { bytes, name ->
+                  ViewerPayload.bytes = bytes
+                  ViewerPayload.name = name
+                  nav.navigate("viewer")
+                },
               )
               Tab.Files -> FilesScreen(onOpenViewer = { bytes, name ->
                 ViewerPayload.bytes = bytes

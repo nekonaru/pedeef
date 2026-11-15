@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Article
@@ -241,8 +242,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
         return@Box
       }
       LazyColumn(contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        items(items.size) { i ->
-          val entry = items[i]
+        items(items, key = { entry -> entry.file.absolutePath }) { entry ->
           Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable { openEntry(entry) }.padding(horizontal = 10.dp, vertical = 10.dp),

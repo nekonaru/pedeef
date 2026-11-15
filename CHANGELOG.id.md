@@ -2,6 +2,24 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.4.0
+
+Sorotan pencarian, file terbaru dan kontrol cache: audit makin dalam.
+
+### Fitur baru
+
+- **Sorotan pencarian di viewer.** Temukan frasa dan setiap halaman berisi frasa itu disorot langsung di halamannya; ketuk ikon kisi untuk thumbnail halaman.
+- **File terbaru di Home.** Lima PDF yang paling baru diubah, satu ketukan untuk membuka.
+
+### Peningkatan
+
+- **Scan terbatas.** Penghitungan ukuran dan jumlah file dibatasi 10.000 entri, jadi folder besar tetap ringan.
+- **Baris Hapus cache.** Satu ketukan membersihkan file sementara, dengan ukurannya ditampilkan di Pengaturan.
+
+### Perbaikan bug
+
+- **Stabilitas daftar.** Baris Files kini di-key berdasarkan path absolut, jadi berpindah folder tidak membocorkan state ke baris lain.
+
 ## v1.3.0
 
 Update besar: perbaikan audit, strip thumbnail di viewer, tanda tangan yang bisa dipakai berulang, dan pengatur ekspor yang lebih baik.

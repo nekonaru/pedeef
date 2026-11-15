@@ -90,6 +90,7 @@ fun ViewerScreen(onBack: () -> Unit) {
   var query by remember { mutableStateOf("") }
   var searching by remember { mutableStateOf(false) }
   var matches by remember { mutableStateOf<List<Int>?>(null) }
+  var highlights by remember { mutableStateOf<Map<Int, List<android.graphics.RectF>>?>(null) }
   var matchIndex by remember(matches) { mutableStateOf(0) }
   var pageTextIndex by remember { mutableStateOf<Int?>(null) }
   var copyMessage by remember { mutableStateOf<String?>(null) }
@@ -147,22 +148,11 @@ fun ViewerScreen(onBack: () -> Unit) {
     if (q.isEmpty()) return
     scope.launch {
       searching = true
-      val hits = withContext(Dispatchers.Default) {
-        withTempPdf(bytes, ToolContext.cacheDir, "search") { tmp ->
-          com.tom_roush.pdfbox.pdmodel.PDDocument.load(tmp).use { doc ->
-            val n = doc.numberOfPages
-            val stripper = com.tom_roush.pdfbox.text.PDFTextStripper()
-            val needle = q.lowercase().replace(Regex("\\s+"), " ")
-            (0 until n).mapNotNull { i ->
-              stripper.startPage = i + 1
-              stripper.endPage = i + 1
-              val text = runCatching { stripper.getText(doc) }.getOrNull() ?: ""
-              if (text.lowercase().replace(Regex("\\s+"), " ").contains(needle)) i else null
-            }
-          }
-        }
+      val result = withContext(Dispatchers.Default) {
+        com.nekonaru.pedeef.engine.searchPdf(bytes, q, ToolContext.cacheDir)
       }
-      matches = hits
+      matches = result.pages
+      highlights = result.boxes
       matchIndex = 0
       searching = false
     }
@@ -223,7 +213,7 @@ fun ViewerScreen(onBack: () -> Unit) {
             if (m.isNotEmpty()) {
               IconButton(onClick = { matchIndex = (matchIndex - 1 + m.size) % m.size; scope.launch { listState.animateScrollToItem(m[matchIndex]) } }) { Icon(Icons.Default.KeyboardArrowUp, contentDescription = s.prevMatch) }
               IconButton(onClick = { matchIndex = (matchIndex + 1) % m.size; scope.launch { listState.animateScrollToItem(m[matchIndex]) } }) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = s.nextMatch) }
-              IconButton(onClick = { matches = null; query = "" }) { Icon(Icons.Outlined.Close, contentDescription = s.cancel) }
+              IconButton(onClick = { matches = null; highlights = null; query = "" }) { Icon(Icons.Outlined.Close, contentDescription = s.cancel) }
             }
           }
         }
@@ -244,7 +234,7 @@ fun ViewerScreen(onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxSize(),
       ) {
-        items(sizes.size) { i -> PageItem(bytes, i, sizes[i], matches?.contains(i) == true) }
+        items(sizes.size) { i -> PageItem(bytes, i, sizes[i], matches?.contains(i) == true, highlights?.get(i) ?: emptyList()) }
       }
       // Bottom page indicator + optional thumbnail strip
       Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp)) {
@@ -284,22 +274,35 @@ fun ViewerScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, isMatch: Boolean) {
+private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, isMatch: Boolean, highlights: List<android.graphics.RectF> = emptyList()) {
   val image by produceState<android.graphics.Bitmap?>(initialValue = null, bytes, index) {
     value = com.nekonaru.pedeef.ui.kit.renderPage(bytes, index, 1200, ToolContext.cacheDir)
   }
   val ratio = size.first.toFloat() / size.second.toFloat()
-  Surface(
-    shape = RoundedCornerShape(4.dp),
-    color = androidx.compose.ui.graphics.Color.White,
-    border = if (isMatch) androidx.compose.foundation.BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
-    modifier = Modifier.fillMaxWidth().aspectRatio(ratio),
-  ) {
-    val bmp = image
-    if (bmp != null) {
-      Image(bmp.asImageBitmap(), contentDescription = "Page ${index + 1}", modifier = Modifier.fillMaxSize())
-    } else {
-      Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(strokeWidth = 2.dp) }
+  Box(Modifier.fillMaxWidth().aspectRatio(ratio)) {
+    Surface(
+      shape = RoundedCornerShape(4.dp),
+      color = androidx.compose.ui.graphics.Color.White,
+      border = if (isMatch) androidx.compose.foundation.BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
+      modifier = Modifier.fillMaxSize(),
+    ) {
+      val bmp = image
+      if (bmp != null) {
+        Image(bmp.asImageBitmap(), contentDescription = "Page ${index + 1}", modifier = Modifier.fillMaxSize())
+      } else {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(strokeWidth = 2.dp) }
+      }
+    }
+    if (highlights.isNotEmpty()) {
+      androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+        for (h in highlights) {
+          drawRect(
+            color = androidx.compose.ui.graphics.Color(0xFFFFD54F).copy(alpha = 0.45f),
+            topLeft = androidx.compose.ui.geometry.Offset(h.left * this.size.width, h.top * this.size.height),
+            size = androidx.compose.ui.geometry.Size((h.right - h.left) * this.size.width, (h.bottom - h.top) * this.size.height),
+          )
+        }
+      }
     }
   }
 }

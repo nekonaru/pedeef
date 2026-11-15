@@ -12,7 +12,7 @@ class Strings(
   // home
   val homeTagline: String, val pinned: String, val allTools: String, val searchHint: String,
   val noMatches: String, val pin: String, val unpin: String, val scan: String, val files: String, val settings: String,
-  val onboardingTitle: String, val onboardingBody: String, val onboardingStart: String,
+  val onboardingTitle: String, val onboardingBody: String, val onboardingStart: String, val recentFiles: String,
   // sections
   val secCapture: String, val secCombineSplit: String, val secArrange: String, val secFillMarkup: String,
   val secProtectShrink: String, val secAutomate: String, val secNew: String,
@@ -33,7 +33,7 @@ class Strings(
   val scheme: String, val schemeEmber: String, val schemeCherry: String, val schemeArctic: String,
   val dynamicColor: String, val dynamicColorHint: String, val language: String, val about: String,
   val versionLabel: String, val privacyPolicy: String, val openSource: String, val clearAppData: String,
-  val clearAppDataConfirm: String, val appDataCleared: String,
+  val clearAppDataConfirm: String, val appDataCleared: String, val clearCache: String, val cacheSize: String, val cacheCleared: String,
   // scanner
   val scanFailed: String, val playServicesMissing: String, val importImages: String, val makeSearchable: String,
   val scanFilterColor: String, val scanFilterGray: String, val scanFilterBw: String, val scanFilterWhiteboard: String,
@@ -57,7 +57,7 @@ val En = Strings(
   // home
   "Every PDF tool you need, on your phone.", "Pinned", "All tools", "Search tools",
   "No tools match that search.", "Pin", "Unpin", "Scan", "Files", "Settings",
-  "Welcome to Pedeef", "Every tool runs on your phone. No account, no network, no ads. Your documents never leave the device unless you share them yourself.", "Get started",
+  "Welcome to Pedeef", "Every tool runs on your phone. No account, no network, no ads. Your documents never leave the device unless you share them yourself.", "Get started", "Recent files",
   // sections
   "Capture", "Combine & split", "Arrange pages", "Fill & mark up",
   "Protect & shrink", "Automate", "New",
@@ -78,7 +78,7 @@ val En = Strings(
   "Color scheme", "Ember", "Black Cherry", "Arctic Blue",
   "Dynamic color", "Use your wallpaper colors (Android 12+)", "Language", "About",
   "Version", "Privacy policy", "Open source licenses", "Clear saved files",
-  "Delete every file Pedeef saved? This cannot be undone.", "Saved files deleted",
+  "Delete every file Pedeef saved? This cannot be undone.", "Saved files deleted", "Clear cache", "Cache", "Cache cleared",
   // scanner
   "Scan failed. Try the gallery import instead.", "The document scanner needs Google Play services. You can import images from the gallery instead.", "Import images", "Make searchable (OCR)",
   "Color", "Grayscale", "Black & white", "Whiteboard",
@@ -102,7 +102,7 @@ val Id = Strings(
   // home
   "Semua alat PDF yang kamu butuhkan, di ponselmu.", "Disematkan", "Semua alat", "Cari alat",
   "Tidak ada alat yang cocok.", "Sematkan", "Lepas sematan", "Pindai", "File", "Pengaturan",
-  "Selamat datang di Pedeef", "Semua alat berjalan di ponselmu. Tanpa akun, tanpa jaringan, tanpa iklan. Dokumenmu tidak pernah keluar dari perangkat kecuali kamu sendiri yang membagikannya.", "Mulai",
+  "Selamat datang di Pedeef", "Semua alat berjalan di ponselmu. Tanpa akun, tanpa jaringan, tanpa iklan. Dokumenmu tidak pernah keluar dari perangkat kecuali kamu sendiri yang membagikannya.", "Mulai", "File terbaru",
   // sections
   "Tangkap", "Gabung & pisah", "Atur halaman", "Isi & tandai",
   "Lindungi & perkecil", "Otomatisasi", "Baru",
@@ -123,7 +123,7 @@ val Id = Strings(
   "Skema warna", "Ember", "Black Cherry", "Arctic Blue",
   "Warna dinamis", "Ikuti warna wallpaper (Android 12+)", "Bahasa", "Tentang",
   "Versi", "Kebijakan privasi", "Lisensi sumber terbuka", "Hapus file tersimpan",
-  "Hapus semua file yang disimpan Pedeef? Tindakan ini tidak bisa dibatalkan.", "File tersimpan dihapus",
+  "Hapus semua file yang disimpan Pedeef? Tindakan ini tidak bisa dibatalkan.", "File tersimpan dihapus", "Hapus cache", "Cache", "Cache dihapus",
   // scanner
   "Pemindaian gagal. Coba impor dari galeri.", "Pemindai dokumen membutuhkan Google Play services. Kamu bisa mengimpor gambar dari galeri.", "Impor gambar", "Jadikan dapat dicari (OCR)",
   "Warna", "Skala abu", "Hitam putih", "Papan tulis",

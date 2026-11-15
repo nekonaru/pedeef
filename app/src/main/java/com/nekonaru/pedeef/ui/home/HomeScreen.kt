@@ -17,6 +17,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,6 +54,7 @@ import androidx.compose.material.icons.filled.VerticalSplit
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -117,7 +120,7 @@ internal val TOOL_ICONS: Map<String, androidx.compose.ui.graphics.vector.ImageVe
 )
 
 @Composable
-fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit) {
+fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onOpenViewer: (ByteArray, String) -> Unit) {
   val s = LocalPedeefStrings.current
   val indonesian = s === Id
   val context = LocalContext.current
@@ -125,6 +128,9 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit) {
   val pinnedIds by Pins.ids.collectAsState()
   var query by remember { mutableStateOf("") }
   var section by remember { mutableStateOf(-1) }
+  val recent by androidx.compose.runtime.produceState<List<com.nekonaru.pedeef.data.FileEntry>>(initialValue = emptyList()) {
+    value = com.nekonaru.pedeef.data.RecentFiles.list(context)
+  }
 
   val q = query.trim().lowercase()
   fun matches(t: Tool): Boolean {
@@ -199,6 +205,20 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit) {
           }
         }
         Box(Modifier.height(12.dp))
+        // Recent files strip
+        if (recent.isNotEmpty()) {
+          Column(modifier = Modifier.padding(bottom = 12.dp)) {
+            Text(s.recentFiles.uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 4.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+              items(recent) { entry ->
+                RecentCard(entry) {
+                  val bytes = runCatching { entry.file.readBytes() }.getOrNull()
+                  if (bytes != null) onOpenViewer(bytes, entry.name)
+                }
+              }
+            }
+          }
+        }
         Row(
           horizontalArrangement = Arrangement.spacedBy(8.dp),
           modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -266,6 +286,40 @@ private fun ToolCard(tool: Tool, indonesian: Boolean, pinnedIds: List<String>, o
       }
       Text(tool.title(indonesian), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 10.dp))
       Text(tool.desc(indonesian), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
+    }
+  }
+}
+
+@Composable
+private fun RecentCard(entry: com.nekonaru.pedeef.data.FileEntry, onClick: () -> Unit) {
+  val date = remember { java.text.SimpleDateFormat("d MMM", java.util.Locale.getDefault()).format(java.util.Date(entry.modified)) }
+  Surface(
+    onClick = onClick,
+    shape = RoundedCornerShape(16.dp),
+    tonalElevation = 2.dp,
+    modifier = Modifier.width(150.dp),
+  ) {
+    Column(Modifier.padding(12.dp)) {
+      Box(
+        Modifier.size(40.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+        contentAlignment = Alignment.Center,
+      ) {
+        Icon(Icons.Default.Article, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(20.dp))
+      }
+      Text(
+        entry.name,
+        style = MaterialTheme.typography.bodyMedium,
+        fontWeight = FontWeight.Medium,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.padding(top = 8.dp),
+      )
+      Text(
+        "${date}  �  ${com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)}",
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = 2.dp),
+      )
     }
   }
 }
