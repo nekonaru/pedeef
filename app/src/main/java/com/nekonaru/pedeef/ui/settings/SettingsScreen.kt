@@ -70,7 +70,7 @@ import com.nekonaru.pedeef.ui.theme.Dimens
 import kotlinx.coroutines.launch
 import java.io.File
 
-const val PEDEEF_VERSION = "1.3.0"
+const val PEDEEF_VERSION = "1.4.0"
 
 private const val PRIVACY_EN = """Pedeef is built to be private:
 
@@ -143,6 +143,7 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
 
   val totalSize = remember(refresh) { FilesStore.totalSize(infoRoot) }
   val fileCount = remember(refresh) { FilesStore.countIn(infoRoot) }
+  val cacheSize = remember(refresh) { context.cacheDir.walkTopDown().filter { it.isFile }.sumOf { it.length() } }
   val granted = storageRoot != null
 
   fun checkUpdate() {
@@ -258,6 +259,12 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
         if (!granted) {
           ListRow(Icons.Default.FolderOpen, s.storageAccessButton, s.storageAccessBody, onClick = { PublicFiles.requestManageAllFilesAccess(context) })
         }
+        ListRow(Icons.Default.FolderOpen, s.clearCache, fmtSize(cacheSize), onClick = {
+          context.cacheDir.listFiles()?.forEach { f ->
+            if (f.isFile && listOf("ocr-", "redact-", "export-", "viewer-", "page-", "pagetext-", "search-", "sizes-", "share").any { f.name.startsWith(it) }) f.delete()
+          }
+          refresh++
+        })
         ListRow(Icons.Default.Delete, s.clearAppData, null, onClick = { showClear = true }, danger = true)
       }
 

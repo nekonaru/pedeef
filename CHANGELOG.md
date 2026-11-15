@@ -2,6 +2,24 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.4.0
+
+Search highlights, recent files and cache control: the audit goes deeper.
+
+### New features
+
+- **Search highlights in the viewer.** Find a phrase and every page with a hit is highlighted on the page itself; tap the grid icon for page thumbnails.
+- **Recent files on Home.** The five most recently changed PDFs, one tap to open.
+
+### Improvements
+
+- **Bounded walks.** File size and count scans cap out at 10,000 entries, so empty states and huge folders stay fast.
+- **Clear cache row.** One tap clears temporary files and their size is shown in Settings.
+
+### Bug fixes
+
+- **List stability.** The Files list now keys rows by absolute path, so jumping between folders does not leak state into rows.
+
 ## v1.3.0
 
 Big update: audit fixes, viewer thumbnail strip, reusable signatures and better export controls.

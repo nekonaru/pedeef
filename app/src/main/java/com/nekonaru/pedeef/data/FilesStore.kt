@@ -28,9 +28,24 @@ object FilesStore {
       .sortedWith(compareByDescending<FileEntry> { it.isDir }.thenBy { it.name.lowercase() })
   }
 
-  private fun dirSize(dir: File): Long = dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+  private fun dirSize(dir: File): Long {
+    var total = 0L
+    var n = 0
+    for (f in dir.walkTopDown()) {
+      if (!f.isFile) continue
+      total += f.length()
+      if (++n > 10_000) break // cap the walk; sizes are approximate for huge folders
+    }
+    return total
+  }
 
-  fun countIn(dir: File): Int = dir.walkTopDown().filter { it.isFile }.count()
+  fun countIn(dir: File): Int {
+    var n = 0
+    for (f in dir.walkTopDown()) {
+      if (f.isFile) { n++; if (n > 10_000) return n }
+    }
+    return n
+  }
 
   fun totalSize(root: File): Long = root.walkTopDown().filter { it.isFile }.sumOf { it.length() }
 

@@ -119,7 +119,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Ekstrak Teks** | Salin semua teks dari PDF ke file `.txt` biasa. |
 | **UI dwibahasa** | English dan Bahasa Indonesia, bisa diganti di Pengaturan. |
 | **Download/Pedeef** | Setiap file yang kamu simpan masuk ke folder Download/Pedeef publik, terlihat di file manager mana pun. Satu-satunya panggilan jaringan adalah cek pembaruan opsional. |
-| **Penampil bawaan** | Gulir halus, zoom, cari dengan navigasi hasil, salin teks halaman, di semua versi Android yang didukung. |
+| **Penampil bawaan** | Gulir halus, zoom, sorotan pencarian di halaman, thumbnail halaman, salin teks halaman, di semua versi Android yang didukung. |
 | **Periksa pembaruan** | Cek pembaruan sesuai permintaan ke rilis GitHub, di Pengaturan. |
 | **Sponsor** | Dukung pengembang lewat GitHub Sponsors, Saweria, SociaBuzz atau BagiBagi. |
 
@@ -156,7 +156,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.3.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-1.4.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
