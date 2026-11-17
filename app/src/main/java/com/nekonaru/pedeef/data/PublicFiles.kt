@@ -15,8 +15,7 @@ import java.io.File
  * for file managers and PDF tools. Without it, Pedeef falls back to its private app storage.
  */
 object PublicFiles {
-  /** The public folder, or null when it cannot be used (permission missing or card
-unmounted). */
+  /** The public folder, or null when it cannot be used (permission missing or card unmounted). */
   fun root(context: Context): File? {
     if (!hasAccess(context)) return null
     return runCatching {
@@ -37,21 +36,72 @@ unmounted). */
     context.startActivity(intent)
   }
 
-  /** One-time migration of files written before public storage was introduced. */
+  /**
+   * One-time migration of files written before public storage was introduced.
+   * Every source file is copied to a temp name, verified by size, renamed into place, and only then deleted.
+   * The .migrated marker is written only when every file succeeded; partial runs retry on next launch.
+   */
   fun migrateOnce(context: Context) {
     val public = root(context) ?: return
     val marker = File(public, ".migrated")
     if (marker.exists()) return
     val private = FilesStore.root(context)
-    if (private != public) {
-      runCatching {
-        private.listFiles()?.forEach { f ->
-          if (f.name == marker.name) return@forEach
-          f.copyRecursively(File(public, f.name), overwrite = false)
-          f.deleteRecursively()
+    if (private == public) {
+      runCatching { marker.writeText("1") }
+      return
+    }
+    var ok = true
+    private.listFiles()?.forEach { src ->
+      if (src.name.startsWith(".")) return@forEach
+      val dest = File(public, src.name)
+      try {
+        if (src.isDirectory) {
+          ok = ok && copyDirVerified(src, dest)
+        } else {
+          ok = ok && copyFileVerified(src, dest)
         }
+      } catch (_: Exception) {
+        ok = false
       }
     }
-    runCatching { marker.writeText("1") }
+    // Only mark migrated when everything made it, so a crash mid-copy retries instead of losing files.
+    if (ok) runCatching { marker.writeText("1") }
+  }
+
+  private fun copyDirVerified(src: File, dest: File): Boolean {
+    var ok = true
+    dest.mkdirs()
+    src.listFiles()?.forEach { child ->
+      val target = File(dest, child.name)
+      ok = ok && if (child.isDirectory) copyDirVerified(child, target) else copyFileVerified(child, target)
+    }
+    if (ok && dest.isDirectory && src.listFiles().orEmpty().all { File(dest, it.name).exists() }) {
+      src.deleteRecursively()
+    }
+    return ok
+  }
+
+  private fun copyFileVerified(src: File, dest: File): Boolean {
+    val name = dest.name
+    val parent = dest.parentFile
+    // Never clobber a file the user already has in the public folder; pick a free name instead.
+    var target = dest
+    var n = 2
+    while (target.exists()) {
+      target = File(parent, FilesStore.sanitizeName(name.substringBeforeLast('.')) + " ($n)" + (if ('.' in name) ".${name.substringAfterLast('.')}" else ""))
+      n++
+    }
+    val tmp = File(parent, target.name + ".part")
+    src.inputStream().use { input -> tmp.outputStream().use { output -> input.copyTo(output) } }
+    if (tmp.length() != src.length()) {
+      tmp.delete()
+      return false
+    }
+    if (!tmp.renameTo(target)) {
+      tmp.delete()
+      return false
+    }
+    src.delete()
+    return true
   }
 }

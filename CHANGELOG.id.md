@@ -2,6 +2,31 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.5.0
+
+Membuka PDF dari aplikasi lain, navigasi bookmark di viewer, perbaikan keamanan mendalam, dan audit lengkap.
+
+### Fitur baru
+
+- **PDF handler.** Buka PDF dari aplikasi lain atau Files; Pedeef langsung menampilkannya di viewer dan hanya disimpan ke Download/Pedeef saat kamu menekan tombol Simpan di bilah atas viewer.
+- **Navigasi bookmark.** Viewer menampilkan outline bookmark dengan ketukan sekali ke setiap bagian.
+- **Preset zoom.** Berganti 100%, 125% dan 150% langsung dari bilah atas viewer.
+
+### Peningkatan
+
+- **Redaksi lebih aman.** Daftar pembersihan tingkat dokumen kini meliputi PageLabels, Dests, file terkait, collection, open action dan piece info; entri AF tingkat halaman juga dihapus.
+- **Migrasi lebih aman.** Migrasi ke penyimpanan publik memverifikasi setiap file yang disalin berdasarkan ukuran, rename secara atomik, tidak pernah menimpa file publikmu yang sudah ada, menulis marker .migrated hanya jika semuanya berhasil, dan mengulangi salinan parsial pada peluncuran berikutnya.
+- **Berbagi lebih aman.** Share dan ekspor dinonaktifkan untuk folder; pemberian izin folder tidak pernah membocorkan seluruh direktori ke aplikasi lain.
+- **Kompresi akurat.** JPEG CMYK, YCCK dan ICCBased tidak lagi di-encode ulang; perubahan warna pada PDF terkompresi dihindari.
+- **Penanganan file terkunci.** PDF dengan owner-password saja kini terbuka tanpa prompt kata sandi (kata sandi kosong dicoba lebih dulu).
+- **Highlight halaman terputar.** Sorotan pencarian berfungsi pada halaman terputar, tidak lagi dilewatkan.
+- **Perbaikan tanda tangan berulang.** Tombol "TTD tersimpan" berfungsi kembali: tanda tangan tersimpan diterima sebagai gambar buatan aplikasi.
+
+### Perbaikan bug
+
+- **Bocor cache polos.** Gambar dan PDF share/eksport sementara dibersihkan saat startup dan baris Hapus cache mencakupnya.
+- **Kebersihan manifest.** Flag legacy external storage dihapus; izin baca dibatasi sampai API 29.
+
 ## v1.4.0
 
 Sorotan pencarian, file terbaru dan kontrol cache: audit makin dalam.

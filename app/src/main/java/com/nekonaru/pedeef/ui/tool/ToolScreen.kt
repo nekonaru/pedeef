@@ -132,11 +132,16 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
   val pdfPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
     scope.launch {
       val out = withContext(Dispatchers.IO) { uris.mapNotNull { readUri(context, it) } }
-      // Anything asking for a password is queued: decrypt on this thread, ask one at a time.
-      val plain = out.filter { !mentionsEncrypt(it.bytes) }
-      val secret = out.filter { mentionsEncrypt(it.bytes) }
+      // Owner-password-only files open with the empty string; try that before prompting.
+      val plain = ArrayList<PickedFile>()
+      val secret = ArrayList<Pair<String, ByteArray>>()
+      for (f in out) {
+        if (!mentionsEncrypt(f.bytes)) { plain.add(f); continue }
+        val unlocked = unlockBytes(f.bytes, "")
+        if (unlocked != null) plain.add(PickedFile(f.name, unlocked)) else secret.add(f.name to f.bytes)
+      }
       if (plain.isNotEmpty()) addFiles(plain)
-      if (secret.isNotEmpty()) locked = (locked ?: emptyList()) + secret.map { it.name to it.bytes }
+      if (secret.isNotEmpty()) locked = (locked ?: emptyList()) + secret
     }
   }
   val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->

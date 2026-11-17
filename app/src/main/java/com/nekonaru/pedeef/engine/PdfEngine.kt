@@ -173,6 +173,9 @@ fun compress(bytes: ByteArray, quality: Int, maxSide: Int = MAX_SIDE[quality] ?:
       val jpeg = filter == COSName.DCT_DECODE ||
         (filter is COSArray && filter.size() == 1 && filter.getObject(0) == COSName.DCT_DECODE)
       if (!jpeg) continue
+      // Only re-encode photos whose colors survive a round-trip (Device RGB/Gray). CMYK, YCCK, ICCBased stay put.
+      val colorSpaceObj = st.getDictionaryObject(COSName.COLORSPACE)
+      if (colorSpaceObj != COSName.DEVICERGB && colorSpaceObj != COSName.DEVICEGRAY) continue
       try {
         val raw = st.createRawInputStream().use { it.readBytes() }
         val out = recompressJpeg(raw, quality, maxSide) ?: continue

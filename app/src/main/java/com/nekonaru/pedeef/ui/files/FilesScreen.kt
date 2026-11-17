@@ -124,6 +124,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   }
 
   fun shareFile(entry: FileEntry) {
+    if (entry.isDir) return // folders do not get shared; sharing a folder would grant read access to its files
     val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.files", entry.file)
     val intent = Intent(Intent.ACTION_SEND).apply {
       type = FilesStore.mimeOf(entry.name)
@@ -261,14 +262,20 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
               )
             }
-            IconButton(onClick = { shareFile(entry) }) { Icon(Icons.Default.Share, contentDescription = s.share) }
+            if (!entry.isDir) {
+              IconButton(onClick = { shareFile(entry) }) { Icon(Icons.Default.Share, contentDescription = s.share) }
+            } else {
+              Box(Modifier.size(48.dp))
+            }
             var menu by remember(entry.file.path) { mutableStateOf(false) }
             Box {
               IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, contentDescription = null) }
               DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 DropdownMenuItem(text = { Text(s.rename) }, leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }, onClick = { menu = false; renameTarget = entry; renameText = entry.name })
                 DropdownMenuItem(text = { Text(s.moveTo) }, leadingIcon = { Icon(Icons.Default.DriveFileMove, contentDescription = null) }, onClick = { menu = false; moveTarget = entry })
-                DropdownMenuItem(text = { Text(s.exportTo) }, leadingIcon = { Icon(Icons.Default.SaveAlt, contentDescription = null) }, onClick = { menu = false; exportTargetHolder = entry; exportLauncher.launch(entry.name) })
+                if (!entry.isDir) {
+                  DropdownMenuItem(text = { Text(s.exportTo) }, leadingIcon = { Icon(Icons.Default.SaveAlt, contentDescription = null) }, onClick = { menu = false; exportTargetHolder = entry; exportLauncher.launch(entry.name) })
+                }
                 DropdownMenuItem(text = { Text(s.delete) }, leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }, onClick = { menu = false; deleteTarget = entry })
               }
             }

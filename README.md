@@ -119,9 +119,10 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Extract Text** | Copy all text from a PDF into a plain `.txt` file. |
 | **Bilingual UI** | English and Bahasa Indonesia, switchable in Settings. |
 | **Download/Pedeef** | Every file you save lands in the public Download/Pedeef folder, visible in any file manager. The only network call is the optional update check. |
-| **Built-in viewer** | Smooth scrolling, zoom, in-page search highlights, page thumbnails, copy page text, on every supported Android version. |
+| **Built-in viewer** | Smooth scrolling, zoom presets (100/125/150%), bookmark navigation, in-page search highlights, page thumbnails, copy page text, on every supported Android version. |
 | **Check for updates** | On-demand update check against GitHub releases, in Settings. |
 | **Sponsor** | Support the developer via GitHub Sponsors, Saweria, SociaBuzz or BagiBagi. |
+| **PDF handler** | Open PDFs sent from other apps, view them in Pedeef and optionally save them to Download/Pedeef. |
 
 ---
 
@@ -156,7 +157,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 ### Option A: Download the APK (easiest)
 
 1. Open the [latest release](https://github.com/nekonaru/pedeef/releases/latest).
-2. Download `pedeef-1.4.0.apk` (signed with the app's built-in debug key).
+2. Download `pedeef-1.5.0.apk` (signed with the app's built-in debug key).
 3. Tap the file to install. If Android warns about unknown sources, allow installing from your browser or file manager.
 4. Open Pedeef. On first use of the Files tab, allow the file access it asks for so your files land in Download/Pedeef.
 

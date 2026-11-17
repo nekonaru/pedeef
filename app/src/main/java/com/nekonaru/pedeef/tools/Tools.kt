@@ -295,8 +295,9 @@ val TOOLS: List<Tool> = listOf(
         File(ToolContext.filesDir, "sign-images").canonicalFile.path, // current save location
         File(ToolContext.cacheDir, "sign-images").canonicalFile.path, // legacy cache location
       )
-      val inSignDir = signDirs.any { f.canonicalFile.path.startsWith(it + File.separator) }
-      if (!inSignDir) fail("A picture added on page ${item.page + 1} is not a signature image created by this app.")
+      val exactOk = f.canonicalFile.path == File(ToolContext.filesDir, "signature.png").canonicalFile.path
+      val dirOk = signDirs.any { f.canonicalFile.path.startsWith(it + File.separator) }
+      if (!exactOk && !dirOk) fail("A picture added on page ${item.page + 1} is not a signature image created by this app.")
       if (!f.exists()) fail("A picture added on page ${item.page + 1} is no longer available. Remove it and add it again.")
       images[item.uri] = f.readBytes()
     }

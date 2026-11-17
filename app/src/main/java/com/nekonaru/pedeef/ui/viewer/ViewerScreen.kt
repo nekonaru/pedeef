@@ -14,11 +14,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -26,6 +30,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmarks
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Search
@@ -95,6 +102,11 @@ fun ViewerScreen(onBack: () -> Unit) {
   var pageTextIndex by remember { mutableStateOf<Int?>(null) }
   var copyMessage by remember { mutableStateOf<String?>(null) }
   var showThumbs by remember { mutableStateOf(false) }
+  var showBookmarks by remember { mutableStateOf(false) }
+  var zoomLevel by remember { mutableStateOf(0) } // 0 = 100%, 1 = 125%, 2 = 150%
+  val zoomFactor = when (zoomLevel) { 0 -> 1f; 1 -> 1.25f; else -> 1.5f }
+  var savedMessage by remember { mutableStateOf<String?>(null) }
+  var persisted by remember { mutableStateOf(com.nekonaru.pedeef.ui.ViewerPayload.persisted) }
   val listState = rememberLazyListState()
   val firstVisible by remember { androidx.compose.runtime.derivedStateOf { listState.firstVisibleItemIndex } }
 
@@ -108,12 +120,18 @@ fun ViewerScreen(onBack: () -> Unit) {
   }
 
   if (mentionsEncrypt(bytes)) {
+    val unlocked = remember(bytes) { unlockBytes(bytes, "") }
+    if (unlocked != null) {
+      payload = unlocked
+      com.nekonaru.pedeef.ui.ViewerPayload.bytes = unlocked
+      return
+    }
     PasswordDialog(
       title = s.passwordPrompt,
       error = passwordError,
       onSubmit = { pw ->
-        val unlocked = unlockBytes(bytes, pw)
-        if (unlocked == null) passwordError = s.passwordWrong else { payload = unlocked; com.nekonaru.pedeef.ui.ViewerPayload.bytes = unlocked }
+        val unlockedWithPw = unlockBytes(bytes, pw)
+        if (unlockedWithPw == null) passwordError = s.passwordWrong else { payload = unlockedWithPw; com.nekonaru.pedeef.ui.ViewerPayload.bytes = unlockedWithPw }
       },
       onDismiss = onBack,
     )
@@ -173,6 +191,22 @@ fun ViewerScreen(onBack: () -> Unit) {
     }
   }
 
+  fun saveToFiles() {
+    scope.launch {
+      val public = com.nekonaru.pedeef.data.PublicFiles.root(context)
+      val dir = public ?: com.nekonaru.pedeef.data.FilesStore.root(context)
+      val base = com.nekonaru.pedeef.data.FilesStore.sanitizeName(name.removeSuffix(".pdf").ifEmpty { "document" })
+      val file = com.nekonaru.pedeef.data.FilesStore.saveBytes(dir, null, base, "pdf", bytes)
+      persisted = true
+      com.nekonaru.pedeef.ui.ViewerPayload.persisted = true
+      savedMessage = (if (public != null) s.savedToDownload else s.savedToApp) + ": " + file.name
+    }
+  }
+
+  val outline by androidx.compose.runtime.produceState<List<Pair<String, Int>>>(initialValue = emptyList(), bytes) {
+    value = withContext(Dispatchers.IO) { runCatching { com.nekonaru.pedeef.engine.readOutline(bytes) }.getOrDefault(emptyList()) }
+  }
+
   val n = sizes?.size ?: 0
   val currentPage = if (n > 0) (firstVisible + 1).coerceIn(1, n) else 0
 
@@ -183,6 +217,13 @@ fun ViewerScreen(onBack: () -> Unit) {
           title = { Text(name, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
           navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = s.back) } },
           actions = {
+            if (outline.isNotEmpty()) {
+              IconButton(onClick = { showBookmarks = !showBookmarks }) { Icon(Icons.Default.Bookmarks, contentDescription = s.bookmarks) }
+            }
+            TextButton(onClick = { zoomLevel = (zoomLevel + 1) % 3 }) { Text("${(zoomFactor * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            if (!persisted) {
+              IconButton(onClick = { saveToFiles() }) { Icon(Icons.Default.SaveAlt, contentDescription = s.saveToFiles) }
+            }
             IconButton(onClick = { showThumbs = !showThumbs }) { Icon(Icons.Default.GridView, contentDescription = "Page thumbnails") }
             IconButton(onClick = { pageTextIndex = currentPage - 1 }) { Icon(Icons.Default.ContentCopy, contentDescription = s.copyPageText) }
             IconButton(onClick = { shareExternally() }) { Icon(Icons.Default.OpenInNew, contentDescription = s.openElsewhere) }
@@ -220,13 +261,23 @@ fun ViewerScreen(onBack: () -> Unit) {
         copyMessage?.let {
           Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp))
         }
+        savedMessage?.let {
+          Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp))
+        }
       }
     },
   ) { padding ->
-    Box(Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surfaceVariant)) {
+    BoxWithConstraints(
+      Modifier
+        .fillMaxSize()
+        .padding(padding)
+        .background(MaterialTheme.colorScheme.surfaceVariant)
+        .horizontalScroll(rememberScrollState()),
+    ) {
+      val viewport = maxWidth
       if (sizes == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        return@Box
+        return@BoxWithConstraints
       }
       LazyColumn(
         state = listState,
@@ -234,7 +285,37 @@ fun ViewerScreen(onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxSize(),
       ) {
-        items(sizes.size) { i -> PageItem(bytes, i, sizes[i], matches?.contains(i) == true, highlights?.get(i) ?: emptyList()) }
+        items(sizes.size) { i -> PageItem(bytes, i, sizes[i], viewport, zoomFactor, matches?.contains(i) == true, highlights?.get(i) ?: emptyList()) }
+      }
+      // Bookmarks panel overlay (top-aligned)
+      androidx.compose.animation.AnimatedVisibility(
+        visible = showBookmarks,
+        modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp),
+        enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(160)),
+        exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(110)),
+      ) {
+        Surface(
+          color = MaterialTheme.colorScheme.surface.copy(alpha = 0.97f),
+          shape = RoundedCornerShape(18.dp),
+          modifier = Modifier.padding(8.dp).width(340.dp).heightIn(max = 420.dp),
+        ) {
+          LazyColumn(contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp)) {
+            items(outline) { (title, page) ->
+              Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .clip(RoundedCornerShape(10.dp))
+                  .clickable { scope.launch { listState.animateScrollToItem(page) }; showBookmarks = false }
+                  .padding(horizontal = 12.dp, vertical = 8.dp),
+              ) {
+                Icon(Icons.Default.BookmarkBorder, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(title, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.padding(start = 10.dp).weight(1f))
+                Text("${page + 1}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+            }
+          }
+        }
       }
       // Bottom page indicator + optional thumbnail strip
       Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp)) {
@@ -274,12 +355,12 @@ fun ViewerScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, isMatch: Boolean, highlights: List<android.graphics.RectF> = emptyList()) {
-  val image by produceState<android.graphics.Bitmap?>(initialValue = null, bytes, index) {
-    value = com.nekonaru.pedeef.ui.kit.renderPage(bytes, index, 1200, ToolContext.cacheDir)
+private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewport: androidx.compose.ui.unit.Dp, zoomFactor: Float, isMatch: Boolean, highlights: List<android.graphics.RectF> = emptyList()) {
+  val image by produceState<android.graphics.Bitmap?>(initialValue = null, bytes, index, zoomFactor) {
+    value = com.nekonaru.pedeef.ui.kit.renderPage(bytes, index, (1200 * zoomFactor).toInt(), ToolContext.cacheDir)
   }
   val ratio = size.first.toFloat() / size.second.toFloat()
-  Box(Modifier.fillMaxWidth().aspectRatio(ratio)) {
+  Box(Modifier.width(viewport * zoomFactor).aspectRatio(ratio)) {
     Surface(
       shape = RoundedCornerShape(4.dp),
       color = androidx.compose.ui.graphics.Color.White,
