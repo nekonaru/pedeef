@@ -42,11 +42,16 @@ object UpdateCheck {
         setRequestProperty("Accept", "application/vnd.github+json")
         setRequestProperty("User-Agent", "Pedeef-Android")
       }
-      val code = conn.responseCode
-      if (code != 200) return@withContext UpdateResult.Failed("GitHub returned $code")
-      val body = conn.inputStream.use { it.readBytes() }.decodeToString()
-      val tag = json.parseToJsonElement(body).jsonObject["tag_name"]?.jsonPrimitive?.contentOrNull ?: return@withContext UpdateResult.Failed("no tag")
-      if (compareTag(tag, currentVersion) > 0) UpdateResult.UpdateAvailable(tag) else UpdateResult.UpToDate(tag)
+      var code = -1
+      try {
+        code = conn.responseCode
+        if (code != 200) return@withContext UpdateResult.Failed("GitHub returned $code")
+        val body = conn.inputStream.use { it.readBytes() }.decodeToString()
+        val tag = json.parseToJsonElement(body).jsonObject["tag_name"]?.jsonPrimitive?.contentOrNull ?: return@withContext UpdateResult.Failed("no tag")
+        if (compareTag(tag, currentVersion) > 0) UpdateResult.UpdateAvailable(tag) else UpdateResult.UpToDate(tag)
+      } finally {
+        runCatching { conn.disconnect() }
+      }
     } catch (e: Exception) {
       UpdateResult.Failed(e.message ?: "network error")
     }

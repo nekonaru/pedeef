@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SaveAlt
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
@@ -112,6 +113,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   var currentDir by remember(root) { mutableStateOf(root) }
   var query by remember { mutableStateOf("") }
   var refreshTick by remember { mutableStateOf(0) }
+  var sort by remember { mutableStateOf("name") } // name | recent | size
   var showNewFolder by remember { mutableStateOf(false) }
   var renameTarget by remember { mutableStateOf<FileEntry?>(null) }
   var renameText by remember { mutableStateOf("") }
@@ -119,8 +121,13 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   var moveTarget by remember { mutableStateOf<FileEntry?>(null) }
   var busy by remember { mutableStateOf(false) }
 
-  val items = remember(currentDir, query, refreshTick) {
-    if (query.isBlank()) FilesStore.list(currentDir) else FilesStore.search(root, query)
+  val items = remember(currentDir, query, refreshTick, sort) {
+    val raw = if (query.isBlank()) FilesStore.list(currentDir) else FilesStore.search(root, query)
+    when (sort) {
+      "recent" -> raw.sortedByDescending { it.modified }
+      "size" -> raw.sortedByDescending { it.size }
+      else -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenBy { it.name.lowercase(java.util.Locale.getDefault()) })
+    }
   }
 
   fun shareFile(entry: FileEntry) {
@@ -207,6 +214,15 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
             }
           },
           actions = {
+            var sortMenu by remember { mutableStateOf(false) }
+            Box {
+              IconButton(onClick = { sortMenu = true }) { Icon(Icons.Default.Sort, contentDescription = s.sortName) }
+              DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
+                listOf("name" to s.sortName, "recent" to s.sortDate, "size" to s.sortSize).forEach { (key, label) ->
+                  DropdownMenuItem(text = { Text(label) }, onClick = { sort = key; sortMenu = false })
+                }
+              }
+            }
             IconButton(onClick = { showNewFolder = true }) { Icon(Icons.Default.CreateNewFolder, contentDescription = s.newFolder) }
           },
         )

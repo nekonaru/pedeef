@@ -123,6 +123,9 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Periksa pembaruan** | Cek pembaruan sesuai permintaan ke rilis GitHub, di Pengaturan. |
 | **Sponsor** | Dukung pengembang lewat GitHub Sponsors, Saweria, SociaBuzz atau BagiBagi. |
 | **PDF handler** | Buka PDF dari aplikasi lain, lihat di Pedeef, dan simpan ke Download/Pedeef kalau kamu mau. |
+| **Cetak ke printer** | Cetak PDF apa pun langsung dari dialog cetak sistem. |
+| **Urutkan file** | Urutkan file berdasarkan nama, tanggal atau ukuran di tab Files. |
+| **Putar semua** | Putar semua halaman di Atur Halaman dengan satu ketukan. |
 
 ---
 
@@ -157,7 +160,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.5.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-1.6.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 

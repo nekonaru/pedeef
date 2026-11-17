@@ -3,73 +3,72 @@ package com.nekonaru.pedeef.ui.viewer
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.SaveAlt
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.SaveAlt
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedIconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import com.nekonaru.pedeef.engine.extractText
 import com.nekonaru.pedeef.engine.mentionsEncrypt
 import com.nekonaru.pedeef.engine.unlockBytes
 import com.nekonaru.pedeef.engine.withTempPdf
@@ -80,7 +79,6 @@ import com.nekonaru.pedeef.ui.kit.pageSizesOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,13 +117,9 @@ fun ViewerScreen(onBack: () -> Unit) {
     return
   }
 
-  if (mentionsEncrypt(bytes)) {
-    val unlocked = remember(bytes) { unlockBytes(bytes, "") }
-    if (unlocked != null) {
-      payload = unlocked
-      com.nekonaru.pedeef.ui.ViewerPayload.bytes = unlocked
-      return
-    }
+  val decrypted = remember(bytes) { if (mentionsEncrypt(bytes)) unlockBytes(bytes, "") else null }
+  val working = decrypted ?: bytes
+  if (mentionsEncrypt(working)) {
     PasswordDialog(
       title = s.passwordPrompt,
       error = passwordError,
@@ -137,9 +131,10 @@ fun ViewerScreen(onBack: () -> Unit) {
     )
     return
   }
+  if (decrypted != null) com.nekonaru.pedeef.ui.ViewerPayload.bytes = decrypted
 
-  val sizesState = produceState<List<Pair<Int, Int>>?>(initialValue = null, bytes) {
-    value = runCatching { pageSizesOf(bytes, ToolContext.cacheDir) }.getOrNull()
+  val sizesState = produceState<List<Pair<Int, Int>>?>(initialValue = null, working) {
+    value = runCatching { pageSizesOf(working, ToolContext.cacheDir) }.getOrNull()
   }
   val sizes = sizesState.value
 
@@ -150,7 +145,7 @@ fun ViewerScreen(onBack: () -> Unit) {
   LaunchedEffect(pageTextIndex) {
     val i = pageTextIndex ?: return@LaunchedEffect
     val text = withContext(Dispatchers.Default) {
-      withTempPdf(bytes, ToolContext.cacheDir, "pagetext") { tmp ->
+      withTempPdf(working, ToolContext.cacheDir, "pagetext") { tmp ->
         com.tom_roush.pdfbox.pdmodel.PDDocument.load(tmp).use { doc ->
           val stripper = com.tom_roush.pdfbox.text.PDFTextStripper().apply { startPage = i + 1; endPage = i + 1 }
           stripper.getText(doc)
@@ -167,7 +162,7 @@ fun ViewerScreen(onBack: () -> Unit) {
     scope.launch {
       searching = true
       val result = withContext(Dispatchers.Default) {
-        com.nekonaru.pedeef.engine.searchPdf(bytes, q, ToolContext.cacheDir)
+        com.nekonaru.pedeef.engine.searchPdf(working, q, ToolContext.cacheDir)
       }
       matches = result.pages
       highlights = result.boxes
@@ -180,7 +175,7 @@ fun ViewerScreen(onBack: () -> Unit) {
     scope.launch {
       val file = withContext(Dispatchers.IO) {
         val dir = File(context.cacheDir, "share").apply { mkdirs() }
-        File(dir, com.nekonaru.pedeef.data.FilesStore.sanitizeName(name.removeSuffix(".pdf")) + ".pdf").apply { writeBytes(bytes) }
+        File(dir, com.nekonaru.pedeef.data.FilesStore.sanitizeName(name.removeSuffix(".pdf")) + ".pdf").apply { writeBytes(working) }
       }
       val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.files", file)
       val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -196,15 +191,19 @@ fun ViewerScreen(onBack: () -> Unit) {
       val public = com.nekonaru.pedeef.data.PublicFiles.root(context)
       val dir = public ?: com.nekonaru.pedeef.data.FilesStore.root(context)
       val base = com.nekonaru.pedeef.data.FilesStore.sanitizeName(name.removeSuffix(".pdf").ifEmpty { "document" })
-      val file = com.nekonaru.pedeef.data.FilesStore.saveBytes(dir, null, base, "pdf", bytes)
+      val file = com.nekonaru.pedeef.data.FilesStore.saveBytes(dir, null, base, "pdf", working)
       persisted = true
       com.nekonaru.pedeef.ui.ViewerPayload.persisted = true
       savedMessage = (if (public != null) s.savedToDownload else s.savedToApp) + ": " + file.name
     }
   }
 
-  val outline by androidx.compose.runtime.produceState<List<Pair<String, Int>>>(initialValue = emptyList(), bytes) {
-    value = withContext(Dispatchers.IO) { runCatching { com.nekonaru.pedeef.engine.readOutline(bytes) }.getOrDefault(emptyList()) }
+  fun printPdf() {
+    com.nekonaru.pedeef.engine.printPdf(context, working, name)
+  }
+
+  val outline by produceState<List<Pair<String, Int>>>(initialValue = emptyList(), working) {
+    value = withContext(Dispatchers.IO) { runCatching { com.nekonaru.pedeef.engine.readOutline(working) }.getOrDefault(emptyList()) }
   }
 
   val n = sizes?.size ?: 0
@@ -220,11 +219,14 @@ fun ViewerScreen(onBack: () -> Unit) {
             if (outline.isNotEmpty()) {
               IconButton(onClick = { showBookmarks = !showBookmarks }) { Icon(Icons.Default.Bookmarks, contentDescription = s.bookmarks) }
             }
-            TextButton(onClick = { zoomLevel = (zoomLevel + 1) % 3 }) { Text("${(zoomFactor * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            TextButton(onClick = { zoomLevel = (zoomLevel + 1) % 3 }) {
+              Text("${(zoomFactor * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            }
             if (!persisted) {
               IconButton(onClick = { saveToFiles() }) { Icon(Icons.Default.SaveAlt, contentDescription = s.saveToFiles) }
             }
             IconButton(onClick = { showThumbs = !showThumbs }) { Icon(Icons.Default.GridView, contentDescription = "Page thumbnails") }
+            IconButton(onClick = { printPdf() }) { Icon(Icons.Default.Print, contentDescription = s.print) }
             IconButton(onClick = { pageTextIndex = currentPage - 1 }) { Icon(Icons.Default.ContentCopy, contentDescription = s.copyPageText) }
             IconButton(onClick = { shareExternally() }) { Icon(Icons.Default.OpenInNew, contentDescription = s.openElsewhere) }
           },
@@ -271,21 +273,23 @@ fun ViewerScreen(onBack: () -> Unit) {
       Modifier
         .fillMaxSize()
         .padding(padding)
-        .background(MaterialTheme.colorScheme.surfaceVariant)
-        .horizontalScroll(rememberScrollState()),
+        .background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
       val viewport = maxWidth
       if (sizes == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         return@BoxWithConstraints
       }
-      LazyColumn(
-        state = listState,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxSize(),
-      ) {
-        items(sizes.size) { i -> PageItem(bytes, i, sizes[i], viewport, zoomFactor, matches?.contains(i) == true, highlights?.get(i) ?: emptyList()) }
+      // Scroll the pages horizontally when zoomed in; overlays stay pinned to the viewport.
+      Box(Modifier.fillMaxSize().horizontalScroll(rememberScrollState())) {
+        LazyColumn(
+          state = listState,
+          contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp),
+          verticalArrangement = Arrangement.spacedBy(12.dp),
+          modifier = Modifier.fillMaxSize(),
+        ) {
+          items(sizes.size) { i -> PageItem(working, i, sizes[i], viewport, zoomFactor, matches?.contains(i) == true, highlights?.get(i) ?: emptyList()) }
+        }
       }
       // Bookmarks panel overlay (top-aligned)
       androidx.compose.animation.AnimatedVisibility(
@@ -334,7 +338,7 @@ fun ViewerScreen(onBack: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 8.dp),
               ) {
-                items(sizes.size) { i -> ThumbItem(bytes, i, i == currentPage - 1) { scope.launch { listState.animateScrollToItem(i) } } }
+                items(sizes.size) { i -> ThumbItem(working, i, i == currentPage - 1) { scope.launch { listState.animateScrollToItem(i) } } }
               }
             }
           }
@@ -364,7 +368,11 @@ private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewpor
     Surface(
       shape = RoundedCornerShape(4.dp),
       color = androidx.compose.ui.graphics.Color.White,
-      border = if (isMatch) androidx.compose.foundation.BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
+      border = if (isMatch) {
+        androidx.compose.foundation.BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
+      } else {
+        null
+      },
       modifier = Modifier.fillMaxSize(),
     ) {
       val bmp = image
@@ -379,8 +387,8 @@ private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewpor
         for (h in highlights) {
           drawRect(
             color = androidx.compose.ui.graphics.Color(0xFFFFD54F).copy(alpha = 0.45f),
-            topLeft = androidx.compose.ui.geometry.Offset(h.left * this.size.width, h.top * this.size.height),
-            size = androidx.compose.ui.geometry.Size((h.right - h.left) * this.size.width, (h.bottom - h.top) * this.size.height),
+            topLeft = Offset(h.left * this.size.width, h.top * this.size.height),
+            size = Size((h.right - h.left) * this.size.width, (h.bottom - h.top) * this.size.height),
           )
         }
       }
@@ -390,7 +398,6 @@ private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewpor
 
 @Composable
 private fun ThumbItem(bytes: ByteArray, index: Int, selected: Boolean, onClick: () -> Unit) {
-  val s = LocalPedeefStrings.current
   val image by produceState<android.graphics.Bitmap?>(initialValue = null, bytes, index) {
     value = com.nekonaru.pedeef.ui.kit.renderPage(bytes, index, 180, ToolContext.cacheDir)
   }
@@ -400,11 +407,11 @@ private fun ThumbItem(bytes: ByteArray, index: Int, selected: Boolean, onClick: 
       .clickable(onClick = onClick)
       .padding(2.dp),
   ) {
-    androidx.compose.foundation.layout.Box(
+    Box(
       Modifier
         .size(52.dp)
-        .border(1.5.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-        .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+        .border(1.5.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+        .clip(RoundedCornerShape(8.dp))
         .background(androidx.compose.ui.graphics.Color.White),
       contentAlignment = Alignment.Center,
     ) {

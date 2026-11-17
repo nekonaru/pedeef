@@ -52,6 +52,23 @@ object ViewerPayload {
 
   /** True when the payload is already stored in the file tree (Files tab, tools); false for incoming VIEW/SEND copies. */
   var persisted: Boolean = true
+
+  /** Bumped on every set or clear; observe with LaunchedEffect(ViewerPayload.version). */
+  var version: Int = 0
+    private set
+
+  fun set(bytes: ByteArray?, name: String, persisted: Boolean) {
+    this.bytes = bytes
+    this.name = name
+    this.persisted = persisted
+    version = version + 1
+  }
+
+  fun clear() {
+    bytes = null
+    persisted = true
+    version = version + 1
+  }
 }
 
 private fun resolveLanguage(settings: SettingsState, systemLocales: String): Strings = when (settings.language) {
@@ -86,8 +103,8 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
   val onTab: (Tab) -> Unit = { tab = it }
   val backStack by nav.currentBackStackEntryAsState()
   val showBar = backStack?.destination?.route == "shell"
-  LaunchedEffect(Unit) {
-    // If an incoming PDF was saved by the launcher, jump straight into the viewer.
+  LaunchedEffect(ViewerPayload.version) {
+    // If an incoming PDF was saved by the launcher (or reopened from a tool), jump straight into the viewer.
     if (com.nekonaru.pedeef.ui.ViewerPayload.bytes != null && nav.currentDestination?.route == "shell") {
       nav.navigate("viewer")
     }
@@ -138,14 +155,12 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
                 onOpenTool = { nav.navigate("tool/$it") },
                 onScan = { nav.navigate("scan") },
                 onOpenViewer = { bytes, name ->
-                  ViewerPayload.bytes = bytes
-                  ViewerPayload.name = name
+                  ViewerPayload.set(bytes, name, persisted = true)
                   nav.navigate("viewer")
                 },
               )
               Tab.Files -> FilesScreen(onOpenViewer = { bytes, name ->
-                ViewerPayload.bytes = bytes
-                ViewerPayload.name = name
+                ViewerPayload.set(bytes, name, persisted = true)
                 nav.navigate("viewer")
               })
               Tab.Settings -> SettingsScreen(settings = settings, update = update)
@@ -158,18 +173,16 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
             toolId = id,
             onBack = { nav.popBackStack() },
             onOpenViewer = { bytes, name ->
-              ViewerPayload.bytes = bytes
-              ViewerPayload.name = name
+              ViewerPayload.set(bytes, name, persisted = true)
               nav.navigate("viewer")
             },
           )
         }
         composable("scan") { ScannerScreen(onBack = { nav.popBackStack() }, onOpenViewer = { bytes, name ->
-          ViewerPayload.bytes = bytes
-          ViewerPayload.name = name
+          ViewerPayload.set(bytes, name, persisted = true)
           nav.navigate("viewer")
         }) }
-        composable("viewer") { ViewerScreen(onBack = { nav.popBackStack() }) }
+        composable("viewer") { ViewerScreen(onBack = { ViewerPayload.clear(); nav.popBackStack() }) }
       }
     }
   }

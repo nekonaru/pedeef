@@ -62,6 +62,7 @@ fun OrganizeEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opt
   Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Row(verticalAlignment = Alignment.CenterVertically) {
       Text("$kept / ${order.size}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+      OutlinedButton(onClick = { apply(order.map { it.copy(rot = (it.rot + 90) % 360) }) }) { Text(s.rotateAll) }
       OutlinedButton(onClick = { apply((0 until count).map { PageOrder(it) }) }) { Text("Reset") }
     }
     LazyVerticalGrid(

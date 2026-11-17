@@ -44,7 +44,8 @@ class Strings(
   val storageAccessTitle: String, val storageAccessBody: String, val storageAccessButton: String,
   val storageAccessHint: String, val storageAccessDenied: String, val storagePrivateFallback: String,
   val savedToDownload: String, val savedToApp: String,
-  val saveToFiles: String, val bookmarks: String,
+  val saveToFiles: String, val bookmarks: String, val print: String,
+  val sortName: String, val sortDate: String, val sortSize: String, val rotateAll: String,
   // update check and sponsor
   val versionRow: String, val checkingUpdates: String, val upToDate: String, val updateAvailable: String,
   val checkFailed: String, val sponsor: String, val sponsorBody: String,
@@ -89,7 +90,7 @@ val En = Strings(
   // storage access
   "File access", "Pedeef stores your PDFs and scans in Download/Pedeef so you can find them.", "Allow file access",
   "You can find every file Pedeef saves in Download/Pedeef with your file manager.", "Without access, files stay inside the app.", "Use app storage instead",
-  "Download/Pedeef", "app storage", "Save to files", "Bookmarks",
+  "Download/Pedeef", "app storage", "Save to files", "Bookmarks", "Print", "Name", "Newest", "Largest", "Rotate all",
   // update check and sponsor
   "Check for updates", "Checking…", "You are on the latest version.", "Version %1\$s is available.",
   "Could not check. Check your connection.", "Sponsor", "Pedeef is free and always will be. If it is useful to you, you can support the developer:",
@@ -134,11 +135,11 @@ val Id = Strings(
   // storage access
   "Akses file", "Pedeef menyimpan PDF dan pindaianmu di Download/Pedeef supaya mudah ditemukan.", "Izinkan akses file",
   "Kamu bisa menemukan semua file yang disimpan Pedeef di Download/Pedeef lewat file manager.", "Tanpa akses, file tersimpan di dalam aplikasi.", "Pakai penyimpanan aplikasi saja",
-  "Download/Pedeef", "penyimpanan aplikasi", "Simpan ke file", "Bookmark",
+  "Download/Pedeef", "penyimpanan aplikasi", "Simpan ke file", "Bookmark", "Cetak",
   // update check and sponsor
   "Periksa pembaruan", "Memeriksa…", "Kamu memakai versi terbaru.", "Versi %1\$s tersedia.",
   "Tidak bisa memeriksa. Periksa koneksimu.", "Sponsor", "Pedeef gratis dan akan selalu gratis. Kalau kamu merasa terbantu, kamu bisa mendukung pengembangnya:",
-  "Pengembang", "Lihat di GitHub",
+  "Pengembang", "Lihat di GitHub", "Nama", "Terbaru", "Terbesar", "Putar semua",
 )
 
 val LocalPedeefStrings = staticCompositionLocalOf { En }

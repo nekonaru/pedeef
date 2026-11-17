@@ -68,9 +68,11 @@ import com.nekonaru.pedeef.ui.kit.ListRow
 import com.nekonaru.pedeef.ui.kit.fmtSize
 import com.nekonaru.pedeef.ui.theme.Dimens
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
-const val PEDEEF_VERSION = "1.5.0"
+const val PEDEEF_VERSION = "1.6.0"
 
 private const val PRIVACY_EN = """Pedeef is built to be private:
 
@@ -141,9 +143,16 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
   var updateStatus by remember { mutableStateOf<UpdateResult?>(null) }
   var checking by remember { mutableStateOf(false) }
 
-  val totalSize = remember(refresh) { FilesStore.totalSize(infoRoot) }
-  val fileCount = remember(refresh) { FilesStore.countIn(infoRoot) }
-  val cacheSize = remember(refresh) { context.cacheDir.walkTopDown().filter { it.isFile }.sumOf { it.length() } }
+  // Size/count walks run on a background thread so opening Settings never stalls the UI.
+  val totalSize by androidx.compose.runtime.produceState(initialValue = 0L, refresh) {
+    value = withContext(Dispatchers.IO) { FilesStore.totalSize(infoRoot) }
+  }
+  val fileCount by androidx.compose.runtime.produceState(initialValue = 0, refresh) {
+    value = withContext(Dispatchers.IO) { FilesStore.countIn(infoRoot) }
+  }
+  val cacheSize by androidx.compose.runtime.produceState(initialValue = 0L, refresh) {
+    value = withContext(Dispatchers.IO) { context.cacheDir.walkTopDown().filter { it.isFile }.take(2_000).sumOf { it.length() } }
+  }
   val granted = storageRoot != null
 
   fun checkUpdate() {
