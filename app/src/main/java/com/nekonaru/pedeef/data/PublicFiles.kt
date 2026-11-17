@@ -45,6 +45,8 @@ object PublicFiles {
     val public = root(context) ?: return
     val marker = File(public, ".migrated")
     if (marker.exists()) return
+    // A previous crashed attempt may have left .part temp files; remove them.
+    public.listFiles()?.forEach { if (it.name.endsWith(".part")) it.delete() }
     val private = FilesStore.root(context)
     if (private == public) {
       runCatching { marker.writeText("1") }

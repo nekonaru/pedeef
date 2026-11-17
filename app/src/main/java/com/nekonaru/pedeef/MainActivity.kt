@@ -49,9 +49,7 @@ class MainActivity : ComponentActivity() {
     runCatching {
       val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return
       val name = uri.lastPathSegment?.substringAfterLast('/')?.substringAfterLast(':') ?: "document.pdf"
-      ViewerPayload.bytes = bytes
-      ViewerPayload.name = com.nekonaru.pedeef.data.FilesStore.sanitizeName(name.removeSuffix(".pdf")).let { if (it.isEmpty()) "document" else "$it.pdf" }
-      ViewerPayload.persisted = false
+      ViewerPayload.set(bytes, com.nekonaru.pedeef.data.FilesStore.sanitizeName(name.removeSuffix(".pdf")).let { if (it.isEmpty()) "document" else "$it.pdf" }, persisted = false)
     }
   }
 }

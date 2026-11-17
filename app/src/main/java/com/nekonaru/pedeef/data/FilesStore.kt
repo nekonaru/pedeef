@@ -47,7 +47,8 @@ object FilesStore {
     return n
   }
 
-  fun totalSize(root: File): Long = root.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+  /** Capped walk: at most 10k entries, so empty states and huge folders stay fast on the main thread. */
+  fun totalSize(root: File): Long = root.walkTopDown().filter { it.isFile }.take(10_000).sumOf { it.length() }
 
   fun search(root: File, query: String): List<FileEntry> {
     val q = query.trim().lowercase()
@@ -75,6 +76,7 @@ object FilesStore {
     require(clean.isNotEmpty()) { "Name the file." }
     val target = File(entry.file.parentFile!!, clean)
     check(insideRoot(root, target))
+    require(!target.exists()) { "A file with that name already exists." }
     require(entry.file.renameTo(target)) { "Could not rename." }
     return target
   }

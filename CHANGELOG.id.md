@@ -2,6 +2,32 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.6.0
+
+Cetak dari viewer, simpan ke file langsung dari viewer, dan penguatan audit secara menyeluruh.
+
+### Fitur baru
+
+- **Cetak.** Ikon cetak di viewer mengirim PDF yang sedang dibuka ke dialog cetak sistem; halaman dapat dicetak apa adanya.
+- **Simpan ke file dari viewer.** Buka PDF dari aplikasi lain atau Files, periksa dulu, lalu ketuk Simpan untuk menuliskannya ke Download/Pedeef (atau penyimpanan aplikasi) hanya saat kamu ingin menyimpannya.
+- **Urutkan file.** Urutkan filemu berdasarkan nama, tanggal atau ukuran di tab Files dengan menu baru.
+- **Putar semua.** Di Atur Halaman, satu ketukan memutar setiap halaman 90 derajat; setiap halaman masih bisa diputar terpisah.
+
+### Peningkatan
+
+- **Keamanan rename.** Ganti nama kini menolak menimpa file yang sudah ada, alih-alih diam-diam menghapusnya.
+- **Muatan kadaluwarsa dibersihkan.** State viewer (kata sandi, status tersimpan, zoom) tidak lagi bocor antar-PDF; kembali menutup dokumen dengan bersih.
+- **Sorotan halaman terputar diperbaiki.** Kotak sorotan hasil pencarian pada halaman dengan /Rotate diputar pada sumbu vertikal sebelum dipetakan, sehingga kotak ada di tempat yang benar.
+- **Tata letak viewer tetap.** Bookmark dan indikator halaman tidak lagi ikut bergeser ke samping saat PDF diperbesar.
+- **Perhitungan Settings dipindah ke background.** Jumlah file dan ukuran penyimpanan dihitung di thread latar dengan batas 10k entri; input tetap responsif.
+- **Bocoran koneksi diperbaiki.** Cek pembaruan memutus koneksi HTTP di setiap jalur.
+- **Buka kunci batch.** Beberapa PDF dengan kata sandi yang dipilih berurutan semuanya dibuka sebelum dialog ditutup.
+- **File .part dimigrasi dengan bersih.** File .part yang tersisa dari salinan gagal dihapus di awal migrasi.
+
+### Perbaikan bug
+
+- **Sapu cache.** File sementara share dan export dihapus saat aplikasi mulai dan melalui tombol Hapus cache.
+
 ## v1.5.0
 
 Membuka PDF dari aplikasi lain, navigasi bookmark di viewer, perbaikan keamanan mendalam, dan audit lengkap.

@@ -52,7 +52,8 @@ fun searchPdf(bytes: ByteArray, query: String, cacheDir: File): SearchResult = w
           RectF(it.left / cb.width, it.top / cb.height, it.right / cb.width, it.bottom / cb.height)
         }
       } else {
-        // Highlight boxes are stored-space; map through unrotate() to the page as displayed.
+        // Highlight boxes from PDFBox are stored-space, y measured from page top. Flip y before mapping
+        // back to the displayed page, or rotated pages get mirrored boxes.
         val cb = page.cropBox
         val collector = LineHighlight(query)
         collector.startPage = i + 1
@@ -60,7 +61,8 @@ fun searchPdf(bytes: ByteArray, query: String, cacheDir: File): SearchResult = w
         runCatching { collector.getText(doc) }
         boxes[i] = collector.boxes.map { b ->
           val f = listOf(b.left / cb.width, b.top / cb.height, (b.right - b.left) / cb.width, (b.bottom - b.top) / cb.height)
-          val u = unrotate(f, rot)
+          val f2 = listOf(f[0], 1 - f[1] - f[3], f[2], f[3])
+          val u = unrotate(f2, rot)
           RectF(u[0], u[1], u[0] + u[2], u[1] + u[3])
         }
       }

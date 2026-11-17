@@ -2,6 +2,32 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.6.0
+
+Print from the viewer, save to file from the viewer, and audit hardening across the board.
+
+### New features
+
+- **Print.** A print icon in the viewer sends the current PDF to the system print dialog; pages can be printed as-is without wrapping.
+- **Save to files from the viewer.** Open a PDF from another app or Files, inspect it, then tap Save to write it into Download/Pedeef (or app storage) only when you want it kept.
+- **Sort files.** Sort your files by name, date or size in the Files tab with the new menu.
+- **Rotate all.** In Organize Pages, one tap rotates every page by 90 degrees; individual pages can still be rotated as usual.
+
+### Improvements
+
+- **Rename safety.** Rename now refuses to overwrite an existing file instead of silently destroying it.
+- **Stale payloads cleared.** Viewer state (password, saved flag, zoom) no longer leaks between PDFs; going back closes the document cleanly.
+- **Rotated-page highlights fixed.** Search highlight boxes on pages with /Rotate are flipped on the vertical axis before mapping, so boxes land where the text actually is.
+- **Viewer layout pinned.** Bookmarks and the page indicator no longer scroll sideways with the pages when zoomed in.
+- **Settings walks off the main thread.** File counts and storage sizes are computed on a background thread with a 10k-capped size walk; UI input stays responsive.
+- **Connection leaks fixed.** Update check disconnects the HTTP connection on every path.
+- **Locked-file batch unlock.** Multiple password-protected PDFs picked in sequence are all unlocked before the dialog closes.
+- **Migration .part files cleaned.** Leftover .part files from crashed copies are removed at the start of migration.
+
+### Bug fixes
+
+- **Cache leak sweeps.** Share and export temporary files are removed at startup and by the clear-cache action.
+
 ## v1.5.0
 
 Opens PDFs from other apps, bookmark navigation in the viewer, deeper security fixes and the full audit pass.

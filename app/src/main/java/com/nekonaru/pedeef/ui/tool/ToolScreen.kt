@@ -122,9 +122,12 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
     savedMessage = null
   }
 
-  fun addFiles(new: List<PickedFile>) {
+  fun addFiles(new: List<PickedFile>, merge: Boolean = false) {
     val images = tool.input == Input.Images
-    val next = if (images || tool.input == Input.Pdfs) picked + new else new.take(1)
+    val next = when {
+      images || tool.input == Input.Pdfs || merge -> picked + new
+      else -> new.take(1)
+    }
     picked = next
     results = null
   }
@@ -166,7 +169,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
       return
     }
     unlockError = null
-    addFiles(listOf(PickedFile(name.replace(Regex("\\.pdf$", RegexOption.IGNORE_CASE), "") + ".pdf", unlocked)))
+    addFiles(listOf(PickedFile(name.replace(Regex("\\.pdf$", RegexOption.IGNORE_CASE), "") + ".pdf", unlocked)), merge = true)
     locked = q.drop(1).ifEmpty { null }
   }
 
