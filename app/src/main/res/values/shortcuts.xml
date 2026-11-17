@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="shortcut_scan_short">Scan</string>
+  <string name="shortcut_scan_long">Scan a document</string>
+  <string name="shortcut_merge_short">Merge PDFs</string>
+  <string name="shortcut_merge_long">Merge PDFs</string>
+  <string name="shortcut_sign_short">Fill &amp; sign</string>
+  <string name="shortcut_sign_long">Fill and sign a PDF</string>
+  <string name="shortcut_organize_short">Organize</string>
+  <string name="shortcut_organize_long">Organize pages</string>
+</resources>

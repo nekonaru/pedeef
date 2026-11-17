@@ -11,9 +11,11 @@ import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
 import java.io.File
 import java.io.FileOutputStream
 
-/** Sends a PDF to the system print service. The whole file is passed to the service untouched. */
-fun printPdf(context: Context, bytes: ByteArray, name: String) {
-  val tmp = File(context.cacheDir, "print-${System.currentTimeMillis()}.pdf").apply { writeBytes(bytes) }
+/** Sends a PDF to the system print service. The whole file is passed to the service untouched. Runs on a background thread. */
+suspend fun printPdf(context: Context, bytes: ByteArray, name: String) {
+  val tmp = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+    File(context.cacheDir, "print-${System.currentTimeMillis()}.pdf").apply { writeBytes(bytes) }
+  }
   val adapter = PdfPrintAdapter(tmp, name.removeSuffix(".pdf") + ".pdf")
   val pm = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
   val jobName = name.removeSuffix(".pdf").ifEmpty { "document" }
@@ -22,6 +24,12 @@ fun printPdf(context: Context, bytes: ByteArray, name: String) {
 
 private class PdfPrintAdapter(private val file: File, private val displayName: String) : PrintDocumentAdapter() {
   private fun pageCount(): Int = PDDocument.load(file).use { it.numberOfPages }
+
+  /** The service may finish without writing (user dismissed the dialog); never leave plaintext behind. */
+  override fun onFinish() {
+    file.delete()
+    super.onFinish()
+  }
 
   override fun onLayout(
     oldAttributes: android.print.PrintAttributes?,

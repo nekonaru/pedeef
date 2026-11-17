@@ -2,6 +2,35 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.7.0
+
+Mode malam, lanjut baca, pintasan launcher, ekstraksi gambar, dan audit mendalam kedua dengan perbaikannya.
+
+### Fitur baru
+
+- **Mode malam.** Penampil dapat membalik warna halaman untuk nyaman membaca di tempat gelap. Aktifkan dari baris atas penampil atau di Pengaturan pada Tampilan.
+- **Lanjut baca.** Pedeef mengingat halaman terakhir yang kamu lihat per dokumen dan membukanya di sana.
+- **Pintasan launcher.** Tahan ikon aplikasi untuk Pindai, Gabung PDF, Isi & tanda, dan Atur halaman.
+- **Ekstrak Gambar.** Alat baru: menyimpan setiap gambar yang tertanam di PDF sebagai PNG, digabung ZIP jika banyak. Ikon lebih kecil dari 48px dilewati.
+
+### Peningkatan
+
+- **Dekripsi di luar thread utama.** Membuka PDF terenkripsi tidak lagi membekukan UI; spinner muncul saat percobaan kata sandi kosong berjalan di background.
+- **Perbaikan cetak.** Menyiapkan pekerjaan cetak sekarang berjalan di thread latar, dan salinan sementara berupa teks biasa dihapus saat layanan cetak selesai tanpa menulis (misalnya saat dialog ditutup).
+- **Hapus cache benar-benar menghapus.** Baris Hapus cache kini menghapus seluruh direktori cache, termasuk salinan berbagi dan sisa cetak, bukan daftar prefix sebagian.
+- **Pemindaian file di luar thread utama.** Tab Files menampilkan dan menghitung dari thread latar; pengurutan berdasarkan tanggal atau ukuran tetap menampilkan folder lebih dulu.
+- **Pencarian dan salin anti-crash.** PDF yang rusak tidak lagi membuat crash penampil saat mencari atau menyalin teks halaman; pesan error umum ditampilkan.
+- **Penyimpanan di background.** Menyimpan hasil alat dan menyimpan dari penampil kini berjalan di thread latar dengan penanganan error, bukan di thread utama.
+- **Sumber versi tunggal.** Versi yang ditampilkan di Pengaturan dan dipakai untuk cek pembaruan kini berasal dari konfigurasi build.
+- **Perbandingan tag diperkuat.** Akhiran prarilis seperti `-beta` tidak lagi dianggap sama dengan rilis dasarnya.
+
+### Perbaikan bug
+
+- **String penghitung rusak.** Pesan "file tersimpan" setelah menyimpan hasil alat tidak lagi berisi karakter rusak.
+- **Tombol salin dinonaktifkan pada PDF kosong.** Salin teks halaman dinonaktifkan saat dokumen tidak punya halaman, alih-alih meneruskan indeks halaman negatif ke text stripper.
+- **Jumlah item folder di thread latar.** Jumlah file folder tidak lagi dihitung sinkron saat render daftar.
+- **PDF masuk tidak lagi membekukan peluncuran.** PDF yang dibuka dari aplikasi lain dibaca di thread latar.
+
 ## v1.6.0
 
 Cetak dari viewer, simpan ke file langsung dari viewer, dan penguatan audit secara menyeluruh.

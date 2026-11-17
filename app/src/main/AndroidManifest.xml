@@ -41,6 +41,15 @@
         <category android:name="android.intent.category.BROWSABLE" />
         <data android:mimeType="application/pdf" />
       </intent-filter>
+      <!-- Launcher shortcuts: scan, merge, fill & sign, organize. -->
+      <intent-filter>
+        <action android:name="com.nekonaru.pedeef.action.SCAN" />
+        <action android:name="com.nekonaru.pedeef.action.MERGE" />
+        <action android:name="com.nekonaru.pedeef.action.SIGN" />
+        <action android:name="com.nekonaru.pedeef.action.ORGANIZE" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+      <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
     </activity>
 
     <!-- Hands saved files to PDF viewers and the share sheet as content:// uris with read permission. -->

@@ -52,6 +52,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -121,12 +122,14 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   var moveTarget by remember { mutableStateOf<FileEntry?>(null) }
   var busy by remember { mutableStateOf(false) }
 
-  val items = remember(currentDir, query, refreshTick, sort) {
-    val raw = if (query.isBlank()) FilesStore.list(currentDir) else FilesStore.search(root, query)
-    when (sort) {
-      "recent" -> raw.sortedByDescending { it.modified }
-      "size" -> raw.sortedByDescending { it.size }
-      else -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenBy { it.name.lowercase(java.util.Locale.getDefault()) })
+  val items by produceState(initialValue = emptyList(), currentDir, query, refreshTick, sort) {
+    value = withContext(Dispatchers.IO) {
+      val raw = if (query.isBlank()) FilesStore.list(currentDir) else FilesStore.search(root, query)
+      when (sort) {
+        "recent" -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenByDescending { it.modified })
+        "size" -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenByDescending { it.size })
+        else -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenBy { it.name.lowercase(java.util.Locale.getDefault()) })
+      }
     }
   }
 
@@ -260,6 +263,9 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
       }
       LazyColumn(contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         items(items, key = { entry -> entry.file.absolutePath }) { entry ->
+          val itemCount by produceState(initialValue = 0, entry.file.path) {
+            value = if (entry.isDir) withContext(Dispatchers.IO) { FilesStore.countIn(entry.file) } else 0
+          }
           Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable { openEntry(entry) }.padding(horizontal = 10.dp, vertical = 10.dp),
@@ -273,7 +279,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
               Text(entry.name, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
               Text(
-                (if (entry.isDir) (FilesStore.countIn(entry.file).toString() + if (indonesian) " file" else " files") else com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)),
+                (if (entry.isDir) ("$itemCount " + if (indonesian) "file" else "files") else com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
               )

@@ -131,6 +131,39 @@ fun pdfToJpegs(bytes: ByteArray, cacheDir: File, maxWidth: Int = 2400, quality: 
 }
 
 /**
+ * Every embedded image placed on a page via a Do operator. Icons smaller than 48px are skipped.
+ * One image: a .png. More: a .zip of page-NNN-IMG.png files. Inline (BI/EI) images are not covered.
+ */
+fun extractImages(bytes: ByteArray): List<Output> {
+  val found = mutableListOf<Pair<String, ByteArray>>()
+  PDDocument.load(bytes).use { doc ->
+    for ((i, page) in doc.pages.withIndex()) {
+      val res = page.resources ?: continue
+      for (name in res.xObjectNames) {
+        val x = runCatching { res.getXObject(name) }.getOrNull() as? com.tom_roush.pdfbox.pdmodel.graphics.image.PDImageXObject ?: continue
+        val bmp = runCatching { x.image }.getOrNull() ?: continue
+        if (bmp.width < 48 || bmp.height < 48) { bmp.recycle(); continue }
+        val out = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+        bmp.recycle()
+        found += "page-%03d-%s".format(i + 1, name.name.replace(Regex("[^A-Za-z0-9_-]"), "_")) to out.toByteArray()
+      }
+    }
+  }
+  if (found.isEmpty()) fail("This PDF has no extractable embedded images.")
+  if (found.size == 1) return listOf(Output(found[0].first, found[0].second, ext = "png"))
+  val out = ByteArrayOutputStream()
+  ZipOutputStream(BufferedOutputStream(out)).use { zip ->
+    for ((name, png) in found) {
+      zip.putNextEntry(ZipEntry("$name.png"))
+      zip.write(png)
+      zip.closeEntry()
+    }
+  }
+  return listOf(Output("images", out.toByteArray(), ext = "zip"))
+}
+
+/**
  * Redaction that removes, not covers. Every page with boxes is rendered at ~216 dpi with the boxes painted black,
  * and that picture becomes the page's only content. Annotation, form and tag trees on those pages are dropped too,
  * since they can hold copies of the redacted text.

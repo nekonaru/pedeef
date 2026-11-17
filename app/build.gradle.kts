@@ -13,8 +13,8 @@ android {
     applicationId = "com.nekonaru.pedeef"
     minSdk = 24
     targetSdk = 36
-    versionCode = 7
-    versionName = "1.6.0"
+    versionCode = 8
+    versionName = "1.7.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -44,7 +44,7 @@ android {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
-  buildFeatures { compose = true }
+  buildFeatures { compose = true; buildConfig = true }
 }
 
 kotlin {

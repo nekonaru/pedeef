@@ -117,6 +117,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Gambar ke PDF** | Ubah gambar JPG dan PNG menjadi satu PDF, satu halaman per gambar. |
 | **PDF ke Gambar** | Ekspor halaman sebagai JPEG (ZIP untuk dokumen multi-halaman). |
 | **Ekstrak Teks** | Salin semua teks dari PDF ke file `.txt` biasa. |
+| **Ekstrak Gambar** | Simpan setiap gambar yang tertanam di PDF sebagai PNG, digabung ZIP jika banyak. |
 | **UI dwibahasa** | English dan Bahasa Indonesia, bisa diganti di Pengaturan. |
 | **Download/Pedeef** | Setiap file yang kamu simpan masuk ke folder Download/Pedeef publik, terlihat di file manager mana pun. Satu-satunya panggilan jaringan adalah cek pembaruan opsional. |
 | **Penampil bawaan** | Gulir halus, preset zoom (100/125/150%), navigasi bookmark, sorotan pencarian di halaman, thumbnail halaman, salin teks halaman, di semua versi Android yang didukung. |
@@ -126,6 +127,9 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Cetak ke printer** | Cetak PDF apa pun langsung dari dialog cetak sistem. |
 | **Urutkan file** | Urutkan file berdasarkan nama, tanggal atau ukuran di tab Files. |
 | **Putar semua** | Putar semua halaman di Atur Halaman dengan satu ketukan. |
+| **Mode malam** | Balikkan warna halaman di penampil untuk nyaman membaca di tempat gelap. Bisa diaktifkan di baris atas atau di Pengaturan. |
+| **Lanjut baca** | Buka kembali dokumen persis di halaman terakhir kamu; penampil mengingat halaman terakhir per file. |
+| **Pintasan launcher** | Tahan ikon aplikasi untuk Pindai, Gabung PDF, Isi & tanda dan Atur. |
 
 ---
 
@@ -160,7 +164,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.6.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-1.7.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
@@ -250,7 +254,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       titik masuk
       engine/               mesin PDF (PdfBox), operasi murni + operasi android
-      tools/                katalog alat (26 alat, EN + ID)
+      tools/                katalog alat (27 alat, EN + ID)
       ui/                   layar: home, tool, files, viewer, settings, scan
       ui/theme/             tema (Ember, Cherry, Arctic) + tipografi
       i18n/                 string English dan Bahasa Indonesia

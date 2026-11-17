@@ -71,6 +71,24 @@ object ViewerPayload {
   }
 }
 
+/** Launcher shortcut picked by the user; consumed once by AppShell. */
+object ShortcutRoute {
+  var target: String? = null
+    private set
+  var version: Int = 0
+    private set
+
+  /** route like "scan" or "tool/merge". */
+  fun open(route: String) {
+    target = route
+    version = version + 1
+  }
+
+  fun consume() {
+    target = null
+  }
+}
+
 private fun resolveLanguage(settings: SettingsState, systemLocales: String): Strings = when (settings.language) {
   "en" -> En
   "id" -> Id
@@ -107,6 +125,14 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
     // If an incoming PDF was saved by the launcher (or reopened from a tool), jump straight into the viewer.
     if (com.nekonaru.pedeef.ui.ViewerPayload.bytes != null && nav.currentDestination?.route == "shell") {
       nav.navigate("viewer")
+    }
+  }
+  LaunchedEffect(ShortcutRoute.version) {
+    // Launcher shortcut picked while the app is alive (or cold): go straight to the target screen.
+    val target = ShortcutRoute.target ?: return@LaunchedEffect
+    if (nav.currentDestination?.route == "shell" && settings.onboardingDone) {
+      ShortcutRoute.consume()
+      nav.navigate(target)
     }
   }
   androidx.compose.material3.Scaffold(
@@ -182,7 +208,13 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
           ViewerPayload.set(bytes, name, persisted = true)
           nav.navigate("viewer")
         }) }
-        composable("viewer") { ViewerScreen(onBack = { ViewerPayload.clear(); nav.popBackStack() }) }
+        composable("viewer") {
+          ViewerScreen(
+            onBack = { ViewerPayload.clear(); nav.popBackStack() },
+            nightMode = settings.nightMode,
+            onToggleNightMode = { update { s -> s.copy(nightMode = !s.nightMode) } },
+          )
+        }
       }
     }
   }
