@@ -13,6 +13,7 @@ data class SettingsState(
   val dynamicColor: Boolean = false,
   val language: String = "system", // system | en | id
   val onboardingDone: Boolean = false,
+  val nightMode: Boolean = false, // invert page colors in the viewer for dark reading
 )
 
 object Settings {

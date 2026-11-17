@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="shortcut_scan_short">Pindai</string>
+  <string name="shortcut_scan_long">Pindai dokumen</string>
+  <string name="shortcut_merge_short">Gabung PDF</string>
+  <string name="shortcut_merge_long">Gabung PDF</string>
+  <string name="shortcut_sign_short">Isi &amp; tanda</string>
+  <string name="shortcut_sign_long">Isi dan tanda tangan PDF</string>
+  <string name="shortcut_organize_short">Atur</string>
+  <string name="shortcut_organize_long">Atur halaman</string>
+</resources>

@@ -2,6 +2,35 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.7.0
+
+Night mode, resume reading, launcher shortcuts, image extraction, and a second deep audit with fixes.
+
+### New features
+
+- **Night mode.** The viewer can invert page colors for comfortable reading in the dark. Toggle it from the viewer top bar or in Settings under Appearance.
+- **Resume reading.** Pedeef remembers the last page you viewed per document and reopens it there.
+- **Launcher shortcuts.** Long-press the app icon for Scan, Merge PDFs, Fill & sign and Organize pages.
+- **Extract Images.** New tool: saves every embedded image in a PDF as a PNG, zipped when there are several. Icons smaller than 48px are skipped.
+
+### Improvements
+
+- **Decrypt off the main thread.** Opening an encrypted PDF no longer blocks the UI; a spinner shows while the empty-password attempt runs in the background.
+- **Print fixed up.** Preparing a print job now happens on a background thread, and the temporary plaintext copy is deleted when the print service finishes without writing (for example when the dialog is dismissed).
+- **Clear cache actually clears.** The Clear cache row now removes the whole cache directory, including shared copies and print leftovers, instead of a partial prefix list.
+- **File walks off the main thread.** The Files tab lists and counts off the composition thread; sorting by date or size keeps folders first.
+- **Crash-proof search and copy.** Corrupted PDFs no longer crash the viewer when searching or copying page text; a generic error message is shown instead.
+- **Background saves.** Saving outputs from tools and saving from the viewer now run on a background thread with error handling instead of firing on the main thread.
+- **Single version source.** The version shown in Settings and used for update checks now comes from the build configuration.
+- **Tag comparison hardened.** Pre-release suffixes like `-beta` no longer compare as equal to the base release.
+
+### Bug fixes
+
+- **Garbled counter string.** The "files saved" message shown after saving tool outputs no longer contains garbled characters.
+- **Copy button disabled on empty PDFs.** Copy page text is disabled when a document has no pages instead of passing a negative page index to the text stripper.
+- **Folder item counts on a background thread.** Folder file counts no longer recompute synchronously during list rendering.
+- **Incoming PDFs no longer stall launch.** A PDF opened from another app is read on a background thread.
+
 ## v1.6.0
 
 Print from the viewer, save to file from the viewer, and audit hardening across the board.

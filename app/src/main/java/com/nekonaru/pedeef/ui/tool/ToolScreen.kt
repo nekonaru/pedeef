@@ -70,6 +70,7 @@ import com.nekonaru.pedeef.tools.str
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.runtime.LaunchedEffect
 import java.io.File
 
 class PickedFile(val name: String, val bytes: ByteArray)
@@ -96,20 +97,25 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
   var locked by remember { mutableStateOf<List<Pair<String, ByteArray>>?>(null) } // queued locked PDFs: name to bytes
   var unlockError by remember { mutableStateOf<String?>(null) }
 
-  androidx.compose.runtime.LaunchedEffect(picked) {
+  LaunchedEffect(picked) {
     if (tool.id == "metadata") {
       val f = picked.firstOrNull() ?: return@LaunchedEffect
-      if (listOf("title", "author", "subject", "keywords").all { opts.str(it).isBlank() }) {
-        runCatching { com.nekonaru.pedeef.engine.readDetails(f.bytes) }.getOrNull()?.let { d ->
-          opts = kotlinx.serialization.json.JsonObject(
-            mapOf(
-              "title" to kotlinx.serialization.json.JsonPrimitive(d["title"].orEmpty()),
-              "author" to kotlinx.serialization.json.JsonPrimitive(d["author"].orEmpty()),
-              "subject" to kotlinx.serialization.json.JsonPrimitive(d["subject"].orEmpty()),
-              "keywords" to kotlinx.serialization.json.JsonPrimitive(d["keywords"].orEmpty()),
-            ),
-          )
+      val d = withContext(Dispatchers.Default) {
+        if (listOf("title", "author", "subject", "keywords").all { opts.str(it).isBlank() }) {
+          runCatching { com.nekonaru.pedeef.engine.readDetails(f.bytes) }.getOrNull()
+        } else {
+          null
         }
+      }
+      if (d != null) {
+        opts = kotlinx.serialization.json.JsonObject(
+          mapOf(
+            "title" to kotlinx.serialization.json.JsonPrimitive(d["title"].orEmpty()),
+            "author" to kotlinx.serialization.json.JsonPrimitive(d["author"].orEmpty()),
+            "subject" to kotlinx.serialization.json.JsonPrimitive(d["subject"].orEmpty()),
+            "keywords" to kotlinx.serialization.json.JsonPrimitive(d["keywords"].orEmpty()),
+          ),
+        )
       }
     }
   }
@@ -205,15 +211,20 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
   fun saveAll() {
     val outs = results ?: return
     scope.launch {
-      val public = com.nekonaru.pedeef.data.PublicFiles.root(context)
-      val root = public ?: FilesStore.root(context)
-      var saved = 0
-      for (o in outs) {
-        val base = FilesStore.sanitizeName(o.name.removeSuffix(".pdf").ifEmpty { "output" })
-        FilesStore.saveBytes(root, null, base, o.ext, o.bytes)
-        saved++
+      val done = withContext(Dispatchers.IO) {
+        runCatching {
+          val public = com.nekonaru.pedeef.data.PublicFiles.root(context)
+          val root = public ?: FilesStore.root(context)
+          var saved = 0
+          for (o in outs) {
+            val base = FilesStore.sanitizeName(o.name.removeSuffix(".pdf").ifEmpty { "output" })
+            FilesStore.saveBytes(root, null, base, o.ext, o.bytes)
+            saved++
+          }
+          saved to (public != null)
+        }.getOrNull()
       }
-      savedMessage = if (public != null) "$saved → ${s.savedToDownload}" else "$saved → ${s.savedToApp}"
+      savedMessage = if (done == null) s.genericError else String.format(java.util.Locale.getDefault(), s.savedNFiles, done.first)
     }
   }
 

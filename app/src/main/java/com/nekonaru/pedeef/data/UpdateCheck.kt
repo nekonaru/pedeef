@@ -25,7 +25,7 @@ object UpdateCheck {
   private const val LATEST = "https://api.github.com/repos/nekonaru/pedeef/releases/latest"
 
   fun compareTag(latest: String, current: String): Int {
-    fun parts(s: String) = s.trim().removePrefix("v").split(".").mapNotNull { it.takeWhile(Char::isDigit).toIntOrNull() }
+    fun parts(s: String) = s.trim().removePrefix("v").substringBefore('-').substringBefore('+').split(".").mapNotNull { it.takeWhile(Char::isDigit).toIntOrNull() }
     val a = parts(latest); val b = parts(current)
     for (i in 0 until maxOf(a.size, b.size)) {
       val d = (a.getOrNull(i) ?: 0).compareTo(b.getOrNull(i) ?: 0)

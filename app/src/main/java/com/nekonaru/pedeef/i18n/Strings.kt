@@ -31,7 +31,7 @@ class Strings(
   // settings
   val settingsTitle: String, val appearance: String, val themeSystem: String, val themeLight: String, val themeDark: String,
   val scheme: String, val schemeEmber: String, val schemeCherry: String, val schemeArctic: String,
-  val dynamicColor: String, val dynamicColorHint: String, val language: String, val about: String,
+  val dynamicColor: String, val dynamicColorHint: String, val nightMode: String, val nightModeHint: String, val language: String, val about: String,
   val versionLabel: String, val privacyPolicy: String, val openSource: String, val clearAppData: String,
   val clearAppDataConfirm: String, val appDataCleared: String, val clearCache: String, val cacheSize: String, val cacheCleared: String,
   // scanner
@@ -45,7 +45,7 @@ class Strings(
   val storageAccessHint: String, val storageAccessDenied: String, val storagePrivateFallback: String,
   val savedToDownload: String, val savedToApp: String,
   val saveToFiles: String, val bookmarks: String, val print: String,
-  val sortName: String, val sortDate: String, val sortSize: String, val rotateAll: String,
+  val sortName: String, val sortDate: String, val sortSize: String, val rotateAll: String, val savedNFiles: String,
   // update check and sponsor
   val versionRow: String, val checkingUpdates: String, val upToDate: String, val updateAvailable: String,
   val checkFailed: String, val sponsor: String, val sponsorBody: String,
@@ -78,7 +78,7 @@ val En = Strings(
   // settings
   "Settings", "Appearance", "System", "Light", "Dark",
   "Color scheme", "Ember", "Black Cherry", "Arctic Blue",
-  "Dynamic color", "Use your wallpaper colors (Android 12+)", "Language", "About",
+  "Dynamic color", "Use your wallpaper colors (Android 12+)", "Night mode", "Invert page colors for comfortable reading in the dark", "Language", "About",
   "Version", "Privacy policy", "Open source licenses", "Clear saved files",
   "Delete every file Pedeef saved? This cannot be undone.", "Saved files deleted", "Clear cache", "Cache", "Cache cleared",
   // scanner
@@ -90,7 +90,7 @@ val En = Strings(
   // storage access
   "File access", "Pedeef stores your PDFs and scans in Download/Pedeef so you can find them.", "Allow file access",
   "You can find every file Pedeef saves in Download/Pedeef with your file manager.", "Without access, files stay inside the app.", "Use app storage instead",
-  "Download/Pedeef", "app storage", "Save to files", "Bookmarks", "Print", "Name", "Newest", "Largest", "Rotate all",
+  "Download/Pedeef", "app storage", "Save to files", "Bookmarks", "Print", "Name", "Newest", "Largest", "Rotate all", "%1\$d files saved",
   // update check and sponsor
   "Check for updates", "Checking…", "You are on the latest version.", "Version %1\$s is available.",
   "Could not check. Check your connection.", "Sponsor", "Pedeef is free and always will be. If it is useful to you, you can support the developer:",
@@ -123,7 +123,7 @@ val Id = Strings(
   // settings
   "Pengaturan", "Tampilan", "Sistem", "Terang", "Gelap",
   "Skema warna", "Ember", "Black Cherry", "Arctic Blue",
-  "Warna dinamis", "Ikuti warna wallpaper (Android 12+)", "Bahasa", "Tentang",
+  "Warna dinamis", "Ikuti warna wallpaper (Android 12+)", "Mode malam", "Balikkan warna halaman agar nyaman membaca di tempat gelap", "Bahasa", "Tentang",
   "Versi", "Kebijakan privasi", "Lisensi sumber terbuka", "Hapus file tersimpan",
   "Hapus semua file yang disimpan Pedeef? Tindakan ini tidak bisa dibatalkan.", "File tersimpan dihapus", "Hapus cache", "Cache", "Cache dihapus",
   // scanner
@@ -139,7 +139,7 @@ val Id = Strings(
   // update check and sponsor
   "Periksa pembaruan", "Memeriksa…", "Kamu memakai versi terbaru.", "Versi %1\$s tersedia.",
   "Tidak bisa memeriksa. Periksa koneksimu.", "Sponsor", "Pedeef gratis dan akan selalu gratis. Kalau kamu merasa terbantu, kamu bisa mendukung pengembangnya:",
-  "Pengembang", "Lihat di GitHub", "Nama", "Terbaru", "Terbesar", "Putar semua",
+  "Pengembang", "Lihat di GitHub", "Nama", "Terbaru", "Terbesar", "Putar semua", "%1\$d file tersimpan",
 )
 
 val LocalPedeefStrings = staticCompositionLocalOf { En }

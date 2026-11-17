@@ -72,7 +72,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-const val PEDEEF_VERSION = "1.6.0"
+/** Single source of truth for the displayed version (build.gradle.kts versionName). */
+val PEDEEF_VERSION: String = com.nekonaru.pedeef.BuildConfig.VERSION_NAME
 
 private const val PRIVACY_EN = """Pedeef is built to be private:
 
@@ -238,6 +239,13 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
               Switch(checked = settings.dynamicColor, onCheckedChange = { v -> update { it.copy(dynamicColor = v) } })
             }
           }
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+              Text(s.nightMode, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+              Text(s.nightModeHint, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Switch(checked = settings.nightMode, onCheckedChange = { v -> update { it.copy(nightMode = v) } })
+          }
         }
       }
 
@@ -269,9 +277,7 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
           ListRow(Icons.Default.FolderOpen, s.storageAccessButton, s.storageAccessBody, onClick = { PublicFiles.requestManageAllFilesAccess(context) })
         }
         ListRow(Icons.Default.FolderOpen, s.clearCache, fmtSize(cacheSize), onClick = {
-          context.cacheDir.listFiles()?.forEach { f ->
-            if (f.isFile && listOf("ocr-", "redact-", "export-", "viewer-", "page-", "pagetext-", "search-", "sizes-", "share").any { f.name.startsWith(it) }) f.delete()
-          }
+          context.cacheDir.listFiles()?.forEach { it.deleteRecursively() }
           refresh++
         })
         ListRow(Icons.Default.Delete, s.clearAppData, null, onClick = { showClear = true }, danger = true)

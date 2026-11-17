@@ -117,6 +117,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Images to PDF** | Turn JPG and PNG images into one PDF, one page per image. |
 | **PDF to Images** | Export pages as JPEG (a ZIP for multi-page documents). |
 | **Extract Text** | Copy all text from a PDF into a plain `.txt` file. |
+| **Extract Images** | Save every embedded image in a PDF as a PNG, zipped when there are several. |
 | **Bilingual UI** | English and Bahasa Indonesia, switchable in Settings. |
 | **Download/Pedeef** | Every file you save lands in the public Download/Pedeef folder, visible in any file manager. The only network call is the optional update check. |
 | **Built-in viewer** | Smooth scrolling, zoom presets (100/125/150%), bookmark navigation, in-page search highlights, page thumbnails, copy page text, on every supported Android version. |
@@ -126,6 +127,9 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Print to printer** | Print any PDF straight from the system print dialog. |
 | **Sort files** | Sort your files by name, date or size in the Files tab. |
 | **Rotate all** | Rotate every page in Organize Pages with one tap. |
+| **Night mode** | Invert page colors in the viewer for comfortable reading in the dark. Toggle in the top bar or in Settings. |
+| **Resume reading** | Reopen a document exactly where you left off; the viewer remembers the last page per file. |
+| **Launcher shortcuts** | Long-press the app icon for Scan, Merge PDFs, Fill & sign and Organize. |
 
 ---
 
@@ -160,7 +164,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 ### Option A: Download the APK (easiest)
 
 1. Open the [latest release](https://github.com/nekonaru/pedeef/releases/latest).
-2. Download `pedeef-1.6.0.apk` (signed with the app's built-in debug key).
+2. Download `pedeef-1.7.0.apk` (signed with the app's built-in debug key).
 3. Tap the file to install. If Android warns about unknown sources, allow installing from your browser or file manager.
 4. Open Pedeef. On first use of the Files tab, allow the file access it asks for so your files land in Download/Pedeef.
 
@@ -250,7 +254,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       entry point
       engine/               PDF engine (PdfBox), pure ops + android ops
-      tools/                tool catalog (26 tools, EN + ID)
+      tools/                tool catalog (27 tools, EN + ID)
       ui/                   screens: home, tool, files, viewer, settings, scan
       ui/theme/             themes (Ember, Cherry, Arctic) + typography
       i18n/                 English and Bahasa Indonesia strings

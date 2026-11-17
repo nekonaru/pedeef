@@ -35,6 +35,8 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.Search
@@ -81,9 +83,26 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+/** RGB inversion for night mode page rendering. */
+private val invertColors = androidx.compose.ui.graphics.ColorMatrix(
+  floatArrayOf(
+    -1f, 0f, 0f, 0f, 255f,
+    0f, -1f, 0f, 0f, 255f,
+    0f, 0f, -1f, 0f, 255f,
+    0f, 0f, 0f, 1f, 0f,
+  ),
+)
+
+private sealed interface AutoDecrypt {
+  data object Working : AutoDecrypt
+  data object Plain : AutoDecrypt
+  data class Ok(val bytes: ByteArray) : AutoDecrypt
+  data object NeedsPassword : AutoDecrypt
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ViewerScreen(onBack: () -> Unit) {
+fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMode: () -> Unit = {}) {
   val s = LocalPedeefStrings.current
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
@@ -117,26 +136,60 @@ fun ViewerScreen(onBack: () -> Unit) {
     return
   }
 
-  val decrypted = remember(bytes) { if (mentionsEncrypt(bytes)) unlockBytes(bytes, "") else null }
-  val working = decrypted ?: bytes
-  if (mentionsEncrypt(working)) {
-    PasswordDialog(
-      title = s.passwordPrompt,
-      error = passwordError,
-      onSubmit = { pw ->
-        val unlockedWithPw = unlockBytes(bytes, pw)
-        if (unlockedWithPw == null) passwordError = s.passwordWrong else { payload = unlockedWithPw; com.nekonaru.pedeef.ui.ViewerPayload.bytes = unlockedWithPw }
-      },
-      onDismiss = onBack,
-    )
-    return
+  // Decide encryption on a background thread; rendering the viewer off the main thread is non-negotiable.
+  val autoDecrypt by produceState<AutoDecrypt>(initialValue = AutoDecrypt.Working, bytes) {
+    value = withContext(Dispatchers.Default) {
+      if (!mentionsEncrypt(bytes)) AutoDecrypt.Plain
+      else unlockBytes(bytes, "")?.let { AutoDecrypt.Ok(it) } ?: AutoDecrypt.NeedsPassword
+    }
   }
-  if (decrypted != null) com.nekonaru.pedeef.ui.ViewerPayload.bytes = decrypted
+  when (val a = autoDecrypt) {
+    AutoDecrypt.Working -> {
+      Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+      return
+    }
+    AutoDecrypt.NeedsPassword -> {
+      PasswordDialog(
+        title = s.passwordPrompt,
+        error = passwordError,
+        onSubmit = { pw ->
+          scope.launch(Dispatchers.Default) {
+            val unlockedWithPw = unlockBytes(bytes, pw)
+            withContext(Dispatchers.Main) {
+              if (unlockedWithPw == null) passwordError = s.passwordWrong else { payload = unlockedWithPw; com.nekonaru.pedeef.ui.ViewerPayload.bytes = unlockedWithPw }
+            }
+          }
+        },
+        onDismiss = onBack,
+      )
+      return
+    }
+    else -> Unit
+  }
+  val working = when (val a = autoDecrypt) {
+    is AutoDecrypt.Ok -> a.bytes
+    else -> bytes
+  }
 
   val sizesState = produceState<List<Pair<Int, Int>>?>(initialValue = null, working) {
     value = runCatching { pageSizesOf(working, ToolContext.cacheDir) }.getOrNull()
   }
   val sizes = sizesState.value
+
+  // Resume reading: reopen at the page the user left off on (keyed by name + size).
+  val resumeKey = remember(working, name) { name + "#" + working.size }
+  var resumed by remember(working) { mutableStateOf(false) }
+  LaunchedEffect(sizes != null) {
+    if (resumed || sizes == null) return@LaunchedEffect
+    resumed = true
+    val pos = com.nekonaru.pedeef.data.ReadingPositions.pageFor(context, resumeKey)
+    if (pos != null && pos in 2..sizes.size) listState.scrollToItem(pos - 1)
+  }
+  LaunchedEffect(firstVisible) {
+    kotlinx.coroutines.delay(600)
+    val page = firstVisible + 1
+    if (page >= 1) com.nekonaru.pedeef.data.ReadingPositions.save(context, resumeKey, page)
+  }
 
   LaunchedEffect(matches) {
     val m = matches ?: return@LaunchedEffect
@@ -145,15 +198,21 @@ fun ViewerScreen(onBack: () -> Unit) {
   LaunchedEffect(pageTextIndex) {
     val i = pageTextIndex ?: return@LaunchedEffect
     val text = withContext(Dispatchers.Default) {
-      withTempPdf(working, ToolContext.cacheDir, "pagetext") { tmp ->
-        com.tom_roush.pdfbox.pdmodel.PDDocument.load(tmp).use { doc ->
-          val stripper = com.tom_roush.pdfbox.text.PDFTextStripper().apply { startPage = i + 1; endPage = i + 1 }
-          stripper.getText(doc)
+      runCatching {
+        withTempPdf(working, ToolContext.cacheDir, "pagetext") { tmp ->
+          com.tom_roush.pdfbox.pdmodel.PDDocument.load(tmp).use { doc ->
+            val stripper = com.tom_roush.pdfbox.text.PDFTextStripper().apply { startPage = i + 1; endPage = i + 1 }
+            stripper.getText(doc)
+          }
         }
-      }
+      }.getOrNull()
     }
-    clipboard.setText(AnnotatedString(text))
-    copyMessage = s.pageTextCopied
+    if (text == null) {
+      copyMessage = s.genericError
+    } else {
+      clipboard.setText(AnnotatedString(text))
+      copyMessage = s.pageTextCopied
+    }
   }
 
   fun runSearch() {
@@ -162,11 +221,17 @@ fun ViewerScreen(onBack: () -> Unit) {
     scope.launch {
       searching = true
       val result = withContext(Dispatchers.Default) {
-        com.nekonaru.pedeef.engine.searchPdf(working, q, ToolContext.cacheDir)
+        runCatching { com.nekonaru.pedeef.engine.searchPdf(working, q, ToolContext.cacheDir) }.getOrNull()
       }
-      matches = result.pages
-      highlights = result.boxes
-      matchIndex = 0
+      if (result == null) {
+        matches = null
+        highlights = null
+        copyMessage = s.genericError
+      } else {
+        matches = result.pages
+        highlights = result.boxes
+        matchIndex = 0
+      }
       searching = false
     }
   }
@@ -188,18 +253,27 @@ fun ViewerScreen(onBack: () -> Unit) {
 
   fun saveToFiles() {
     scope.launch {
-      val public = com.nekonaru.pedeef.data.PublicFiles.root(context)
-      val dir = public ?: com.nekonaru.pedeef.data.FilesStore.root(context)
-      val base = com.nekonaru.pedeef.data.FilesStore.sanitizeName(name.removeSuffix(".pdf").ifEmpty { "document" })
-      val file = com.nekonaru.pedeef.data.FilesStore.saveBytes(dir, null, base, "pdf", working)
+      val saved = withContext(Dispatchers.IO) {
+        runCatching {
+          val public = com.nekonaru.pedeef.data.PublicFiles.root(context)
+          val dir = public ?: com.nekonaru.pedeef.data.FilesStore.root(context)
+          val base = com.nekonaru.pedeef.data.FilesStore.sanitizeName(name.removeSuffix(".pdf").ifEmpty { "document" })
+          val file = com.nekonaru.pedeef.data.FilesStore.saveBytes(dir, null, base, "pdf", working)
+          (if (public != null) s.savedToDownload else s.savedToApp) + ": " + file.name
+        }.getOrNull()
+      }
+      if (saved == null) {
+        savedMessage = s.genericError
+        return@launch
+      }
       persisted = true
       com.nekonaru.pedeef.ui.ViewerPayload.persisted = true
-      savedMessage = (if (public != null) s.savedToDownload else s.savedToApp) + ": " + file.name
+      savedMessage = saved
     }
   }
 
   fun printPdf() {
-    com.nekonaru.pedeef.engine.printPdf(context, working, name)
+    scope.launch(Dispatchers.IO) { com.nekonaru.pedeef.engine.printPdf(context, working, name) }
   }
 
   val outline by produceState<List<Pair<String, Int>>>(initialValue = emptyList(), working) {
@@ -222,12 +296,19 @@ fun ViewerScreen(onBack: () -> Unit) {
             TextButton(onClick = { zoomLevel = (zoomLevel + 1) % 3 }) {
               Text("${(zoomFactor * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
+            IconButton(onClick = onToggleNightMode) {
+              Icon(
+                if (nightMode) Icons.Default.LightMode else Icons.Default.DarkMode,
+                contentDescription = s.nightMode,
+              )
+            }
+
             if (!persisted) {
               IconButton(onClick = { saveToFiles() }) { Icon(Icons.Default.SaveAlt, contentDescription = s.saveToFiles) }
             }
             IconButton(onClick = { showThumbs = !showThumbs }) { Icon(Icons.Default.GridView, contentDescription = "Page thumbnails") }
             IconButton(onClick = { printPdf() }) { Icon(Icons.Default.Print, contentDescription = s.print) }
-            IconButton(onClick = { pageTextIndex = currentPage - 1 }) { Icon(Icons.Default.ContentCopy, contentDescription = s.copyPageText) }
+            IconButton(onClick = { pageTextIndex = (currentPage - 1).coerceAtLeast(0) }, enabled = n > 0) { Icon(Icons.Default.ContentCopy, contentDescription = s.copyPageText) }
             IconButton(onClick = { shareExternally() }) { Icon(Icons.Default.OpenInNew, contentDescription = s.openElsewhere) }
           },
         )
@@ -288,7 +369,7 @@ fun ViewerScreen(onBack: () -> Unit) {
           verticalArrangement = Arrangement.spacedBy(12.dp),
           modifier = Modifier.fillMaxSize(),
         ) {
-          items(sizes.size) { i -> PageItem(working, i, sizes[i], viewport, zoomFactor, matches?.contains(i) == true, highlights?.get(i) ?: emptyList()) }
+          items(sizes.size) { i -> PageItem(working, i, sizes[i], viewport, zoomFactor, matches?.contains(i) == true, highlights?.get(i) ?: emptyList(), nightMode) }
         }
       }
       // Bookmarks panel overlay (top-aligned)
@@ -338,7 +419,7 @@ fun ViewerScreen(onBack: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 8.dp),
               ) {
-                items(sizes.size) { i -> ThumbItem(working, i, i == currentPage - 1) { scope.launch { listState.animateScrollToItem(i) } } }
+                items(sizes.size) { i -> ThumbItem(working, i, i == currentPage - 1, nightMode) { scope.launch { listState.animateScrollToItem(i) } } }
               }
             }
           }
@@ -359,7 +440,7 @@ fun ViewerScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewport: androidx.compose.ui.unit.Dp, zoomFactor: Float, isMatch: Boolean, highlights: List<android.graphics.RectF> = emptyList()) {
+private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewport: androidx.compose.ui.unit.Dp, zoomFactor: Float, isMatch: Boolean, highlights: List<android.graphics.RectF> = emptyList(), nightMode: Boolean = false) {
   val image by produceState<android.graphics.Bitmap?>(initialValue = null, bytes, index, zoomFactor) {
     value = com.nekonaru.pedeef.ui.kit.renderPage(bytes, index, (1200 * zoomFactor).toInt(), ToolContext.cacheDir)
   }
@@ -377,7 +458,7 @@ private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewpor
     ) {
       val bmp = image
       if (bmp != null) {
-        Image(bmp.asImageBitmap(), contentDescription = "Page ${index + 1}", modifier = Modifier.fillMaxSize())
+        Image(bmp.asImageBitmap(), contentDescription = "Page ${index + 1}", colorFilter = if (nightMode) androidx.compose.ui.graphics.ColorFilter.colorMatrix(invertColors) else null, modifier = Modifier.fillMaxSize())
       } else {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(strokeWidth = 2.dp) }
       }
@@ -397,7 +478,7 @@ private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewpor
 }
 
 @Composable
-private fun ThumbItem(bytes: ByteArray, index: Int, selected: Boolean, onClick: () -> Unit) {
+private fun ThumbItem(bytes: ByteArray, index: Int, selected: Boolean, nightMode: Boolean = false, onClick: () -> Unit) {
   val image by produceState<android.graphics.Bitmap?>(initialValue = null, bytes, index) {
     value = com.nekonaru.pedeef.ui.kit.renderPage(bytes, index, 180, ToolContext.cacheDir)
   }
@@ -417,7 +498,7 @@ private fun ThumbItem(bytes: ByteArray, index: Int, selected: Boolean, onClick: 
     ) {
       val bmp = image
       if (bmp != null) {
-        Image(bmp.asImageBitmap(), contentDescription = "Page ${index + 1}", contentScale = androidx.compose.ui.layout.ContentScale.Fit, modifier = Modifier.fillMaxSize())
+        Image(bmp.asImageBitmap(), contentDescription = "Page ${index + 1}", colorFilter = if (nightMode) androidx.compose.ui.graphics.ColorFilter.colorMatrix(invertColors) else null, contentScale = androidx.compose.ui.layout.ContentScale.Fit, modifier = Modifier.fillMaxSize())
       } else {
         CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
       }
