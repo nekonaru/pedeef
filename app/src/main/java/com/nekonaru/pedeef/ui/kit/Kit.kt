@@ -264,7 +264,7 @@ fun PasswordDialog(title: String, error: String?, onSubmit: (String) -> Unit, on
         if (error != null) Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
       }
     },
-    confirmButton = { TextButton(onClick = { if (text.isNotBlank()) onSubmit(text) }) { Text(s.unlock, fontWeight = FontWeight.SemiBold) } },
+    confirmButton = { TextButton(onClick = { onSubmit(text) }) { Text(s.unlock, fontWeight = FontWeight.SemiBold) } },
     dismissButton = { TextButton(onClick = onDismiss) { Text(s.cancel) } },
   )
 }

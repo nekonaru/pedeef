@@ -41,16 +41,28 @@ fun searchPdf(bytes: ByteArray, query: String, cacheDir: File): SearchResult = w
       if (!found) continue
       pages.add(i)
       val page = doc.getPage(i)
-      val rot = page.rotation
-      if (rot == 0 || rot == 360) {
+      val rot = ((page.rotation % 360) + 360) % 360
+      if (rot == 0) {
         val cb = page.cropBox
         val collector = LineHighlight(query)
         collector.startPage = i + 1
         collector.endPage = i + 1
         runCatching { collector.getText(doc) }
-        boxes[i] = collector.boxes.map { RectF(it.left / cb.width, it.top / cb.height, it.right / cb.width, it.bottom / cb.height) }
+        boxes[i] = collector.boxes.map {
+          RectF(it.left / cb.width, it.top / cb.height, it.right / cb.width, it.bottom / cb.height)
+        }
       } else {
-        boxes[i] = emptyList()
+        // Highlight boxes are stored-space; map through unrotate() to the page as displayed.
+        val cb = page.cropBox
+        val collector = LineHighlight(query)
+        collector.startPage = i + 1
+        collector.endPage = i + 1
+        runCatching { collector.getText(doc) }
+        boxes[i] = collector.boxes.map { b ->
+          val f = listOf(b.left / cb.width, b.top / cb.height, (b.right - b.left) / cb.width, (b.bottom - b.top) / cb.height)
+          val u = unrotate(f, rot)
+          RectF(u[0], u[1], u[0] + u[2], u[1] + u[3])
+        }
       }
     }
     SearchResult(pages, boxes)

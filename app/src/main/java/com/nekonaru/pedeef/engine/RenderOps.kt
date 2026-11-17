@@ -164,7 +164,7 @@ fun redactPdf(bytes: ByteArray, boxes: Map<String, List<Box>>, cacheDir: File): 
               val img = JPEGFactory.createFromImage(doc, bitmap, 0.9f)
               bitmap.recycle()
               val page = doc.getPage(i)
-              for (name in listOf("Annots", "Thumb", "PieceInfo", "Metadata", "StructParents", "B", "AA", "Tabs", "ArtBox", "BleedBox", "TrimBox", "UserUnit", "Group", "VP", "SeparationInfo", "ID", "PZ")) {
+              for (name in listOf("Annots", "Thumb", "PieceInfo", "Metadata", "StructParents", "B", "AA", "AF", "Tabs", "ArtBox", "BleedBox", "TrimBox", "UserUnit", "Group", "VP", "SeparationInfo", "ID", "PZ")) {
                 page.cosObject.removeItem(COSName.getPDFName(name))
               }
               val box = PDRectangle(p.width.toFloat(), p.height.toFloat()) // the picture is already the visible area
@@ -182,7 +182,9 @@ fun redactPdf(bytes: ByteArray, boxes: Map<String, List<Box>>, cacheDir: File): 
         val catalog = doc.documentCatalog.cosObject
         // The document's title, author, subject, keywords, bookmarks and embedded files (and the XMP copy) can
         // repeat what was redacted.
-        listOf("AcroForm", "StructTreeRoot", "MarkInfo", "Metadata", "Outlines", "Names").forEach { catalog.removeItem(COSName.getPDFName(it)) }
+        // Additional document-level carriers of arbitrary strings. PageLabels, Dests and AF are not text by shape
+        // but can mirror content the user redacted; drop them to be safe.
+        listOf("AcroForm", "StructTreeRoot", "MarkInfo", "Metadata", "Outlines", "Names", "PageLabels", "Dests", "AF", "Collection", "AA", "OpenAction", "PieceInfo").forEach { catalog.removeItem(COSName.getPDFName(it)) }
         doc.documentInformation = com.tom_roush.pdfbox.pdmodel.PDDocumentInformation()
         // Annotations elsewhere can still point at the removed ones, which would keep them in the file.
         for ((i, page) in doc.pages.withIndex()) {

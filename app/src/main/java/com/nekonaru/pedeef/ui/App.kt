@@ -11,6 +11,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -48,6 +49,9 @@ import com.nekonaru.pedeef.ui.viewer.ViewerScreen
 object ViewerPayload {
   var bytes: ByteArray? = null
   var name: String = "document.pdf"
+
+  /** True when the payload is already stored in the file tree (Files tab, tools); false for incoming VIEW/SEND copies. */
+  var persisted: Boolean = true
 }
 
 private fun resolveLanguage(settings: SettingsState, systemLocales: String): Strings = when (settings.language) {
@@ -82,6 +86,12 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
   val onTab: (Tab) -> Unit = { tab = it }
   val backStack by nav.currentBackStackEntryAsState()
   val showBar = backStack?.destination?.route == "shell"
+  LaunchedEffect(Unit) {
+    // If an incoming PDF was saved by the launcher, jump straight into the viewer.
+    if (com.nekonaru.pedeef.ui.ViewerPayload.bytes != null && nav.currentDestination?.route == "shell") {
+      nav.navigate("viewer")
+    }
+  }
   androidx.compose.material3.Scaffold(
     modifier = Modifier.safeDrawingPadding(),
     bottomBar = {

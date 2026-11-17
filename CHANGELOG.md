@@ -2,6 +2,31 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.5.0
+
+Opens PDFs from other apps, bookmark navigation in the viewer, deeper security fixes and the full audit pass.
+
+### New features
+
+- **PDF handler.** Open a PDF from another app or Files; Pedeef opens it in the viewer and only saves it to Download/Pedeef after you tap Save in the viewer's top bar.
+- **Bookmark navigation.** The viewer shows an outline of bookmarks with one-tap jumps to each section.
+- **Zoom presets.** Cycle between 100%, 125% and 150% zoom directly from the viewer's top bar.
+
+### Improvements
+
+- **Safer redaction.** The document-level cleanup list now covers PageLabels, Dests, associated files, collections, open actions and piece info; page-level AF entries are also removed.
+- **Safer migration.** Public storage migration verifies every copied file by size, renames atomically, never overwrites your existing public files, writes the .migrated marker only when everything succeeds, and retries any partial run on next launch.
+- **Safer sharing.** Share and export are disabled for folders; folder grants never leak a whole directory tree to another app.
+- **Compression fidelity.** CMYK, YCCK and ICCBased JPEGs are no longer re-encoded; color shifts in compressed PDFs are avoided.
+- **Locked-file handling.** Owner-password-only PDFs now open without a password prompt (empty password is tried first).
+- **Rotated-page highlight.** Highlight boxes work on rotated pages instead of silently skipping them.
+- **Reusable signature fix.** The "My signature" button works again: the saved signature is accepted as an app-generated image.
+
+### Bug fixes
+
+- **Plain cache leaks.** Temp share/export images and PDFs are swept on startup and the clear-cache row covers them.
+- **Manifest hygiene.** The legacy external-storage flag is gone; read permission caps at API 29.
+
 ## v1.4.0
 
 Search highlights, recent files and cache control: the audit goes deeper.
