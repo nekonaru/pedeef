@@ -1,11 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <rect width="256" height="256" rx="58" fill="#C8501E"/>
-  <g>
-  <path d="M 70.0 152.3 L 156.0 121.0 V 197.0 Q 156.0 206.0 147.0 206.0 H 79.0 Q 70.0 206.0 70.0 197.0 V 152.3 Z" fill="#F5BC78"/>
-  <path d="M 70.0 139.0 L 70.0 75.0 Q 70.0 66.0 79.0 66.0 H 124.0 L 152.0 94.0 V 109.2 L 70.0 139.0 Z" fill="#FCFBF8"/>
-  <path d="M 124.0 66.0 L 152.0 94.0 L 124.0 94.0 Z" fill="#E8A05C"/>
-  <path d="M 91.5 94.0 H 134.5 a 3.5 3.5 0 0 1 0 7.0 H 91.5 a 3.5 3.5 0 0 1 0 -7.0 Z" fill="#C8501E"/>
-  <path d="M 91.5 111.0 H 113.5 a 3.5 3.5 0 0 1 0 7.0 H 91.5 a 3.5 3.5 0 0 1 0 -7.0 Z" fill="#C8501E"/>
-</g>
-
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Pedeef">
+  <title>Pedeef</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D9602B"/>
+      <stop offset="1" stop-color="#A93D12"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <g fill="#FFF3E8" stroke="#FFF3E8" stroke-width="12" stroke-linejoin="round">
+    <path d="M160 112 H300 L352 164 V252 H160 Z"/>
+    <rect x="180" y="268" width="192" height="132" rx="10"/>
+  </g>
+  <path d="M300 112 V164 H352 Z" fill="#F0B08A" stroke="#F0B08A" stroke-width="6" stroke-linejoin="round"/>
+  <g fill="#C8501E">
+    <rect x="192" y="188" width="84" height="14" rx="7"/>
+    <rect x="192" y="214" width="56" height="14" rx="7"/>
+    <rect x="212" y="304" width="112" height="14" rx="7"/>
+    <rect x="212" y="330" width="88" height="14" rx="7"/>
+    <rect x="212" y="356" width="104" height="14" rx="7"/>
+  </g>
 </svg>
