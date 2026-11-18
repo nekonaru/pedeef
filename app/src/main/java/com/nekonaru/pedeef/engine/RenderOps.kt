@@ -132,31 +132,44 @@ fun pdfToJpegs(bytes: ByteArray, cacheDir: File, maxWidth: Int = 2400, quality: 
 
 /**
  * Every embedded image placed on a page via a Do operator. Icons smaller than 48px are skipped.
- * One image: a .png. More: a .zip of page-NNN-IMG.png files. Inline (BI/EI) images are not covered.
+ * JPEG-backed images are re-encoded as JPEG, everything else as PNG. One image: a single file.
+ * More: a .zip. Inline (BI/EI) images and images inside Form XObjects are not covered.
  */
 fun extractImages(bytes: ByteArray): List<Output> {
-  val found = mutableListOf<Pair<String, ByteArray>>()
+  // Triple of base name, extension, payload bytes; kept small by the total cap below.
+  val found = mutableListOf<Triple<String, String, ByteArray>>()
+  var totalBytes = 0L
+  val maxTotal = 256L * 1024 * 1024
   PDDocument.load(bytes).use { doc ->
     for ((i, page) in doc.pages.withIndex()) {
       val res = page.resources ?: continue
       for (name in res.xObjectNames) {
         val x = runCatching { res.getXObject(name) }.getOrNull() as? com.tom_roush.pdfbox.pdmodel.graphics.image.PDImageXObject ?: continue
+        val suffix = runCatching { x.suffix }.getOrNull()?.lowercase()
+        val asJpeg = suffix == "jpg" || suffix == "jpeg"
         val bmp = runCatching { x.image }.getOrNull() ?: continue
         if (bmp.width < 48 || bmp.height < 48) { bmp.recycle(); continue }
         val out = ByteArrayOutputStream()
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+        if (asJpeg) bmp.compress(Bitmap.CompressFormat.JPEG, 95, out) else bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
         bmp.recycle()
-        found += "page-%03d-%s".format(i + 1, name.name.replace(Regex("[^A-Za-z0-9_-]"), "_")) to out.toByteArray()
+        val data = out.toByteArray()
+        totalBytes += data.size
+        if (totalBytes > maxTotal) fail("Too much image data in this PDF. Split the document first.")
+        val base = "page-%03d-%s".format(i + 1, name.name.replace(Regex("[^A-Za-z0-9_-]"), "_"))
+        found += Triple(base, if (asJpeg) "jpg" else "png", data)
       }
     }
   }
   if (found.isEmpty()) fail("This PDF has no extractable embedded images.")
-  if (found.size == 1) return listOf(Output(found[0].first, found[0].second, ext = "png"))
+  if (found.size == 1) {
+    val (base, ext, data) = found[0]
+    return listOf(Output(base, data, ext = ext))
+  }
   val out = ByteArrayOutputStream()
   ZipOutputStream(BufferedOutputStream(out)).use { zip ->
-    for ((name, png) in found) {
-      zip.putNextEntry(ZipEntry("$name.png"))
-      zip.write(png)
+    for ((base, ext, data) in found) {
+      zip.putNextEntry(ZipEntry("$base.$ext"))
+      zip.write(data)
       zip.closeEntry()
     }
   }

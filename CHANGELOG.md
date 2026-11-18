@@ -2,6 +2,31 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.8.0
+
+A new app icon, reopen-recent PDFs from the launcher, Blank PDF, and a second audit pass of v1.7.0 with fixes.
+
+### New features
+
+- **New app icon.** A fresh terracotta mark (two overlapping pages split by a diagonal gap), shipped as an adaptive icon with a monochrome themed layer for Android 13+, plus round and legacy icons. Same mark replaces the in-repo artwork.
+- **Reopen recent PDFs.** Long-press the app icon and your most recently modified PDFs appear as shortcuts (up to 4); one tap reopens one straight into the viewer.
+- **Blank PDF.** New tool: create an empty PDF at A4, A5, Letter or Legal, up to 200 pages, no source file required.
+
+### Improvements
+
+- **Resume reading race fixed.** The 600ms page-position save no longer overwrites the restored position before the resume scroll lands, so large or encrypted PDFs resume reliably.
+- **Shortcut delivery outside the shell fixed.** A shortcut tapped while another screen is open (or the app onboarding is showing) now opens the target screen when the app returns to the shell, instead of being silently dropped.
+- **Extract Images slimmer and capped.** JPEG-backed images are re-encoded as JPEG instead of ballooning into PNG, and total extracted data is capped with a clear error message instead of memory pressure.
+- **Reading positions write atomically.** A crash mid-save can no longer wipe the stored reading positions.
+- **Files tab loading state.** The Files tab shows a spinner on first render instead of briefly claiming "no files".
+- **Decrypt notice.** When a password-protected PDF was opened without a password, the viewer shows a one-line note that saved and shared copies are not password-protected.
+
+### Bug fixes
+
+- **Print path streamlined.** Full-document print jobs no longer parse the PDF at all; partial ranges validate against the page count before rewriting.
+- **Folder counts display.** Folders with more than 10,000 files now show "10,000+" instead of a bare number.
+- **Version badge color.** README badges use the new brand terracotta.
+
 ## v1.7.0
 
 Night mode, resume reading, launcher shortcuts, image extraction, and a second deep audit with fixes.

@@ -122,7 +122,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   var moveTarget by remember { mutableStateOf<FileEntry?>(null) }
   var busy by remember { mutableStateOf(false) }
 
-  val items by produceState(initialValue = emptyList(), currentDir, query, refreshTick, sort) {
+  val items by produceState<List<FileEntry>?>(initialValue = null, currentDir, query, refreshTick, sort) {
     value = withContext(Dispatchers.IO) {
       val raw = if (query.isBlank()) FilesStore.list(currentDir) else FilesStore.search(root, query)
       when (sort) {
@@ -252,7 +252,12 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         return@Box
       }
-      if (items.isEmpty()) {
+      val list = items
+      if (list == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        return@Box
+      }
+      if (list.isEmpty()) {
         Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
           Box(Modifier.size(88.dp).background(MaterialTheme.colorScheme.surfaceVariant, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
             Icon(Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(44.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -262,7 +267,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
         return@Box
       }
       LazyColumn(contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        items(items, key = { entry -> entry.file.absolutePath }) { entry ->
+        items(list, key = { entry -> entry.file.absolutePath }) { entry ->
           val itemCount by produceState(initialValue = 0, entry.file.path) {
             value = if (entry.isDir) withContext(Dispatchers.IO) { FilesStore.countIn(entry.file) } else 0
           }
@@ -279,7 +284,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
               Text(entry.name, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
               Text(
-                (if (entry.isDir) ("$itemCount " + if (indonesian) "file" else "files") else com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)),
+                (if (entry.isDir) ((if (itemCount >= 10_000) "10,000+ " else "$itemCount ") + if (indonesian) "file" else "files") else com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
               )

@@ -2,6 +2,31 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.8.0
+
+Ikon aplikasi baru, buka kembali PDF terakhir dari launcher, PDF kosong, dan audit ronde kedua untuk v1.7.0 beserta perbaikannya.
+
+### Fitur baru
+
+- **Ikon aplikasi baru.** Lambang terakota baru (dua halaman bertumpuk dipisah celah diagonal), dikemas sebagai ikon adaptif dengan lapisan bertema monokrom untuk Android 13+, plus ikon bulat dan ikon lawas. Lambang yang sama menggantikan karya seni di repo.
+- **Buka kembali PDF terakhir.** Tahan ikon aplikasi dan PDF yang terakhir diubah muncul sebagai pintasan (sampai 4); ketuk sekali untuk membukanya langsung ke viewer.
+- **PDF kosong.** Alat baru: buat PDF kosong di A4, A5, Letter atau Legal, sampai 200 halaman, tanpa file sumber.
+
+### Peningkatan
+
+- **Race lanjut baca diperbaiki.** Penyimpanan posisi halaman 600ms tidak lagi menimpa posisi hasil pemulihan sebelum gulir lanjut baca selesai, jadi PDF besar atau terenkripsi bisa lanjut baca dengan andal.
+- **Pengantaran pintasan di luar shell diperbaiki.** Pintasan yang diklik saat layar lain terbuka (atau onboarding masih tampil) kini langsung membuka layar tujuannya saat aplikasi kembali ke shell, alih-alih diam diabaikan.
+- **Ekstrak Gambar lebih ringan dan dibatasi.** Gambar JPEG di-encode ulang sebagai JPEG, bukan membengkak menjadi PNG, dan total data yang diekstrak dibatasi dengan pesan error yang jelas alih-alih tekanan memori.
+- **Posisi baca ditulis atomik.** Crash di tengah penyimpanan tidak lagi bisa menghapus posisi baca yang tersimpan.
+- **Status loading tab Files.** Tab Files menampilkan spinner pada render pertama alih-alih sekilas menyatakan "tidak ada file".
+- **Catatan dekripsi.** Saat PDF terproteksi dibuka tanpa sandi, viewer menampilkan catatan satu baris bahwa salinan yang disimpan dan dibagikan tidak dilindungi sandi.
+
+### Perbaikan bug
+
+- **Jalur cetak dirapikan.** Job cetak dokumen penuh tidak lagi mem-parse PDF sama sekali; rentang halaman parsial divalidasi terhadap jumlah halaman sebelum ditulis ulang.
+- **Tampilan jumlah folder.** Folder dengan lebih dari 10.000 file kini menampilkan "10,000+", bukan angka polos.
+- **Warna badge versi.** Badge README memakai terakota brand baru.
+
 ## v1.7.0
 
 Mode malam, lanjut baca, pintasan launcher, ekstraksi gambar, dan audit mendalam kedua dengan perbaikannya.

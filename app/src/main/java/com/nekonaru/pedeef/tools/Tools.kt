@@ -44,7 +44,7 @@ fun defaults(defs: List<OptDef>): Opts = JsonObject(defs.associate {
   }
 })
 
-enum class Input { Pdf, Pdfs, Images }
+enum class Input { Pdf, Pdfs, Images, None }
 
 class Tool(
   val id: String,
@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "blankPdf")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -399,6 +399,17 @@ val TOOLS: List<Tool> = listOf(
     "Save every embedded image in a PDF as a PNG, zipped when there are several.", "Simpan setiap gambar yang tertanam di PDF sebagai PNG, digabung ZIP jika banyak.",
     "Extract images", "Ekstrak gambar", "Reading pages", "Membaca halaman", Input.Pdf, noPreview = true,
     run = { files, _ -> extractImages(files[0].bytes) },
+  ),
+  Tool(
+    "blankPdf", SECTION_NEW,
+    "Blank PDF", "PDF Kosong",
+    "Create a blank PDF with up to 200 empty pages at a page size you choose.", "Buat PDF kosong dengan sampai 200 halaman kosong pada ukuran halaman pilihanmu.",
+    "Create PDF", "Buat PDF", "Building PDF", "Membuat PDF", Input.None, noPreview = true,
+    opts = listOf(
+      seg("size", "Page size", "Ukuran halaman", listOf(Triple("A4", "A4", "A4"), Triple("A5", "A5", "A5"), Triple("Letter", "Letter", "Letter"), Triple("Legal", "Legal", "Legal")), "A4"),
+      num("pages", "Pages", "Halaman", "1", "1"),
+    ),
+    run = { _, o -> listOf(Output("blank", blankPdf(o.str("pages").toIntOrNull() ?: 1, o.str("size")))) },
   ),
 )
 

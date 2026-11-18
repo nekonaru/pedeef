@@ -6,15 +6,15 @@
   <p><b>Semua alat PDF yang kamu butuhkan dalam satu aplikasi gratis.<br/>Semuanya berjalan di ponselmu, file tetap di Download/Pedeef.</b></p>
 
   <a href="https://github.com/nekonaru/pedeef/releases/latest">
-    <img alt="Rilis" src="https://img.shields.io/github/v/release/nekonaru/pedeef?style=flat-square&color=C2410C" />
+    <img alt="Rilis" src="https://img.shields.io/github/v/release/nekonaru/pedeef?style=flat-square&color=C8501E" />
   </a>
   <a href="https://github.com/nekonaru/pedeef/actions/workflows/ci.yml">
     <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/nekonaru/pedeef/ci.yml?branch=main&style=flat-square" />
   </a>
   <img alt="Platform: Android" src="https://img.shields.io/badge/platform-Android-3DDC84?style=flat-square&logo=android&logoColor=white" />
-  <img alt="Min SDK: Android 7.0" src="https://img.shields.io/badge/minSdk-24-1F1B1A?style=flat-square" />
+  <img alt="Min SDK: Android 7.0" src="https://img.shields.io/badge/minSdk-24-C8501E?style=flat-square" />
   <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.2-7F52FF?style=flat-square&logo=kotlin&logoColor=white" />
-  <img alt="Lisensi: MIT" src="https://img.shields.io/badge/license-MIT-C2410C?style=flat-square" />
+  <img alt="Lisensi: MIT" src="https://img.shields.io/badge/license-MIT-C8501E?style=flat-square" />
 </div>
 
 <br />
@@ -129,7 +129,10 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Putar semua** | Putar semua halaman di Atur Halaman dengan satu ketukan. |
 | **Mode malam** | Balikkan warna halaman di penampil untuk nyaman membaca di tempat gelap. Bisa diaktifkan di baris atas atau di Pengaturan. |
 | **Lanjut baca** | Buka kembali dokumen persis di halaman terakhir kamu; penampil mengingat halaman terakhir per file. |
-| **Pintasan launcher** | Tahan ikon aplikasi untuk Pindai, Gabung PDF, Isi & tanda dan Atur. |
+| **Pintasan launcher** | Tahan ikon aplikasi untuk Pindai, Gabung PDF, Isi & tanda, dan Atur halaman. |
+| **Buka kembali PDF terakhir** | Pintasan launcher juga menampilkan PDF yang terakhir diubah (sampai 4); ketuk sekali untuk membukanya. |
+| **Ikon aplikasi baru** | Lambang terakota baru dengan ikon adaptif dan ikon bertema (monokrom) untuk Android 13+. |
+| **PDF kosong** | Buat PDF kosong di A4, A5, Letter atau Legal, sampai 200 halaman, tanpa file sumber. |
 
 ---
 
@@ -164,7 +167,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.7.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-1.8.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
@@ -254,7 +257,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       titik masuk
       engine/               mesin PDF (PdfBox), operasi murni + operasi android
-      tools/                katalog alat (27 alat, EN + ID)
+      tools/                katalog alat (28 alat, EN + ID)
       ui/                   layar: home, tool, files, viewer, settings, scan
       ui/theme/             tema (Ember, Cherry, Arctic) + tipografi
       i18n/                 string English dan Bahasa Indonesia
