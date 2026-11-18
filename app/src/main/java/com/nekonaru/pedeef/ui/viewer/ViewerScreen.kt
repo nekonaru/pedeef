@@ -100,6 +100,11 @@ private sealed interface AutoDecrypt {
   data object NeedsPassword : AutoDecrypt
 }
 
+private sealed interface PageSizes {
+  data class Ok(val list: List<Pair<Int, Int>>) : PageSizes
+  data object Failed : PageSizes
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMode: () -> Unit = {}) {
@@ -156,7 +161,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
           scope.launch(Dispatchers.Default) {
             val unlockedWithPw = unlockBytes(bytes, pw)
             withContext(Dispatchers.Main) {
-              if (unlockedWithPw == null) passwordError = s.passwordWrong else { payload = unlockedWithPw; com.nekonaru.pedeef.ui.ViewerPayload.bytes = unlockedWithPw }
+              if (unlockedWithPw == null) passwordError = s.passwordWrong else { payload = unlockedWithPw; com.nekonaru.pedeef.ui.ViewerPayload.set(unlockedWithPw, name, com.nekonaru.pedeef.ui.ViewerPayload.persisted) }
             }
           }
         },
@@ -171,10 +176,11 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     else -> bytes
   }
 
-  val sizesState = produceState<List<Pair<Int, Int>>?>(initialValue = null, working) {
-    value = runCatching { pageSizesOf(working, ToolContext.cacheDir) }.getOrNull()
+  val sizesState = produceState<PageSizes?>(initialValue = null, working) {
+    value = runCatching { PageSizes.Ok(pageSizesOf(working, ToolContext.cacheDir)) }.getOrDefault(PageSizes.Failed)
   }
-  val sizes = sizesState.value
+  val sizes = (sizesState.value as? PageSizes.Ok)?.list
+  val sizesFailed = sizesState.value == PageSizes.Failed
 
   // Resume reading: reopen at the page the user left off on (keyed by name + size).
   val resumeKey = remember(working, name) { name + "#" + working.size }
@@ -185,7 +191,9 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     val pos = com.nekonaru.pedeef.data.ReadingPositions.pageFor(context, resumeKey)
     if (pos != null && pos in 2..sizes.size) listState.scrollToItem(pos - 1)
   }
-  LaunchedEffect(firstVisible) {
+  LaunchedEffect(firstVisible, resumed) {
+    // Do not save page 1 over the stored position before the resume scroll has landed.
+    if (!resumed) return@LaunchedEffect
     kotlinx.coroutines.delay(600)
     val page = firstVisible + 1
     if (page >= 1) com.nekonaru.pedeef.data.ReadingPositions.save(context, resumeKey, page)
@@ -347,6 +355,9 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
         savedMessage?.let {
           Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp))
         }
+        if (autoDecrypt is AutoDecrypt.Ok) {
+          Text(s.decryptNotice, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp))
+        }
       }
     },
   ) { padding ->
@@ -358,7 +369,14 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     ) {
       val viewport = maxWidth
       if (sizes == null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        if (sizesFailed) {
+          Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.Center) {
+            Text(s.cannotOpenPdf)
+            TextButton(onClick = onBack) { Text(s.back) }
+          }
+        } else {
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        }
         return@BoxWithConstraints
       }
       // Scroll the pages horizontally when zoomed in; overlays stay pinned to the viewport.

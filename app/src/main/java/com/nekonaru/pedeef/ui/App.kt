@@ -127,8 +127,9 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
       nav.navigate("viewer")
     }
   }
-  LaunchedEffect(ShortcutRoute.version) {
-    // Launcher shortcut picked while the app is alive (or cold): go straight to the target screen.
+  LaunchedEffect(ShortcutRoute.version, backStack?.destination?.route, settings.onboardingDone) {
+    // Launcher shortcut picked: go straight to the target screen, even if it was tapped while another
+    // screen was open or while onboarding was still showing.
     val target = ShortcutRoute.target ?: return@LaunchedEffect
     if (nav.currentDestination?.route == "shell" && settings.onboardingDone) {
       ShortcutRoute.consume()

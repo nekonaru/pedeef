@@ -6,15 +6,15 @@
   <p><b>All your PDF tools in one free app.<br/>Everything runs on your phone, your files stay in Download/Pedeef.</b></p>
 
   <a href="https://github.com/nekonaru/pedeef/releases/latest">
-    <img alt="Release" src="https://img.shields.io/github/v/release/nekonaru/pedeef?style=flat-square&color=C2410C" />
+    <img alt="Release" src="https://img.shields.io/github/v/release/nekonaru/pedeef?style=flat-square&color=C8501E" />
   </a>
   <a href="https://github.com/nekonaru/pedeef/actions/workflows/ci.yml">
     <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/nekonaru/pedeef/ci.yml?branch=main&style=flat-square" />
   </a>
   <img alt="Platform: Android" src="https://img.shields.io/badge/platform-Android-3DDC84?style=flat-square&logo=android&logoColor=white" />
-  <img alt="Min SDK: Android 7.0" src="https://img.shields.io/badge/minSdk-24-1F1B1A?style=flat-square" />
+  <img alt="Min SDK: Android 7.0" src="https://img.shields.io/badge/minSdk-24-C8501E?style=flat-square" />
   <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.2-7F52FF?style=flat-square&logo=kotlin&logoColor=white" />
-  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-C2410C?style=flat-square" />
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-C8501E?style=flat-square" />
 </div>
 
 <br />
@@ -129,7 +129,10 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Rotate all** | Rotate every page in Organize Pages with one tap. |
 | **Night mode** | Invert page colors in the viewer for comfortable reading in the dark. Toggle in the top bar or in Settings. |
 | **Resume reading** | Reopen a document exactly where you left off; the viewer remembers the last page per file. |
-| **Launcher shortcuts** | Long-press the app icon for Scan, Merge PDFs, Fill & sign and Organize. |
+| **Launcher shortcuts** | Long-press the app icon for Scan, Merge PDFs, Fill & sign and Organize pages. |
+| **Reopen recent PDFs** | The launcher shortcut also lists your most recently modified PDFs (up to 4); one tap reopens one. |
+| **New app icon** | A fresh terracotta mark with an adaptive icon and a themed (monochrome) icon for Android 13+. |
+| **Blank PDF** | Create an empty PDF at A4, A5, Letter or Legal, up to 200 pages, no source file required. |
 
 ---
 
@@ -164,7 +167,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 ### Option A: Download the APK (easiest)
 
 1. Open the [latest release](https://github.com/nekonaru/pedeef/releases/latest).
-2. Download `pedeef-1.7.0.apk` (signed with the app's built-in debug key).
+2. Download `pedeef-1.8.0.apk` (signed with the app's built-in debug key).
 3. Tap the file to install. If Android warns about unknown sources, allow installing from your browser or file manager.
 4. Open Pedeef. On first use of the Files tab, allow the file access it asks for so your files land in Download/Pedeef.
 
@@ -254,7 +257,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       entry point
       engine/               PDF engine (PdfBox), pure ops + android ops
-      tools/                tool catalog (27 tools, EN + ID)
+      tools/                tool catalog (28 tools, EN + ID)
       ui/                   screens: home, tool, files, viewer, settings, scan
       ui/theme/             themes (Ember, Cherry, Arctic) + typography
       i18n/                 English and Bahasa Indonesia strings

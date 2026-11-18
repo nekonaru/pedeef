@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
     }
     FilesStore.root(applicationContext) // make sure the tree exists before any screen reads it
     Pins.load(applicationContext)
+    com.nekonaru.pedeef.data.RecentShortcuts.refresh(this)
     consumeLaunchIntent(intent)
     enableEdgeToEdge()
     setContent { App() }
@@ -44,11 +45,23 @@ class MainActivity : ComponentActivity() {
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     setIntent(intent)
+    com.nekonaru.pedeef.data.RecentShortcuts.refresh(this)
     consumeLaunchIntent(intent)
   }
 
   /** Routes a launcher shortcut picked by the user to the matching screen. */
   private fun consumeShortcut(intent: Intent?) {
+    val action = intent?.action ?: return
+    if (action == com.nekonaru.pedeef.data.RecentShortcuts.ACTION_OPEN_RECENT) {
+      val file = com.nekonaru.pedeef.data.RecentShortcuts.openable(this, intent.getStringExtra(com.nekonaru.pedeef.data.RecentShortcuts.EXTRA_PATH)) ?: return
+      scope.launch {
+        val bytes = runCatching { file.readBytes() }.getOrNull() ?: return@launch
+        withContext(kotlinx.coroutines.Dispatchers.Main) {
+          ViewerPayload.set(bytes, file.name, persisted = true)
+        }
+      }
+      return
+    }
     val route = when (intent?.action) {
       "com.nekonaru.pedeef.action.SCAN" -> "scan"
       "com.nekonaru.pedeef.action.MERGE" -> "tool/merge"

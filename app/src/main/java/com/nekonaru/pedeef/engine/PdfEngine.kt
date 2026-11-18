@@ -54,6 +54,18 @@ private fun PDDocument.adopt(p: PDPage): PDPage {
   return n
 }
 
+/** A blank PDF with [pages] empty pages at the named page size. */
+fun blankPdf(pages: Int, size: String): ByteArray {
+  require(pages in 1..200) { "Between 1 and 200 pages." }
+  val rect = SIZES[size] ?: SIZES.getValue("A4")
+  return PDDocument().use { doc ->
+    repeat(pages) {
+      doc.addPage(com.tom_roush.pdfbox.pdmodel.PDPage(PDRectangle(rect.first, rect.second)))
+    }
+    doc.bytes()
+  }
+}
+
 private fun pick(src: PDDocument, indices: List<Int>): ByteArray = PDDocument().use { out ->
   for (i in indices) out.adopt(src.getPage(i))
   out.bytes()

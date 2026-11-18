@@ -1,9 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <!-- Pedeef mark: a document swept by a scan beam. For light backgrounds. -->
-  <path d="M92 22 H152 L190 60 V212 Q190 228 174 228 H92 Q74 228 74 212 V44 Q74 22 92 22 Z"
-        fill="none" stroke="#1F1B1A" stroke-width="15" stroke-linejoin="round"/>
-  <path d="M152 22 V60 H190 Z" fill="none" stroke="#1F1B1A" stroke-width="15" stroke-linejoin="round"/>
-  <rect x="100" y="76" width="52" height="11" rx="5.5" fill="#1F1B1A"/>
-  <rect x="100" y="166" width="52" height="11" rx="5.5" fill="#1F1B1A"/>
-  <rect x="34" y="115" width="188" height="17" rx="8.5" fill="#C2410C"/>
+  <path d="M 70.0 152.3 L 156.0 121.0 V 197.0 Q 156.0 206.0 147.0 206.0 H 79.0 Q 70.0 206.0 70.0 197.0 V 152.3 Z" fill="#F5BC78"/>
+  <path d="M 70.0 139.0 L 70.0 75.0 Q 70.0 66.0 79.0 66.0 H 124.0 L 152.0 94.0 V 109.2 L 70.0 139.0 Z" fill="#FCFBF8"/>
+  <path d="M 124.0 66.0 L 152.0 94.0 L 124.0 94.0 Z" fill="#E8A05C"/>
+  <path d="M 91.5 94.0 H 134.5 a 3.5 3.5 0 0 1 0 7.0 H 91.5 a 3.5 3.5 0 0 1 0 -7.0 Z" fill="#C8501E"/>
+  <path d="M 91.5 111.0 H 113.5 a 3.5 3.5 0 0 1 0 7.0 H 91.5 a 3.5 3.5 0 0 1 0 -7.0 Z" fill="#C8501E"/>
 </svg>

@@ -51,25 +51,23 @@ private class PdfPrintAdapter(private val file: File, private val displayName: S
     try {
       val total = pageCount()
       val all = pages.isEmpty() || (pages.size == 1 && pages[0].start == 0 && pages[0].end >= total - 1)
-      val outBytes: ByteArray
-      if (all) {
-        outBytes = file.readBytes()
-      } else {
-        // Rewrite only the selected pages.
-        val indices = pages.flatMap { range -> (range.start..range.end).toList() }.filter { it in 0 until total }.toSortedSet().toList()
-        PDDocument.load(file).use { src ->
-          com.tom_roush.pdfbox.pdmodel.PDDocument().use { out ->
-            for (i in indices) out.adopt(src.getPage(i))
-            java.io.ByteArrayOutputStream().use { out2 -> out.save(out2); outBytes = out2.toByteArray() }
-          }
-        }
-      }
+      val outBytes = if (all) file.readBytes() else rewritePages(pages, total)
       FileOutputStream(destination.fileDescriptor).use { it.write(outBytes) }
       file.delete()
       callback.onWriteFinished(pages)
     } catch (e: Exception) {
       file.delete()
       callback.onWriteFailed(e.message ?: "Print failed")
+    }
+  }
+
+  private fun rewritePages(pages: Array<PageRange>, total: Int): ByteArray {
+    val indices = pages.flatMap { range -> (range.start..range.end).toList() }.filter { it in 0 until total }.toSortedSet().toList()
+    PDDocument.load(file).use { src ->
+      com.tom_roush.pdfbox.pdmodel.PDDocument().use { out ->
+        for (i in indices) out.adopt(src.getPage(i))
+        java.io.ByteArrayOutputStream().use { out2 -> out.save(out2); return out2.toByteArray() }
+      }
     }
   }
 

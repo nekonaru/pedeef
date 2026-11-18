@@ -162,6 +162,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
 
   fun pick() = when (tool.input) {
     Input.Images -> imagePicker.launch("image/*")
+    Input.None -> Unit
     else -> pdfPicker.launch("application/pdf")
   }
 
@@ -180,7 +181,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
   }
 
   fun run() {
-    if (picked.isEmpty()) { error = s.pickFiles; return }
+    if (picked.isEmpty() && tool.input != Input.None) { error = s.pickFiles; return }
     val total = picked.sumOf { it.bytes.size.toLong() }
     if (total > 256L * 1024 * 1024) { error = s.fileTooLarge; return }
     scope.launch {
@@ -192,6 +193,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
           when (tool.input) {
             Input.Images, Input.Pdfs -> tool.run(picked.map { com.nekonaru.pedeef.engine.Named(it.name, it.bytes) }, opts)
             Input.Pdf -> picked.flatMap { f -> tool.run(listOf(com.nekonaru.pedeef.engine.Named(f.name, f.bytes)), opts) }
+            Input.None -> tool.run(emptyList(), opts)
           }
         }
         results = outs
@@ -262,8 +264,9 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
     ) {
       Text(tool.desc(indonesian), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-      // Step 1: pick files
-      when {
+      // Step 1: pick files (not shown for tools that take no file)
+      if (tool.input != Input.None) {
+        when {
         picked.isEmpty() -> OutlinedButton(onClick = { pick() }, modifier = Modifier.fillMaxWidth()) {
           Icon(if (tool.input == Input.Images) Icons.Default.Image else Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(18.dp))
           Text(if (tool.input == Input.Images) s.pickImages else s.pickFiles, Modifier.padding(start = 8.dp))
@@ -293,6 +296,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
           }
         }
       }
+      }
 
       // Step 2: tool-specific editor or generic options
       when (tool.id) {
@@ -310,7 +314,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
       Btn(
         text = tool.cta(indonesian),
         onClick = { run() },
-        enabled = picked.isNotEmpty(),
+        enabled = picked.isNotEmpty() || tool.input == Input.None,
         busy = busy,
         modifier = Modifier.fillMaxWidth(),
       )

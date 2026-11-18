@@ -30,6 +30,11 @@ object ReadingPositions {
     map.remove(key) // re-insert to mark it as most recent
     map[key] = page
     while (map.size > MAX) map.remove(map.keys.first())
-    runCatching { fileOf(appContext).writeText(json.encodeToString(map)) }
+    // Atomic write: never leave a half-written JSON behind on a kill.
+    runCatching {
+      val tmp = File(appContext.filesDir, "reading-positions.json.tmp")
+      tmp.writeText(json.encodeToString(map))
+      tmp.renameTo(fileOf(appContext))
+    }
   }
 }
