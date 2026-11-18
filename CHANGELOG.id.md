@@ -8,7 +8,7 @@ Ikon aplikasi baru, buka kembali PDF terakhir dari launcher, PDF kosong, dan aud
 
 ### Fitur baru
 
-- **Ikon aplikasi baru.** Lambang terakota baru (dua halaman bertumpuk dipisah celah diagonal), dikemas sebagai ikon adaptif dengan lapisan bertema monokrom untuk Android 13+, plus ikon bulat dan ikon lawas. Lambang yang sama menggantikan karya seni di repo.
+- **Ikon aplikasi baru.** Lambang resmi Pedeef (dokumen krem di atas halaman peach di atas ubin gradien terakota), dikemas sebagai ikon adaptif dengan lapisan bertema monokrom untuk Android 13+, plus ikon bulat dan ikon lawas. Lambang yang sama menggantikan karya seni di repo.
 - **Buka kembali PDF terakhir.** Tahan ikon aplikasi dan PDF yang terakhir diubah muncul sebagai pintasan (sampai 4); ketuk sekali untuk membukanya langsung ke viewer.
 - **PDF kosong.** Alat baru: buat PDF kosong di A4, A5, Letter atau Legal, sampai 200 halaman, tanpa file sumber.
 

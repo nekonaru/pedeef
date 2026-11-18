@@ -8,7 +8,7 @@ A new app icon, reopen-recent PDFs from the launcher, Blank PDF, and a second au
 
 ### New features
 
-- **New app icon.** A fresh terracotta mark (two overlapping pages split by a diagonal gap), shipped as an adaptive icon with a monochrome themed layer for Android 13+, plus round and legacy icons. Same mark replaces the in-repo artwork.
+- **New app icon.** The official Pedeef mark (a cream document over a peach page on a terracotta gradient tile), shipped as an adaptive icon with a monochrome themed layer for Android 13+, plus round and legacy icons. The same mark replaces the in-repo artwork.
 - **Reopen recent PDFs.** Long-press the app icon and your most recently modified PDFs appear as shortcuts (up to 4); one tap reopens one straight into the viewer.
 - **Blank PDF.** New tool: create an empty PDF at A4, A5, Letter or Legal, up to 200 pages, no source file required.
 
