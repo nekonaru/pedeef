@@ -37,7 +37,7 @@ object RecentShortcuts {
       val intent = Intent(ACTION_OPEN_RECENT)
         .putExtra(EXTRA_PATH, entry.file.absolutePath)
         .setClass(appContext, com.nekonaru.pedeef.MainActivity::class.java)
-      ShortcutInfoCompat.Builder(appContext, "recent-${entry.file.absolutePath.hashCode()}")
+      ShortcutInfoCompat.Builder(appContext, "recent-${entry.file.absolutePath}")
         .setShortLabel(short)
         .setLongLabel(short)
         .setIcon(IconCompat.createWithResource(appContext, com.nekonaru.pedeef.R.mipmap.ic_launcher))

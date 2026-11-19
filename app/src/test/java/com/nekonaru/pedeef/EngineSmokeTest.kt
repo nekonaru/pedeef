@@ -48,3 +48,57 @@ class EngineSmokeTest {
     assertEquals(listOf(listOf(0), listOf(2, 3)), parseRanges("1, 3-4", 6))
   }
 }
+
+private fun textPdf(lines: List<String>): ByteArray {
+  com.tom_roush.pdfbox.pdmodel.PDDocument().use { doc ->
+    val page = com.tom_roush.pdfbox.pdmodel.PDPage(com.tom_roush.pdfbox.pdmodel.common.PDRectangle(200f, 300f))
+    doc.addPage(page)
+    com.tom_roush.pdfbox.pdmodel.PDPageContentStream(doc, page).use { cs ->
+      cs.beginText()
+      // PDType1Font needs the AFM bundle that ships only on-device; embed the repo's Poppins instead.
+      val fontFile = java.io.File("src/main/res/font/poppins_regular.ttf").takeIf { it.exists() } ?: java.io.File(System.getProperty("user.dir"), "app/src/main/res/font/poppins_regular.ttf")
+      val font = com.tom_roush.pdfbox.pdmodel.font.PDType0Font.load(doc, fontFile)
+      cs.setFont(font, 12f)
+      cs.newLineAtOffset(20f, 270f)
+      var firstLine = true
+      for (line in lines) {
+        if (!firstLine) cs.newLineAtOffset(0f, -16f)
+        cs.showText(line)
+        firstLine = false
+      }
+      cs.endText()
+    }
+    return java.io.ByteArrayOutputStream().use { doc.save(it); it.toByteArray() }
+  }
+}
+
+class CompareSmokeTest {
+  @Test
+  fun identicalPdfsReportIdentical() {
+    val a = textPdf(listOf("hello", "world"))
+    val b = textPdf(listOf("hello", "world"))
+    val report = String(com.nekonaru.pedeef.engine.comparePdfs("a.pdf", a, "b.pdf", b), Charsets.UTF_8)
+    org.junit.Assert.assertTrue(report, report.contains("Page 1: identical"))
+    org.junit.Assert.assertTrue(report, report.contains("Changed pages: 0"))
+  }
+
+  @Test
+  fun changedLineIsReported() {
+    val a = textPdf(listOf("hello", "world"))
+    val b = textPdf(listOf("hello", "mars"))
+    val report = String(com.nekonaru.pedeef.engine.comparePdfs("a.pdf", a, "b.pdf", b), Charsets.UTF_8)
+    org.junit.Assert.assertTrue(report, report.contains("Page 1: 1 line(s) added, 1 line(s) removed"))
+    org.junit.Assert.assertTrue(report, report.contains("- world"))
+    org.junit.Assert.assertTrue(report, report.contains("+ mars"))
+    org.junit.Assert.assertTrue(report, report.contains("Changed pages: 1"))
+  }
+
+  @Test
+  fun missingPagesAreReported() {
+    val a = textPdf(listOf("hello"))
+    val b = com.nekonaru.pedeef.engine.merge(listOf(Named("a.pdf", textPdf(listOf("hello"))), Named("b.pdf", textPdf(listOf("world")))))
+    val report = String(com.nekonaru.pedeef.engine.comparePdfs("a.pdf", a, "b.pdf", b), Charsets.UTF_8)
+    org.junit.Assert.assertTrue(report, report.contains("Page 2: only in B"))
+    org.junit.Assert.assertTrue(report, report.contains("Only in B: 1"))
+  }
+}

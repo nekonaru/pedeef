@@ -13,8 +13,8 @@ android {
     applicationId = "com.nekonaru.pedeef"
     minSdk = 24
     targetSdk = 36
-    versionCode = 9
-    versionName = "1.8.0"
+    versionCode = 10
+    versionName = "1.9.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -39,6 +39,9 @@ android {
       signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
     }
   }
+
+  // Unit tests run on the plain JVM; let android.jar stubs return defaults instead of throwing.
+  testOptions { unitTests.isReturnDefaultValues = true }
 
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17

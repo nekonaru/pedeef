@@ -36,7 +36,8 @@ class MainActivity : ComponentActivity() {
     }
     FilesStore.root(applicationContext) // make sure the tree exists before any screen reads it
     Pins.load(applicationContext)
-    com.nekonaru.pedeef.data.RecentShortcuts.refresh(this)
+    // Walks the tree and talks to the shortcut service; never on the main thread.
+    scope.launch(kotlinx.coroutines.Dispatchers.IO) { com.nekonaru.pedeef.data.RecentShortcuts.refresh(applicationContext) }
     consumeLaunchIntent(intent)
     enableEdgeToEdge()
     setContent { App() }
@@ -45,7 +46,7 @@ class MainActivity : ComponentActivity() {
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     setIntent(intent)
-    com.nekonaru.pedeef.data.RecentShortcuts.refresh(this)
+    scope.launch(kotlinx.coroutines.Dispatchers.IO) { com.nekonaru.pedeef.data.RecentShortcuts.refresh(applicationContext) }
     consumeLaunchIntent(intent)
   }
 

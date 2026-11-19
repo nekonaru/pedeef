@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "blankPdf")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "blankPdf")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -399,6 +399,16 @@ val TOOLS: List<Tool> = listOf(
     "Save every embedded image in a PDF as a PNG, zipped when there are several.", "Simpan setiap gambar yang tertanam di PDF sebagai PNG, digabung ZIP jika banyak.",
     "Extract images", "Ekstrak gambar", "Reading pages", "Membaca halaman", Input.Pdf, noPreview = true,
     run = { files, _ -> extractImages(files[0].bytes) },
+  ),
+  Tool(
+    "comparePdf", SECTION_NEW,
+    "Compare PDFs", "Bandingkan PDF",
+    "See what changed between two PDFs: identical pages, changed pages and the exact lines that differ. Outputs a plain .txt report.", "Lihat apa yang berubah antara dua PDF: halaman identik, halaman berubah, dan baris yang berbeda. Menghasilkan laporan .txt biasa.",
+    "Compare", "Bandingkan", "Comparing pages", "Membandingkan halaman", Input.Pdfs, min = 2, noPreview = true,
+    run = { files, _ ->
+      if (files.size != 2) fail("Pick exactly two PDFs: a before and an after.")
+      listOf(Output("comparison", comparePdfs(files[0].name, files[0].bytes, files[1].name, files[1].bytes), ext = "txt"))
+    },
   ),
   Tool(
     "blankPdf", SECTION_NEW,

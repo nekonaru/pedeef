@@ -196,7 +196,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     if (!resumed) return@LaunchedEffect
     kotlinx.coroutines.delay(600)
     val page = firstVisible + 1
-    if (page >= 1) com.nekonaru.pedeef.data.ReadingPositions.save(context, resumeKey, page)
+    if (page >= 1) withContext(Dispatchers.IO) { com.nekonaru.pedeef.data.ReadingPositions.save(context, resumeKey, page) }
   }
 
   LaunchedEffect(matches) {

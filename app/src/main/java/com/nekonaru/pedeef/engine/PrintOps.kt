@@ -62,7 +62,8 @@ private class PdfPrintAdapter(private val file: File, private val displayName: S
   }
 
   private fun rewritePages(pages: Array<PageRange>, total: Int): ByteArray {
-    val indices = pages.flatMap { range -> (range.start..range.end).toList() }.filter { it in 0 until total }.toSortedSet().toList()
+    val indices = pages.flatMap { range -> (range.start..minOf(range.end, total - 1)).toList() }.filter { it in 0 until total }.toSortedSet().toList()
+    if (indices.isEmpty()) throw IllegalArgumentException("No pages in the selected range.")
     PDDocument.load(file).use { src ->
       com.tom_roush.pdfbox.pdmodel.PDDocument().use { out ->
         for (i in indices) out.adopt(src.getPage(i))
