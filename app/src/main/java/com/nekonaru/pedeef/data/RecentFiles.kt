@@ -10,7 +10,8 @@ object RecentFiles {
     val seen = HashSet<String>()
     val all = ArrayList<File>()
     for (root in listOfNotNull(public, private)) {
-      root.walkTopDown().forEach { f ->
+      // Cap the walk: huge trees only need the 5 newest PDFs, not every file ever.
+      root.walkTopDown().take(2_000).forEach { f ->
         if (f.isFile && f.extension.equals("pdf", ignoreCase = true)) {
           if (seen.add(f.absolutePath)) all.add(f)
         }

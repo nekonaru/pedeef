@@ -2,6 +2,27 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.9.0
+
+Bandingkan PDF, dan audit ronde ketiga di seluruh aplikasi.
+
+### Fitur baru
+
+- **Bandingkan PDF.** Alat baru: bandingkan dua PDF halaman demi halaman dan dapatkan laporan teks: halaman identik, halaman berubah, dan baris yang tepat berbeda (dibatasi per halaman). Berguna untuk meninjau revisi kontrak dan spesifikasi.
+
+### Peningkatan
+
+- **Walk file terbaru dibatasi.** Membuka kembali PDF terakhir tidak lagi memindai seluruh pohon Download/Pedeef di thread utama; walk dibatasi dan berjalan di background.
+- **Penjaga memori Ekstrak Gambar.** Gambar di atas 60 megapiksel dilewati alih-alih berisiko mematikan aplikasi karena out-of-memory pada PDF hasil pindai, dan gambar yang diekstrak dialirkan langsung ke hasil alih-alih menumpuk di memori.
+- **Posisi baca di luar thread utama.** Penyimpanan posisi halaman kini berjalan di coroutine latar.
+- **Pintasan diantar saat onboarding.** PDF yang dibagikan saat onboarding belum selesai dibuka begitu aplikasi sampai ke layar utama, alih-alih diabaikan.
+
+### Perbaikan bug
+
+- **Rentang halaman cetak di-clamp.** Akhir rentang yang tidak dibatasi tidak lagi meledakkan daftar indeks; pemilihan kosong melaporkan error alih-alih menghasilkan job kosong.
+- **ID pintasan bebas tabrakan.** Pintasan file terbaru memakai path penuh sebagai id, bukan hash 32-bit, jadi dua path tidak pernah jatuh ke pintasan yang sama.
+- **Pesan error PDF kosong.** Jumlah halaman tidak valid menampilkan pesan yang dimaksud alih-alih error generik.
+
 ## v1.8.0
 
 Ikon aplikasi baru, buka kembali PDF terakhir dari launcher, PDF kosong, dan audit ronde kedua untuk v1.7.0 beserta perbaikannya.

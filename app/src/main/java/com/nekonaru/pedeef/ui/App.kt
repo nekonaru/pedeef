@@ -121,9 +121,9 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
   val onTab: (Tab) -> Unit = { tab = it }
   val backStack by nav.currentBackStackEntryAsState()
   val showBar = backStack?.destination?.route == "shell"
-  LaunchedEffect(ViewerPayload.version) {
+  LaunchedEffect(ViewerPayload.version, settings.onboardingDone) {
     // If an incoming PDF was saved by the launcher (or reopened from a tool), jump straight into the viewer.
-    if (com.nekonaru.pedeef.ui.ViewerPayload.bytes != null && nav.currentDestination?.route == "shell") {
+    if (com.nekonaru.pedeef.ui.ViewerPayload.bytes != null && nav.currentDestination?.route == "shell" && settings.onboardingDone) {
       nav.navigate("viewer")
     }
   }

@@ -2,6 +2,27 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.9.0
+
+Compare PDFs, and a third audit pass across the app.
+
+### New features
+
+- **Compare PDFs.** New tool: compare two PDFs page by page and get a plain-text report showing which pages are identical, which changed and the exact lines that differ (capped and truncated per page). Useful for reviewing revisions of contracts and specs.
+
+### Improvements
+
+- **Recent files walk bounded.** Reopening recent PDFs no longer scans the whole Download/Pedeef tree on the main thread; the walk is capped and runs in the background.
+- **Extract Images memory guard.** Images over 60 megapixels are skipped instead of risking an out-of-memory kill on scan-heavy PDFs, and extracted images are streamed into the output instead of accumulating in memory.
+- **Reading positions off the main thread.** The page-position save now runs on a background coroutine.
+- **Shortcuts deliver during onboarding.** An incoming PDF shared while onboarding is not finished is opened as soon as the app reaches the main screen, instead of being dropped.
+
+### Bug fixes
+
+- **Print page ranges clamped.** An unclamped end-of-range no longer explodes the boxed index list; an empty selection reports an error instead of producing an empty job.
+- **Shortcut ids collision-free.** Recent-file shortcuts use the full path as their id, not a 32-bit hash, so two paths can never collapse into one shortcut.
+- **Blank PDF error message.** Invalid page counts show the intended message instead of a generic error.
+
 ## v1.8.0
 
 A new app icon, reopen-recent PDFs from the launcher, Blank PDF, and a second audit pass of v1.7.0 with fixes.

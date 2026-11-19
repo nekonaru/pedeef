@@ -14,6 +14,12 @@ Pedeef is MIT licensed. It stands on these open source projects, libraries and a
 | [ML Kit Text Recognition](https://developers.google.com/ml-kit/vision/text-recognition) (on-device, Latin) | Google ML Kit terms | OCR: searchable scans |
 | [ML Kit Document Scanner](https://developers.google.com/ml-kit/vision/doc-scanner) (Google Play services) | Google Play services terms | Camera scanning with edge detection |
 
+## Test resources
+
+| Asset | Licence | Notes |
+|-------|---------|-------|
+| Apache PDFBox resource files (fontbox CMaps, AFM metrics, glyph lists) | Apache 2.0 | Unmodified copies under `app/src/test/resources/`; used only by the JVM unit tests, not shipped in the APK. |
+
 ## Fonts and icons
 
 | Asset | Licence | Notes |

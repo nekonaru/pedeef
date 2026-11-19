@@ -56,7 +56,7 @@ private fun PDDocument.adopt(p: PDPage): PDPage {
 
 /** A blank PDF with [pages] empty pages at the named page size. */
 fun blankPdf(pages: Int, size: String): ByteArray {
-  require(pages in 1..200) { "Between 1 and 200 pages." }
+  if (pages !in 1..200) fail("Between 1 and 200 pages.")
   val rect = SIZES[size] ?: SIZES.getValue("A4")
   return PDDocument().use { doc ->
     repeat(pages) {

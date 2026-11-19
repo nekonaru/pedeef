@@ -136,43 +136,64 @@ fun pdfToJpegs(bytes: ByteArray, cacheDir: File, maxWidth: Int = 2400, quality: 
  * More: a .zip. Inline (BI/EI) images and images inside Form XObjects are not covered.
  */
 fun extractImages(bytes: ByteArray): List<Output> {
-  // Triple of base name, extension, payload bytes; kept small by the total cap below.
-  val found = mutableListOf<Triple<String, String, ByteArray>>()
+  var count = 0
   var totalBytes = 0L
   val maxTotal = 256L * 1024 * 1024
+  var skippedLarge = 0
+  var first: Triple<String, String, ByteArray>? = null
+  val out = ByteArrayOutputStream()
+  var zip: ZipOutputStream? = null
+
+  fun emit(base: String, ext: String, data: ByteArray) {
+    count++
+    totalBytes += data.size
+    if (totalBytes > maxTotal) fail("Too much image data in this PDF. Split the document first.")
+    if (count == 1) {
+      first = Triple(base, ext, data)
+      return
+    }
+    if (zip == null) {
+      zip = ZipOutputStream(BufferedOutputStream(out))
+      val (fBase, fExt, fData) = first!!
+      zip!!.putNextEntry(ZipEntry("$fBase.$fExt"))
+      zip!!.write(fData)
+      zip!!.closeEntry()
+      first = null
+    }
+    zip!!.putNextEntry(ZipEntry("$base.$ext"))
+    zip!!.write(data)
+    zip!!.closeEntry()
+  }
+
   PDDocument.load(bytes).use { doc ->
     for ((i, page) in doc.pages.withIndex()) {
       val res = page.resources ?: continue
       for (name in res.xObjectNames) {
         val x = runCatching { res.getXObject(name) }.getOrNull() as? com.tom_roush.pdfbox.pdmodel.graphics.image.PDImageXObject ?: continue
+        // Decoding a huge scan would allocate hundreds of MB before any cap trips; skip those.
+        if (x.width.toLong() * x.height > 60_000_000L) { skippedLarge++; continue }
         val suffix = runCatching { x.suffix }.getOrNull()?.lowercase()
         val asJpeg = suffix == "jpg" || suffix == "jpeg"
         val bmp = runCatching { x.image }.getOrNull() ?: continue
         if (bmp.width < 48 || bmp.height < 48) { bmp.recycle(); continue }
-        val out = ByteArrayOutputStream()
-        if (asJpeg) bmp.compress(Bitmap.CompressFormat.JPEG, 95, out) else bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+        val tmp = ByteArrayOutputStream()
+        if (asJpeg) bmp.compress(Bitmap.CompressFormat.JPEG, 95, tmp) else bmp.compress(Bitmap.CompressFormat.PNG, 100, tmp)
         bmp.recycle()
-        val data = out.toByteArray()
-        totalBytes += data.size
-        if (totalBytes > maxTotal) fail("Too much image data in this PDF. Split the document first.")
         val base = "page-%03d-%s".format(i + 1, name.name.replace(Regex("[^A-Za-z0-9_-]"), "_"))
-        found += Triple(base, if (asJpeg) "jpg" else "png", data)
+        emit(base, if (asJpeg) "jpg" else "png", tmp.toByteArray())
       }
     }
   }
-  if (found.isEmpty()) fail("This PDF has no extractable embedded images.")
-  if (found.size == 1) {
-    val (base, ext, data) = found[0]
+
+  if (count == 0) {
+    if (skippedLarge > 0) fail("Images in this PDF are too large to extract safely (over 60 megapixels).")
+    fail("This PDF has no extractable embedded images.")
+  }
+  if (count == 1) {
+    val (base, ext, data) = first!!
     return listOf(Output(base, data, ext = ext))
   }
-  val out = ByteArrayOutputStream()
-  ZipOutputStream(BufferedOutputStream(out)).use { zip ->
-    for ((base, ext, data) in found) {
-      zip.putNextEntry(ZipEntry("$base.$ext"))
-      zip.write(data)
-      zip.closeEntry()
-    }
-  }
+  zip!!.close()
   return listOf(Output("images", out.toByteArray(), ext = "zip"))
 }
 
