@@ -104,11 +104,11 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   }
   LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
     granted = PublicFiles.hasAccess(context)
-    if (granted) PublicFiles.migrateOnce(context)
+    if (granted) scope.launch(Dispatchers.IO) { PublicFiles.migrateOnceSuspended(context) }
   }
   val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { grantedPerm ->
     granted = grantedPerm || PublicFiles.hasAccess(context)
-    if (granted) PublicFiles.migrateOnce(context)
+    if (granted) scope.launch(Dispatchers.IO) { PublicFiles.migrateOnceSuspended(context) }
   }
 
   var currentDir by remember(root) { mutableStateOf(root) }
@@ -130,6 +130,13 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
         "size" -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenByDescending { it.size })
         else -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenBy { it.name.lowercase(java.util.Locale.getDefault()) })
       }
+    }
+  }
+
+  val folders by produceState<List<java.io.File>>(initialValue = emptyList(), moveTarget, refreshTick) {
+    value = withContext(Dispatchers.IO) {
+      if (moveTarget == null) emptyList()
+      else runCatching { root.walkTopDown().filter { it.isDirectory }.take(500).toList() }.getOrDefault(emptyList())
     }
   }
 
@@ -356,9 +363,10 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
       dismiss = s.cancel,
       danger = true,
       onConfirm = {
-        FilesStore.delete(root, entry.file)
-        deleteTarget = null
-        refreshTick++
+        scope.launch(Dispatchers.IO) {
+          runCatching { FilesStore.delete(root, entry.file) }
+          withContext(Dispatchers.Main) { deleteTarget = null; refreshTick++ }
+        }
       },
       onDismiss = { deleteTarget = null },
     )
@@ -366,9 +374,6 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
 
   // Move to... dialog: pick a target folder
   moveTarget?.let { entry ->
-    val folders = remember(refreshTick, entry) {
-      root.walkTopDown().filter { it.isDirectory }.toList()
-    }
     AlertDialog(
       onDismissRequest = { moveTarget = null },
       title = { Text(s.moveTo) },

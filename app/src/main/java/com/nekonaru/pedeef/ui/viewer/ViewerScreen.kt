@@ -314,7 +314,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
             if (!persisted) {
               IconButton(onClick = { saveToFiles() }) { Icon(Icons.Default.SaveAlt, contentDescription = s.saveToFiles) }
             }
-            IconButton(onClick = { showThumbs = !showThumbs }) { Icon(Icons.Default.GridView, contentDescription = "Page thumbnails") }
+            IconButton(onClick = { showThumbs = !showThumbs }) { Icon(Icons.Default.GridView, contentDescription = s.pageThumbs) }
             IconButton(onClick = { printPdf() }) { Icon(Icons.Default.Print, contentDescription = s.print) }
             IconButton(onClick = { pageTextIndex = (currentPage - 1).coerceAtLeast(0) }, enabled = n > 0) { Icon(Icons.Default.ContentCopy, contentDescription = s.copyPageText) }
             IconButton(onClick = { shareExternally() }) { Icon(Icons.Default.OpenInNew, contentDescription = s.openElsewhere) }

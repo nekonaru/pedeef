@@ -9,6 +9,7 @@ import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.PDPage
 import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
 import com.tom_roush.pdfbox.pdmodel.PDResources
+import com.tom_roush.pdfbox.pdmodel.PDDocumentInformation
 import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
 import com.tom_roush.pdfbox.pdmodel.common.PDStream
 import com.tom_roush.pdfbox.pdmodel.encryption.AccessPermission
@@ -263,6 +264,13 @@ fun writeDetails(bytes: ByteArray, title: String, author: String, subject: Strin
   info.subject = subject.trim().ifEmpty { null }
   info.keywords = keywords.trim().ifEmpty { null }
   doc.documentInformation = info
+  doc.documentCatalog.cosObject.removeItem(COSName.METADATA)
+  doc.bytes()
+}
+
+/** Removes everything the file says about itself: document information dictionary and the XMP metadata stream. */
+fun stripMetadata(bytes: ByteArray): ByteArray = loadPdf(bytes).use { doc ->
+  doc.documentInformation = PDDocumentInformation()
   doc.documentCatalog.cosObject.removeItem(COSName.METADATA)
   doc.bytes()
 }

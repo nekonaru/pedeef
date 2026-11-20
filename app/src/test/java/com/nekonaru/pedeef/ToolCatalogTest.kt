@@ -33,8 +33,8 @@ class ToolCatalogTest {
 
   @Test
   fun catalogCoversTheOriginalsPlusNew() {
-    assertEquals(29, TOOLS.size)
-    for (id in listOf("merge", "alternate", "compress", "split", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "blankPdf", "scan")) {
+    assertEquals(31, TOOLS.size)
+    for (id in listOf("merge", "alternate", "compress", "split", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "stripMetadata", "blankPdf", "scan")) {
       // scan is not a catalog tool; the rest must exist
       if (id == "scan") assertNull(toolById(id)) else assertNotNull(toolById(id))
     }
@@ -43,7 +43,7 @@ class ToolCatalogTest {
   @Test
   fun stepToolsExcludesCustomEditorsAndNonPdfOutputs() {
     val stepIds = stepTools().map { it.id }.toSet()
-    for (excluded in listOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "blankPdf")) {
+    for (excluded in listOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf")) {
       assertTrue(excluded, excluded !in stepIds)
     }
   }

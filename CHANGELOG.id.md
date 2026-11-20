@@ -2,6 +2,32 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.10.0
+
+Dua alat baru, perbaikan lokal teks Bahasa Indonesia, dan audit mendalam kelima di seluruh aplikasi.
+
+### Fitur baru
+
+- **Laporan Dokumen.** Alat baru: laporan teks tentang halaman, ukuran halaman pertama, metadata (judul, penulis, subjek, kata kunci, creator, producer, tanggal), jumlah gambar tertanam dan nilai kolom formulir, dibatasi untuk formulir besar.
+- **Hapus Metadata.** Alat baru: menghapus dictionary informasi dokumen dan metadata XMP dalam satu ketukan, untuk berbagi file tanpa detail pribadi. Bisa juga dipakai sebagai langkah dalam Workflow Builder.
+
+### Peningkatan
+
+- **Strings Indonesia diperbaiki.** Pergeseran posisi pos memindahkan label sort, tombol putar semua, notice dekripsi dan seluruh bagian update/sponsor ke field yang salah dalam Bahasa Indonesia. Diperbaiki, dengan tes regresi.
+- **Tab Files work di luar thread utama.** Daftar folder Move-to kini dihitung di dispatcher latar dan dibatasi 500 folder; konfirmasi delete dan migrasi penyimpanan sekali tidak memblokir UI.
+- **Home recent files di luar thread utama.** Query file terbaru di Home kini berjalan di Dispatchers.IO.
+- **Startup dan cache clearing di luar thread utama.** Pembersihan file sementara saat peluncuran dan baris Hapus cache tidak lagi di thread utama.
+- **Label thumbnail lokal.** Button thumbnail di viewer kini punya content description Bahasa Indonesia.
+- **Compare melaporkan halaman tak terbaca.** Halaman yang teksnya tidak bisa diekstrak dilaporkan, bukan diam-diam dihitung identik. Potongan yang terpotong ditandai eksplisit.
+
+### Perbaikan bug
+
+- **Compare resource leak.** Kegagalan saat membuka PDF kedua tidak lagi membiarkan dokumen pertama terbuka.
+- **Parsing rentang tolak teks.** Rentang salah seperti `abc` atau `x-3` kini memunculkan error alih-alih diam-diam memilih halaman 1.
+- **Nama file sementara unik.** Counter proses-wide mencegah dua render paralel berkolisi pada path berbasis timestamp.
+- **Gambar besar dilaporkan.** Saat Ekstrak Gambar melewati gambar di atas 60 megapiksel, file `skipped-images.txt` disertakan dalam hasil.
+- **CTA Bandingkan butuh dua file.** CTA tetap nonaktif sampai dua PDF dipilih, alih-alih gagal setelah diklik.
+
 ## v1.9.0
 
 Bandingkan PDF, dan audit ronde ketiga di seluruh aplikasi.
@@ -13,7 +39,7 @@ Bandingkan PDF, dan audit ronde ketiga di seluruh aplikasi.
 ### Peningkatan
 
 - **Walk file terbaru dibatasi.** Membuka kembali PDF terakhir tidak lagi memindai seluruh pohon Download/Pedeef di thread utama; walk dibatasi dan berjalan di background.
-- **Penjaga memori Ekstrak Gambar.** Gambar di atas 60 megapiksel dilewati alih-alih berisiko mematikan aplikasi karena out-of-memory pada PDF hasil pindai, dan gambar yang diekstrak dialirkan langsung ke hasil alih-alih menumpuk di memori.
+- **Penjaga memori Ekstrak Gambar.** Gambar di atas 60 megapiksel dilewati alih-alih berisiko mematikan aplikasi karena out-of-memory pada PDF hasil pindai, dan gambar yang diekstrak ditulis ke ZIP satu per satu alih-alih semuanya ditahan sebelum di-zip.
 - **Posisi baca di luar thread utama.** Penyimpanan posisi halaman kini berjalan di coroutine latar.
 - **Pintasan diantar saat onboarding.** PDF yang dibagikan saat onboarding belum selesai dibuka begitu aplikasi sampai ke layar utama, alih-alih diabaikan.
 

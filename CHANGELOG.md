@@ -2,6 +2,32 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.10.0
+
+Two new tools, an Indonesian localization fix, and a fifth deep audit across the app.
+
+### New features
+
+- **Document report.** New tool: a plain-text report of a PDF's pages, first-page size, metadata (title, author, subject, keywords, creator, producer, dates), embedded image count and AcroForm field values, capped for large forms.
+- **Remove Metadata.** New tool: strips the document information dictionary and XMP metadata in one tap, for sharing files without personal details. Can also be used as a step in Workflow Builder.
+
+### Improvements
+
+- **Indonesian strings realigned.** A positional shift had put sort labels, the rotate-all button, the decrypt notice and the whole update/sponsor section on the wrong fields in Bahasa Indonesia. Fixed, with a regression test.
+- **Files tab work off the main thread.** Move-to folder listing is now computed on a background dispatcher and capped at 500 folders; delete confirmations and the one-time storage migration no longer block the UI.
+- **Home recent files off the main thread.** The Home screen's recent-file query now runs on Dispatchers.IO.
+- **Startup and cache clearing off the main thread.** The temp-file sweep at launch and the Clear cache row no longer run on the main thread.
+- **Localized thumbnail label.** The viewer's page-thumbnail button now has an Indonesian content description.
+- **Compare reports unreadable pages.** A page whose text could not be extracted is reported instead of silently counted as identical. Truncated excerpts are marked explicitly.
+
+### Bug fixes
+
+- **Compare resource leak.** A failure while opening the second PDF no longer leaves the first document open.
+- **Range parsing rejects text.** Typo'd ranges such as `abc` or `x-3` now show an error instead of silently selecting page 1.
+- **Temp file names unique.** A process-wide counter prevents two parallel renders from colliding on a timestamp-based path.
+- **Skipped large images reported.** When Extract Images skips images above 60 megapixels, a `skipped-images.txt` note is produced alongside the results.
+- **Compare tool needs two files.** Its CTA stays disabled until two PDFs are chosen instead of failing after the tap.
+
 ## v1.9.0
 
 Compare PDFs, and a third audit pass across the app.
@@ -13,7 +39,7 @@ Compare PDFs, and a third audit pass across the app.
 ### Improvements
 
 - **Recent files walk bounded.** Reopening recent PDFs no longer scans the whole Download/Pedeef tree on the main thread; the walk is capped and runs in the background.
-- **Extract Images memory guard.** Images over 60 megapixels are skipped instead of risking an out-of-memory kill on scan-heavy PDFs, and extracted images are streamed into the output instead of accumulating in memory.
+- **Extract Images memory guard.** Images over 60 megapixels are skipped instead of risking an out-of-memory kill on scan-heavy PDFs, and extracted images are written into the ZIP one entry at a time instead of all being held before zipping.
 - **Reading positions off the main thread.** The page-position save now runs on a background coroutine.
 - **Shortcuts deliver during onboarding.** An incoming PDF shared while onboarding is not finished is opened as soon as the app reaches the main screen, instead of being dropped.
 
