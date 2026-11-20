@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "blankPdf")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -354,6 +354,13 @@ val TOOLS: List<Tool> = listOf(
     "Remove password", "Hapus kata sandi", "Unlocking", "Membuka kunci", Input.Pdf, noPreview = true,
   ) { files, _ -> listOf(Output("unlocked", removePassword(files[0].bytes))) },
   Tool(
+    "stripMetadata", SECTION_PROTECT,
+    "Remove Metadata", "Hapus Metadata",
+    "Strip everything the file says about itself: title, author, subject, keywords, creator, producer and XMP.", "Hapus semua yang dikatakan file tentang dirinya: judul, penulis, subjek, kata kunci, creator, producer, dan XMP.",
+    "Remove metadata", "Hapus metadata", "Cleaning document", "Membersihkan dokumen", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("clean", stripMetadata(files[0].bytes), ext = "pdf")) },
+  ),
+  Tool(
     "password", SECTION_PROTECT,
     "Set Password", "Setel Kata Sandi",
     "Lock a PDF so it asks for a password before it opens.", "Kunci PDF agar meminta kata sandi saat dibuka.",
@@ -399,6 +406,13 @@ val TOOLS: List<Tool> = listOf(
     "Save every embedded image in a PDF as a PNG, zipped when there are several.", "Simpan setiap gambar yang tertanam di PDF sebagai PNG, digabung ZIP jika banyak.",
     "Extract images", "Ekstrak gambar", "Reading pages", "Membaca halaman", Input.Pdf, noPreview = true,
     run = { files, _ -> extractImages(files[0].bytes) },
+  ),
+  Tool(
+    "reportPdf", SECTION_NEW,
+    "Document report", "Laporan Dokumen",
+    "A plain-text report of the file: pages, size, metadata, form fields and embedded images.", "Laporan teks biasa tentang file: halaman, ukuran, metadata, kolom formulir, dan gambar tertanam.",
+    "Generate report", "Buat laporan", "Reading document", "Membaca dokumen", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("report", reportPdf(files[0].name, files[0].bytes), ext = "txt")) },
   ),
   Tool(
     "comparePdf", SECTION_NEW,

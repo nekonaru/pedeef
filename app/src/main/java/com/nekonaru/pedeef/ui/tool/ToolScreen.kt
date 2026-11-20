@@ -314,7 +314,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
       Btn(
         text = tool.cta(indonesian),
         onClick = { run() },
-        enabled = picked.isNotEmpty() || tool.input == Input.None,
+        enabled = picked.size >= tool.min || tool.input == Input.None,
         busy = busy,
         modifier = Modifier.fillMaxWidth(),
       )

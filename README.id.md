@@ -101,6 +101,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **OCR** | Tambahkan lapisan teks tak terlihat pada pindaian sehingga cari, pilih dan salin berfungsi. |
 | **Setel Kata Sandi** | Enkripsi AES-256; PDF meminta kata sandi sebelum terbuka. |
 | **Hapus Kata Sandi** | Simpan salinan yang terbuka tanpa kata sandi, batasan juga dihapus. |
+| **Hapus Metadata** | Hapus judul, penulis, subjek, kata kunci, creator, producer, dan XMP dari PDF. |
 
 ### Otomatisasi
 
@@ -134,6 +135,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Ikon aplikasi baru** | Lambang terakota baru dengan ikon adaptif dan ikon bertema (monokrom) untuk Android 13+. |
 | **PDF kosong** | Buat PDF kosong di A4, A5, Letter atau Legal, sampai 200 halaman, tanpa file sumber. |
 | **Bandingkan PDF** | Bandingkan dua PDF halaman demi halaman dan dapatkan laporan teks: halaman identik, halaman berubah, dan baris yang tepat berbeda. |
+| **Laporan Dokumen** | Laporan teks tentang halaman, metadata, gambar tertanam, dan kolom formulir sebuah PDF. |
 
 ---
 
@@ -168,7 +170,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.9.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-1.10.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
@@ -258,7 +260,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       titik masuk
       engine/               mesin PDF (PdfBox), operasi murni + operasi android
-      tools/                katalog alat (29 alat, EN + ID)
+      tools/                katalog alat (31 alat, EN + ID)
       ui/                   layar: home, tool, files, viewer, settings, scan
       ui/theme/             tema (Ember, Cherry, Arctic) + tipografi
       i18n/                 string English dan Bahasa Indonesia

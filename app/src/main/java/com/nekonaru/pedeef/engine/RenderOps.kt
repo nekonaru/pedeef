@@ -30,11 +30,15 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.math.max
 
+import java.util.concurrent.atomic.AtomicInteger
+
 // File- and render-based operations: need android.graphics or PdfRenderer.
+
+private val tempCounter = AtomicInteger(0)
 
 /** Runs `block` with the bytes written to a temp file (PdfRenderer needs a file descriptor). */
 fun <T> withTempPdf(bytes: ByteArray, cacheDir: File, tag: String, block: (File) -> T): T {
-  val tmp = File(cacheDir, "$tag-${System.currentTimeMillis()}.pdf").apply { writeBytes(bytes) }
+  val tmp = File(cacheDir, "$tag-${System.currentTimeMillis()}-${tempCounter.incrementAndGet()}.pdf").apply { writeBytes(bytes) }
   try {
     return block(tmp)
   } finally {
@@ -189,12 +193,15 @@ fun extractImages(bytes: ByteArray): List<Output> {
     if (skippedLarge > 0) fail("Images in this PDF are too large to extract safely (over 60 megapixels).")
     fail("This PDF has no extractable embedded images.")
   }
+  val skipNote = if (skippedLarge > 0) listOf(
+    Output("skipped-images", "$skippedLarge image(s) over 60 megapixels were skipped to keep the app responsive.".toByteArray(Charsets.UTF_8), ext = "txt")
+  ) else emptyList()
   if (count == 1) {
     val (base, ext, data) = first!!
-    return listOf(Output(base, data, ext = ext))
+    return listOf(Output(base, data, ext = ext)) + skipNote
   }
   zip!!.close()
-  return listOf(Output("images", out.toByteArray(), ext = "zip"))
+  return listOf(Output("images", out.toByteArray(), ext = "zip")) + skipNote
 }
 
 /**

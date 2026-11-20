@@ -277,8 +277,10 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
           ListRow(Icons.Default.FolderOpen, s.storageAccessButton, s.storageAccessBody, onClick = { PublicFiles.requestManageAllFilesAccess(context) })
         }
         ListRow(Icons.Default.FolderOpen, s.clearCache, fmtSize(cacheSize), onClick = {
-          context.cacheDir.listFiles()?.forEach { it.deleteRecursively() }
-          refresh++
+          scope.launch(Dispatchers.IO) {
+            context.cacheDir.listFiles()?.forEach { it.deleteRecursively() }
+            withContext(Dispatchers.Main) { refresh++ }
+          }
         })
         ListRow(Icons.Default.Delete, s.clearAppData, null, onClick = { showClear = true }, danger = true)
       }

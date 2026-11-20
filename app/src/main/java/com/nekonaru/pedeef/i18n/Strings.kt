@@ -49,7 +49,7 @@ class Strings(
   // update check and sponsor
   val versionRow: String, val checkingUpdates: String, val upToDate: String, val updateAvailable: String,
   val checkFailed: String, val sponsor: String, val sponsorBody: String,
-  val developer: String, val viewOnGithub: String,
+  val developer: String, val viewOnGithub: String, val pageThumbs: String,
 )
 
 val En = Strings(
@@ -94,7 +94,7 @@ val En = Strings(
   // update check and sponsor
   "Check for updates", "Checking…", "You are on the latest version.", "Version %1\$s is available.",
   "Could not check. Check your connection.", "Sponsor", "Pedeef is free and always will be. If it is useful to you, you can support the developer:",
-  "Developer", "View on GitHub",
+  "Developer", "View on GitHub", "Page thumbnails",
 )
 
 val Id = Strings(
@@ -135,11 +135,11 @@ val Id = Strings(
   // storage access
   "Akses file", "Pedeef menyimpan PDF dan pindaianmu di Download/Pedeef supaya mudah ditemukan.", "Izinkan akses file",
   "Kamu bisa menemukan semua file yang disimpan Pedeef di Download/Pedeef lewat file manager.", "Tanpa akses, file tersimpan di dalam aplikasi.", "Pakai penyimpanan aplikasi saja",
-  "Download/Pedeef", "penyimpanan aplikasi", "Simpan ke file", "Bookmark", "Cetak",
+  "Download/Pedeef", "penyimpanan aplikasi", "Simpan ke file", "Bookmark", "Cetak", "Nama", "Terbaru", "Terbesar", "Putar semua", "%1\$d file tersimpan", "Dibuka tanpa sandi. Salinan yang disimpan dan dibagikan tidak dilindungi sandi.",
   // update check and sponsor
   "Periksa pembaruan", "Memeriksa…", "Kamu memakai versi terbaru.", "Versi %1\$s tersedia.",
   "Tidak bisa memeriksa. Periksa koneksimu.", "Sponsor", "Pedeef gratis dan akan selalu gratis. Kalau kamu merasa terbantu, kamu bisa mendukung pengembangnya:",
-  "Pengembang", "Lihat di GitHub", "Nama", "Terbaru", "Terbesar", "Putar semua", "%1\$d file tersimpan", "Dibuka tanpa sandi. Salinan yang disimpan dan dibagikan tidak dilindungi sandi.",
+  "Pengembang", "Lihat di GitHub", "Thumbnail halaman",
 )
 
 val LocalPedeefStrings = staticCompositionLocalOf { En }

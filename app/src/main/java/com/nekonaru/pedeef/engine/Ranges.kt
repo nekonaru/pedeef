@@ -8,8 +8,9 @@ fun parseRanges(str: String, n: Int): List<List<Int>> {
   if (parts.isEmpty()) fail("Enter page ranges, e.g. 1-3, 5")
   return parts.map { part ->
     val ab = part.split('-').map { it.trim() }
-    val start = maxOf(1, ab[0].toIntOrNull() ?: 1)
-    val end = minOf(n, if (ab.size < 2) start else ab[1].toIntOrNull() ?: n)
+    if (ab.size > 2 || ab.any { it.isNotEmpty() && !it.all(Char::isDigit) }) fail("\"$part\" is not a valid page range")
+    val start = maxOf(1, ab[0].toIntOrNull() ?: fail("\"$part\" is not a valid page range"))
+    val end = minOf(n, if (ab.size < 2) start else if (ab[1].isEmpty()) n else ab[1].toIntOrNull() ?: fail("\"$part\" is not a valid page range"))
     if (start > end) fail("\"$part\" is outside pages 1-$n")
     (start - 1 until end).toList()
   }

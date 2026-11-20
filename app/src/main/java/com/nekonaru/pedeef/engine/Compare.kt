@@ -10,9 +10,11 @@ import java.util.TreeMap
  * formatting, images and annotations are ignored.
  */
 fun comparePdfs(aName: String, aBytes: ByteArray, bName: String, bBytes: ByteArray): ByteArray {
-  val a = loadPdf(aBytes)
-  val b = loadPdf(bBytes)
+  var a: PDDocument? = null
+  var b: PDDocument? = null
   try {
+    a = loadPdf(aBytes)
+    b = loadPdf(bBytes)
     val pagesA = a.pages.count
     val pagesB = b.pages.count
     val n = maxOf(pagesA, pagesB)
@@ -25,18 +27,23 @@ fun comparePdfs(aName: String, aBytes: ByteArray, bName: String, bBytes: ByteArr
     var changed = 0
     var onlyA = 0
     var onlyB = 0
+    var unreadable = 0
     val changedLines = StringBuilder()
 
     for (i in 1..n) {
-      val la = if (i <= pagesA) pageLines(a, i) else null
-      val lb = if (i <= pagesB) pageLines(b, i) else null
+      val inA = i <= pagesA
+      val inB = i <= pagesB
+      val la = if (inA) pageLines(a, i) else null
+      val lb = if (inB) pageLines(b, i) else null
       when {
-        la == null -> { onlyB++; out.append("Page $i: only in B\n") }
-        lb == null -> { onlyA++; out.append("Page $i: only in A\n") }
+        inA && la == null -> { unreadable++; out.append("Page $i: could not read text in A\n") }
+        inB && lb == null -> { unreadable++; out.append("Page $i: could not read text in B\n") }
+        !inA -> { onlyB++; out.append("Page $i: only in B\n") }
+        !inB -> { onlyA++; out.append("Page $i: only in A\n") }
         la == lb -> { identical++; out.append("Page $i: identical\n") }
         else -> {
           changed++
-          val (added, removed, excerpt) = diffLines(la, lb)
+          val (added, removed, excerpt) = diffLines(la!!, lb!!)
           out.append("Page $i: $added line(s) added, $removed line(s) removed\n")
           if (excerpt.isNotEmpty()) {
             changedLines.append("Page $i:\n")
@@ -52,23 +59,34 @@ fun comparePdfs(aName: String, aBytes: ByteArray, bName: String, bBytes: ByteArr
     out.append("Changed pages: $changed\n")
     out.append("Only in A: $onlyA\n")
     out.append("Only in B: $onlyB\n")
+    if (unreadable > 0) out.append("Could not read text: $unreadable\n")
     if (changedLines.isNotEmpty()) {
       out.append("\nDifferences (first differences per page, capped)\n\n")
       out.append(changedLines)
     }
     return out.toString().toByteArray(Charsets.UTF_8)
   } finally {
-    runCatching { a.close() }
-    runCatching { b.close() }
+    runCatching { a?.close() }
+    runCatching { b?.close() }
   }
 }
 
-private fun pageLines(doc: PDDocument, page: Int): List<String> {
+private fun pageLines(doc: PDDocument, page: Int): List<String>? {
   val stripper = PDFTextStripper().apply { startPage = page; endPage = page }
-  return runCatching { stripper.getText(doc) }.getOrDefault("")
-    .lines()
-    .map { it.trim() }
-    .filter { it.isNotEmpty() }
+  val text = runCatching { stripper.getText(doc) }.getOrNull() ?: return null
+  return text.lines().map { it.trim() }.filter { it.isNotEmpty() }
+}
+
+private const val EXCERPT_LIMIT = 4000
+
+/** Caps at a code-point boundary and leaves an explicit marker so a cut-off is never mistaken for a complete diff. */
+private fun capExcerpt(sb: StringBuilder) {
+  if (sb.length > EXCERPT_LIMIT) {
+    var cut = EXCERPT_LIMIT
+    if (sb[cut - 1].isHighSurrogate()) cut--
+    sb.setLength(cut)
+    sb.append("\n(excerpt truncated)\n")
+  }
 }
 
 /** Line-level diff. Returns added/removed counts and a `+`/`-` excerpt, capped at ~4000 chars. */
@@ -85,7 +103,7 @@ private fun diffLines(a: List<String>, b: List<String>): Triple<Int, Int, String
       if (delta > 0) { repeat(delta) { added++; if (sb.length < 4000) sb.append("+ $line\n") } }
       else if (delta < 0) { repeat(-delta) { removed++; if (sb.length < 4000) sb.append("- $line\n") } }
     }
-    if (sb.length > 4000) sb.setLength(4000)
+    capExcerpt(sb)
     return Triple(added, removed, sb.toString())
   }
 
@@ -110,6 +128,6 @@ private fun diffLines(a: List<String>, b: List<String>): Triple<Int, Int, String
   }
   while (i < m) { removed++; if (sb.length < 4000) sb.append("- ${a[i]}\n"); i++ }
   while (j < n) { added++; if (sb.length < 4000) sb.append("+ ${b[j]}\n"); j++ }
-  if (sb.length > 4000) sb.setLength(4000)
+  capExcerpt(sb)
   return Triple(added, removed, sb.toString())
 }

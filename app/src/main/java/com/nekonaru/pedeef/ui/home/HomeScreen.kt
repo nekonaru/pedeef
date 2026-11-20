@@ -89,6 +89,7 @@ import com.nekonaru.pedeef.tools.SECTIONS
 import com.nekonaru.pedeef.tools.TOOLS
 import com.nekonaru.pedeef.tools.Tool
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal val TOOL_ICONS: Map<String, androidx.compose.ui.graphics.vector.ImageVector> = mapOf(
   "workflow" to Icons.Default.AccountTree,
@@ -129,7 +130,7 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onOpenViewer: (
   var query by remember { mutableStateOf("") }
   var section by remember { mutableStateOf(-1) }
   val recent by androidx.compose.runtime.produceState<List<com.nekonaru.pedeef.data.FileEntry>>(initialValue = emptyList()) {
-    value = com.nekonaru.pedeef.data.RecentFiles.list(context)
+    value = withContext(kotlinx.coroutines.Dispatchers.IO) { com.nekonaru.pedeef.data.RecentFiles.list(context) }
   }
 
   val q = query.trim().lowercase()

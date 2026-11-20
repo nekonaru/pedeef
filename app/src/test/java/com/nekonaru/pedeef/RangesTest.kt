@@ -40,6 +40,13 @@ class RangesTest {
   }
 
   @Test
+  fun parseRanges_garbageFails() {
+    assertThrows(UserError::class.java) { parseRanges("abc", 5) }
+    assertThrows(UserError::class.java) { parseRanges("x-3", 5) }
+    assertThrows(UserError::class.java) { parseRanges("1--3", 5) }
+  }
+
+  @Test
   fun parseRanges_clampsToPageCount() {
     assertEquals(listOf(listOf(0, 1, 2, 3, 4)), parseRanges("1-99", 5))
   }

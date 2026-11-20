@@ -7,6 +7,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.File
 
 /**
@@ -15,6 +17,10 @@ import java.io.File
  * for file managers and PDF tools. Without it, Pedeef falls back to its private app storage.
  */
 object PublicFiles {
+  private val migrationMutex = kotlinx.coroutines.sync.Mutex()
+
+  /** Serializes the one-time migration when several screens request it on resume. */
+  suspend fun migrateOnceSuspended(context: Context) = migrationMutex.withLock { migrateOnce(context) }
   /** The public folder, or null when it cannot be used (permission missing or card unmounted). */
   fun root(context: Context): File? {
     if (!hasAccess(context)) return null
