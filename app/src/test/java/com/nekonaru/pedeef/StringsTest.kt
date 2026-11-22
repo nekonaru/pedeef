@@ -22,6 +22,9 @@ class StringsTest {
     assertEquals("Pengembang", Id.developer)
     assertEquals("Lihat di GitHub", Id.viewOnGithub)
     assertEquals("Thumbnail halaman", Id.pageThumbs)
+    assertEquals("File", Id.fileOne)
+    assertEquals("File", Id.fileMany)
+    assertEquals("Cari di folder ini", Id.searchInFolder)
   }
 
   @Test
@@ -31,5 +34,8 @@ class StringsTest {
     assertEquals("Extension", En.sortExt)
     assertEquals("Developer", En.developer)
     assertEquals("Page thumbnails", En.pageThumbs)
+    assertEquals("File", En.fileOne)
+    assertEquals("Files", En.fileMany)
+    assertEquals("Search in this folder", En.searchInFolder)
   }
 }

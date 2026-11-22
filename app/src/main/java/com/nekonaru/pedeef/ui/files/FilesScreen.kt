@@ -93,7 +93,7 @@ private fun iconFor(entry: FileEntry) = when {
 @Composable
 fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   val s = LocalPedeefStrings.current
-  val indonesian = s === com.nekonaru.pedeef.i18n.Id
+  // (language is handled by the localizer; no other per-locale branches here)
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
   val privateRoot = remember { FilesStore.root(context) }
@@ -114,12 +114,13 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   var currentDir by remember(root) { mutableStateOf(root) }
   var query by remember { mutableStateOf("") }
   var refreshTick by remember { mutableStateOf(0) }
-  var sort by remember { mutableStateOf("name") } // name | recent | size
+  var sort by remember { mutableStateOf("name") } // name | recent | size | extension
   var showNewFolder by remember { mutableStateOf(false) }
   var renameTarget by remember { mutableStateOf<FileEntry?>(null) }
   var renameText by remember { mutableStateOf("") }
   var deleteTarget by remember { mutableStateOf<FileEntry?>(null) }
   var moveTarget by remember { mutableStateOf<FileEntry?>(null) }
+  var moveError by remember { mutableStateOf<String?>(null) }
   var busy by remember { mutableStateOf(false) }
 
   val items by produceState<List<FileEntry>?>(initialValue = null, currentDir, query, refreshTick, sort) {
@@ -128,7 +129,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
       when (sort) {
         "recent" -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenByDescending { it.modified })
         "size" -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenByDescending { it.size })
-        "extension" -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenBy { it.name.lowercase(java.util.Locale.getDefault()).substringAfterLast('.') }.thenBy { it.name.lowercase(java.util.Locale.getDefault()) })
+        "extension" -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenBy { it.name.lowercase(java.util.Locale.getDefault()).substringAfterLast('.', "") }.thenBy { it.name.lowercase(java.util.Locale.getDefault()) })
         else -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenBy { it.name.lowercase(java.util.Locale.getDefault()) })
       }
     }
@@ -247,7 +248,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
         OutlinedTextField(
           value = query,
           onValueChange = { query = it },
-          placeholder = { Text(if (indonesian) "Cari di semua folder" else "Search all folders") },
+          placeholder = { Text(s.searchInFolder) },
           leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
           singleLine = true,
           modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
@@ -292,7 +293,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
               Text(entry.name, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
               Text(
-                (if (entry.isDir) ((if (itemCount >= 10_000) "10,000+ " else "$itemCount ") + if (indonesian) "file" else "files") else com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)),
+                (if (entry.isDir) ((if (itemCount >= 10_000) "10,000+ " else "$itemCount ") + (if (itemCount == 1) s.fileOne else s.fileMany)) else com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
               )
@@ -383,11 +384,11 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
           folders.forEach { f ->
             val rel = if (f == root) s.filesTitle else relPath(root, f).ifEmpty { s.filesTitle }
             Text(rel, modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable {
-              runCatching { FilesStore.moveTo(root, entry, f) }
-              moveTarget = null
-              refreshTick++
+              val err = runCatching { FilesStore.moveTo(root, entry, f) }.exceptionOrNull()
+              if (err != null) moveError = s.genericError else { moveTarget = null; refreshTick++ }
             }.padding(10.dp))
           }
+          moveError?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) }
         }
       },
       confirmButton = { TextButton(onClick = { moveTarget = null }) { Text(s.cancel) } },

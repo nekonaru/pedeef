@@ -9,7 +9,8 @@ New tools: PDF Lint and extension sorting. Fifth audit round across the app.
 ### New features
 
 - **PDF Lint.** New tool: a plain-text report of a PDF's internals - version, fonts, encryption, producer, and a list of issues found (fonts not embedded, reportable oddities). One tap produces the `.txt`.
-- **Sort by extension.** New option in the Files tab sort menu: sorts by file extension, then by name; folders still come first.
+- **Sort by extension.** New option in the Files tab sort menu: sorts by file extension, then by name; folders still come first. Extensionless files sort by name.
+- **Files tab UI polish.** Sort placeholder and plural strings are localized; moving a file to a folder that already has a same-named file shows an error instead of silently dropping the move; stale comments updated.
 
 ### Improvements
 
@@ -18,11 +19,12 @@ New tools: PDF Lint and extension sorting. Fifth audit round across the app.
 
 ### Bug fixes
 
-- **ComparePdf load ordering**: on an unreadable second PDF, the first document is now closed properly (fifth audit finding).
+- **Files tab (fifth audit)**: stale sort comment updated; `moveError` surfaces `genericError` when the target folder already has a same-named file.
+- **ComparePdf load ordering**: on an unreadable second PDF, the first document is now closed properly.
 - **Compare excerpt marking**: truncated excerpts are now terminated with a `(excerpt truncated)` marker instead of looking like a complete diff; splitting is code-point-safe.
-- **Compare unreadable pages**: pages whose text could not be read are now reported in the summary instead of being counted as identical (fifth audit finding).
-- **extractImages + temporary file naming**: process-wide unique temp file names avoid collisions between parallel renders (fifth audit finding).
-- **Tool catalog test robustness**: comparePdf/reportPdf/stripMetadata are excluded from stepTools expectations as appropriate.
+- **Compare unreadable pages**: pages whose text could not be read are now reported in the summary instead of being counted as identical.
+- **extractImages + temporary file naming**: process-wide unique temp file names avoid collisions between parallel renders.
+- **Dead strings**: `nothingYet`, `batchHint`, `imagesToPdfNote`, `jumpToPage`, `noTextOnPage`, `saveAs`, `savedCopies` deleted (unused); localization test extended to assert all new strings at both position and value level.
 
 ## v1.10.0
 

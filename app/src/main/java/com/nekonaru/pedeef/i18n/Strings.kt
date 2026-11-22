@@ -17,17 +17,17 @@ class Strings(
   val secCapture: String, val secCombineSplit: String, val secArrange: String, val secFillMarkup: String,
   val secProtectShrink: String, val secAutomate: String, val secNew: String,
   // tool screen
-  val preview: String, val resultReady: String, val nothingYet: String, val pickFiles: String,
+  val preview: String, val resultReady: String, val pickFiles: String,
   val pickImages: String, val runBusy: String, val savedTo: String, val shareFile: String, val tryAgain: String,
   val passwordPrompt: String, val passwordWrong: String, val unlock: String,
-  val batch: String, val batchHint: String, val openResult: String, val imagesToPdfNote: String,
+  val batch: String, val openResult: String,
   // viewer
-  val viewerSearchHint: String, val copyPageText: String, val pageTextCopied: String, val jumpToPage: String,
-  val pageOf: String, val openElsewhere: String, val textNotFound: String, val noTextOnPage: String,
+  val viewerSearchHint: String, val copyPageText: String, val pageTextCopied: String,
+  val pageOf: String, val openElsewhere: String, val textNotFound: String,
   val searchResults: String, val prevMatch: String, val nextMatch: String,
   // files
   val filesTitle: String, val filesEmpty: String, val newFolder: String, val folderName: String,
-  val saveAs: String, val moveTo: String, val savedCopies: String, val exportTo: String,
+  val moveTo: String, val exportTo: String,
   // settings
   val settingsTitle: String, val appearance: String, val themeSystem: String, val themeLight: String, val themeDark: String,
   val scheme: String, val schemeEmber: String, val schemeCherry: String, val schemeArctic: String,
@@ -49,7 +49,7 @@ class Strings(
   // update check and sponsor
   val versionRow: String, val checkingUpdates: String, val upToDate: String, val updateAvailable: String,
   val checkFailed: String, val sponsor: String, val sponsorBody: String,
-  val developer: String, val viewOnGithub: String, val pageThumbs: String,
+  val developer: String, val viewOnGithub: String, val pageThumbs: String, val fileOne: String, val fileMany: String, val searchInFolder: String,
 )
 
 val En = Strings(
@@ -64,17 +64,17 @@ val En = Strings(
   "Capture", "Combine & split", "Arrange pages", "Fill & mark up",
   "Protect & shrink", "Automate", "New",
   // tool screen
-  "Preview", "Result is ready", "Pick files to get started.", "Pick PDFs",
+  "Preview", "Result is ready", "Pick PDFs",
   "Pick images", "Working…", "Saved", "Share file", "Try again",
   "This PDF has a password.", "Wrong password.", "Unlock",
-  "Batch", "Run on every selected PDF", "Open", "Images become one page each.",
+  "Batch", "Open",
   // viewer
-  "Search in document", "Copy page text", "Page text copied", "Jump to page",
-  "of", "Open in another app", "Text not found", "This page has no text",
+  "Search in document", "Copy page text", "Page text copied",
+  "of", "Open in another app", "Text not found",
   "matches", "Previous match", "Next match",
   // files
   "Files", "Saved files will appear here.", "New folder", "Folder name",
-  "Save as…", "Move to…", "Saved copies", "Export to…",
+  "Move to…", "Export to…",
   // settings
   "Settings", "Appearance", "System", "Light", "Dark",
   "Color scheme", "Ember", "Black Cherry", "Arctic Blue",
@@ -94,7 +94,7 @@ val En = Strings(
   // update check and sponsor
   "Check for updates", "Checking…", "You are on the latest version.", "Version %1\$s is available.",
   "Could not check. Check your connection.", "Sponsor", "Pedeef is free and always will be. If it is useful to you, you can support the developer:",
-  "Developer", "View on GitHub", "Page thumbnails",
+  "Developer", "View on GitHub", "Page thumbnails", "File", "Files", "Search in this folder",
 )
 
 val Id = Strings(
@@ -109,17 +109,17 @@ val Id = Strings(
   "Tangkap", "Gabung & pisah", "Atur halaman", "Isi & tandai",
   "Lindungi & perkecil", "Otomatisasi", "Baru",
   // tool screen
-  "Pratinjau", "Hasil sudah siap", "Pilih file untuk mulai.", "Pilih PDF",
+  "Pratinjau", "Hasil sudah siap", "Pilih PDF",
   "Pilih gambar", "Memproses…", "Tersimpan", "Bagikan file", "Coba lagi",
   "PDF ini memiliki kata sandi.", "Kata sandi salah.", "Buka kunci",
-  "Batch", "Jalankan untuk setiap PDF yang dipilih", "Buka", "Gambar menjadi satu halaman per gambar.",
+  "Batch", "Buka",
   // viewer
-  "Cari di dokumen", "Salin teks halaman", "Teks halaman tersalin", "Lompat ke halaman",
-  "dari", "Buka di aplikasi lain", "Teks tidak ditemukan", "Halaman ini tidak memiliki teks",
+  "Cari di dokumen", "Salin teks halaman", "Teks halaman tersalin",
+  "dari", "Buka di aplikasi lain", "Teks tidak ditemukan",
   "hasil", "Hasil sebelumnya", "Hasil berikutnya",
   // files
   "File", "File yang tersimpan akan muncul di sini.", "Folder baru", "Nama folder",
-  "Simpan sebagai…", "Pindahkan ke…", "Salinan tersimpan", "Ekspor ke…",
+  "Pindahkan ke…", "Ekspor ke…",
   // settings
   "Pengaturan", "Tampilan", "Sistem", "Terang", "Gelap",
   "Skema warna", "Ember", "Black Cherry", "Arctic Blue",
@@ -139,7 +139,7 @@ val Id = Strings(
   // update check and sponsor
   "Periksa pembaruan", "Memeriksa…", "Kamu memakai versi terbaru.", "Versi %1\$s tersedia.",
   "Tidak bisa memeriksa. Periksa koneksimu.", "Sponsor", "Pedeef gratis dan akan selalu gratis. Kalau kamu merasa terbantu, kamu bisa mendukung pengembangnya:",
-  "Pengembang", "Lihat di GitHub", "Thumbnail halaman",
+  "Pengembang", "Lihat di GitHub", "Thumbnail halaman", "File", "File", "Cari di folder ini",
 )
 
 val LocalPedeefStrings = staticCompositionLocalOf { En }

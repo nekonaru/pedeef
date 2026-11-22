@@ -4,12 +4,13 @@ Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a
 
 ## v1.11.0
 
-Alat baru: PDF Lint dan sort menggunakan ekstensi. Audit lima ronde di seluruh aplikasi.
+Alat baru: PDF Lint dan sort berdasarkan ekstensi. Audit lima ronde di seluruh aplikasi.
 
 ### Fitur baru
 
 - **PDF Lint.** Alat baru: laporan teks tentang isi PDF - versi, font, enkripsi, producer, dan daftar masalah yang ditemukan (font tidak ter-embed, keanehan yang tersebut). Satu ketukan menghasilkan `.txt`.
-- **Urutkan berdasarkan ekstensi.** Opsi baru di menu sort tab Files: sort berdasarkan ekstensi file lalu nama; folder tetap berada di atas.
+- **Urutkan berdasarkan ekstensi.** Opsi baru di menu sort tab Files: sort berdasarkan ekstensi file lalu nama; folder tetap berada di atas. File tanpa ekstensi diurutkan menggunakan nama.
+- **Tata letak tab Files diperhalus.** Placeholder sort dan string plural dilokalisikan; memindahkan file ke folder yang sudah punya nama sama muncul error di `moveError`, alih-alih diam-diam membiarkan pemindahannya berhasil. Komentar menjadi mutakhir.
 
 ### Peningkatan
 
@@ -18,11 +19,12 @@ Alat baru: PDF Lint dan sort menggunakan ekstensi. Audit lima ronde di seluruh a
 
 ### Perbaikan bug
 
-- **ComparePdf load ordering**: pada PDF kedua yang tidak terbaca, dokumen pertama sekarang ditutup dengan benar (temuan audit lima).
-- **Compare excerpt marking**: potongan yang terpotong kini diakhiri dengan penanda `(excerpt truncated)` alih-alih terlihat seperti diff lengkap; pemotongan di ukua ukup code point.
-- **Compare unreadable pages**: halaman yang teksnya tidak bisa dibaca kini dilaporkan pada ringkasan alih-alih dihitung identik (temuan audit lima).
-- **extractImages + temporary file naming**: nama file temp proses-wide unik menghindari tabrakan antar render paralel (temuan audit lima).
-- **Robustness tool catalog test**: comparePdf/reportPdf/stripMetadata tidak keliru diexklusi dari stepTools.
+- **Tab Files (audit lima)**: komentar sort diperbarui; error baru `moveError` menampilkan `genericError` kalau folder target sudah punya nama sama.
+- **ComparePdf load ordering**: pada PDF kedua yang tidak terbaca, dokumen pertama sekarang ditutup dengan benar.
+- **Compare excerpt marking**: potongan yang terpotong kini diakhiri dengan penanda `(excerpt truncated)` alih-alih terlihat seperti diff lengkap; pemotongan aman di batas code point.
+- **Compare unreadable pages**: halaman yang teksnya tidak bisa dibaca kini dilaporkan pada ringkasan alih-alih dihitung identik.
+- **extractImages + temporary file naming**: nama file temp proses-wide unik menghindari tabrakan antar render paralel.
+- **String mati dihapus**: `nothingYet`, `batchHint`, `imagesToPdfNote`, `jumpToPage`, `noTextOnPage`, `saveAs`, `savedCopies` dihapus (tak dipakai); tes lokalasi diperkuat dengan asersi bebas variabel di posisi dan nilai kedua bahasa.
 
 ## v1.10.0
 
