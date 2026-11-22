@@ -128,6 +128,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
       when (sort) {
         "recent" -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenByDescending { it.modified })
         "size" -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenByDescending { it.size })
+        "extension" -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenBy { it.name.lowercase(java.util.Locale.getDefault()).substringAfterLast('.') }.thenBy { it.name.lowercase(java.util.Locale.getDefault()) })
         else -> raw.sortedWith(compareByDescending<FileEntry> { it.isDir }.thenBy { it.name.lowercase(java.util.Locale.getDefault()) })
       }
     }
@@ -228,7 +229,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
             Box {
               IconButton(onClick = { sortMenu = true }) { Icon(Icons.Default.Sort, contentDescription = s.sortName) }
               DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
-                listOf("name" to s.sortName, "recent" to s.sortDate, "size" to s.sortSize).forEach { (key, label) ->
+                listOf("name" to s.sortName, "recent" to s.sortDate, "size" to s.sortSize, "extension" to s.sortExt).forEach { (key, label) ->
                   DropdownMenuItem(text = { Text(label) }, onClick = { sort = key; sortMenu = false })
                 }
               }

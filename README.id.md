@@ -126,7 +126,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Sponsor** | Dukung pengembang lewat GitHub Sponsors, Saweria, SociaBuzz atau BagiBagi. |
 | **PDF handler** | Buka PDF dari aplikasi lain, lihat di Pedeef, dan simpan ke Download/Pedeef kalau kamu mau. |
 | **Cetak ke printer** | Cetak PDF apa pun langsung dari dialog cetak sistem. |
-| **Urutkan file** | Urutkan file berdasarkan nama, tanggal atau ukuran di tab Files. |
+| **Urutkan file** | Urutkan file berdasarkan nama, tanggal, ukuran, atau ekstensi di tab Files. |
 | **Putar semua** | Putar semua halaman di Atur Halaman dengan satu ketukan. |
 | **Mode malam** | Balikkan warna halaman di penampil untuk nyaman membaca di tempat gelap. Bisa diaktifkan di baris atas atau di Pengaturan. |
 | **Lanjut baca** | Buka kembali dokumen persis di halaman terakhir kamu; penampil mengingat halaman terakhir per file. |
@@ -136,6 +136,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **PDF kosong** | Buat PDF kosong di A4, A5, Letter atau Legal, sampai 200 halaman, tanpa file sumber. |
 | **Bandingkan PDF** | Bandingkan dua PDF halaman demi halaman dan dapatkan laporan teks: halaman identik, halaman berubah, dan baris yang tepat berbeda. |
 | **Laporan Dokumen** | Laporan teks tentang halaman, metadata, gambar tertanam, dan kolom formulir sebuah PDF. |
+| **Pemeriksa PDF** | Pemeriksaan masalah intern sebuah PDF: font yang tidak ter-embed, versi ganjil, enkripsi, producer. |
 
 ---
 
@@ -170,7 +171,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.10.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-1.11.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
@@ -260,7 +261,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       titik masuk
       engine/               mesin PDF (PdfBox), operasi murni + operasi android
-      tools/                katalog alat (31 alat, EN + ID)
+      tools/                katalog alat (32 alat, EN + ID)
       ui/                   layar: home, tool, files, viewer, settings, scan
       ui/theme/             tema (Ember, Cherry, Arctic) + tipografi
       i18n/                 string English dan Bahasa Indonesia
