@@ -85,7 +85,7 @@ object FilesStore {
     check(insideRoot(root, targetDir))
     val target = File(targetDir, entry.file.name)
     require(!target.exists()) { "A file with that name already exists there." }
-    require(entry.file.renameTo(target)) { "Could not move." }
+    check(entry.file.renameTo(target)) { "Could not move." }
     return target
   }
 
