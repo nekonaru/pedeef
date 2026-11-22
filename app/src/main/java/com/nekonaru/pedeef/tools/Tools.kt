@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -423,6 +423,14 @@ val TOOLS: List<Tool> = listOf(
       if (files.size != 2) fail("Pick exactly two PDFs: a before and an after.")
       listOf(Output("comparison", comparePdfs(files[0].name, files[0].bytes, files[1].name, files[1].bytes), ext = "txt"))
     },
+  ),
+  Tool(
+    "lintPdf", SECTION_PROTECT,
+    "PDF Lint", "Pemeriksa PDF",
+    "A plain-text report of a PDF's internals: version, fonts, encryption, producer and issues found.",
+    "Laporan isi PDF: versi, font, enkripsi, producer dan masalah yang ditemukan.",
+    "Lint PDF", "Lint PDF", "Linting", "Memeriksa", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("lint", lintPdf(files[0].name, files[0].bytes), ext = "txt")) },
   ),
   Tool(
     "blankPdf", SECTION_NEW,

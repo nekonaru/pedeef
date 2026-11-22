@@ -15,6 +15,7 @@ class StringsTest {
     assertEquals("Terbaru", Id.sortDate)
     assertEquals("Terbesar", Id.sortSize)
     assertEquals("Putar semua", Id.rotateAll)
+    assertEquals("Ekstensi", Id.sortExt)
     assertEquals("%1\$d file tersimpan", Id.savedNFiles)
     assertTrue(Id.decryptNotice.startsWith("Dibuka tanpa sandi"))
     assertEquals("Periksa pembaruan", Id.versionRow)
@@ -27,6 +28,7 @@ class StringsTest {
   fun enTailStringsMatchTheirFields() {
     assertEquals("Print", En.print)
     assertEquals("Name", En.sortName)
+    assertEquals("Extension", En.sortExt)
     assertEquals("Developer", En.developer)
     assertEquals("Page thumbnails", En.pageThumbs)
   }

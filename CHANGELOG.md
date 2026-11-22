@@ -2,6 +2,28 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.11.0
+
+New tools: PDF Lint and extension sorting. Fifth audit round across the app.
+
+### New features
+
+- **PDF Lint.** New tool: a plain-text report of a PDF's internals - version, fonts, encryption, producer, and a list of issues found (fonts not embedded, reportable oddities). One tap produces the `.txt`.
+- **Sort by extension.** New option in the Files tab sort menu: sorts by file extension, then by name; folders still come first.
+
+### Improvements
+
+- **Files tab**: extension sort option added to the sort dropdown.
+- **PDF Lint** fills `ToolCatalogTest` expectations (32 tools) and gets a dedicated JVM-based smoke test using the embedded Poppins font, so fonts are actually exercised on the JVM unit test run.
+
+### Bug fixes
+
+- **ComparePdf load ordering**: on an unreadable second PDF, the first document is now closed properly (fifth audit finding).
+- **Compare excerpt marking**: truncated excerpts are now terminated with a `(excerpt truncated)` marker instead of looking like a complete diff; splitting is code-point-safe.
+- **Compare unreadable pages**: pages whose text could not be read are now reported in the summary instead of being counted as identical (fifth audit finding).
+- **extractImages + temporary file naming**: process-wide unique temp file names avoid collisions between parallel renders (fifth audit finding).
+- **Tool catalog test robustness**: comparePdf/reportPdf/stripMetadata are excluded from stepTools expectations as appropriate.
+
 ## v1.10.0
 
 Two new tools, an Indonesian localization fix, and a fifth deep audit across the app.

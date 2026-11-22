@@ -126,7 +126,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Sponsor** | Support the developer via GitHub Sponsors, Saweria, SociaBuzz or BagiBagi. |
 | **PDF handler** | Open PDFs sent from other apps, view them in Pedeef and optionally save them to Download/Pedeef. |
 | **Print to printer** | Print any PDF straight from the system print dialog. |
-| **Sort files** | Sort your files by name, date or size in the Files tab. |
+| **Sort files** | Sort your files by name, date, size or extension in the Files tab. |
 | **Rotate all** | Rotate every page in Organize Pages with one tap. |
 | **Night mode** | Invert page colors in the viewer for comfortable reading in the dark. Toggle in the top bar or in Settings. |
 | **Resume reading** | Reopen a document exactly where you left off; the viewer remembers the last page per file. |
@@ -136,6 +136,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Blank PDF** | Create an empty PDF at A4, A5, Letter or Legal, up to 200 pages, no source file required. |
 | **Compare PDFs** | Compare two PDFs page by page and get a plain-text report: identical pages, changed pages and the exact lines that differ. |
 | **Document report** | A plain-text report of a PDF's pages, metadata, embedded images and form fields. |
+| **PDF Lint** | Lint a PDF for internal issues: fonts that are not embedded, odd versions, encryption, producer. |
 
 ---
 
@@ -170,7 +171,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 ### Option A: Download the APK (easiest)
 
 1. Open the [latest release](https://github.com/nekonaru/pedeef/releases/latest).
-2. Download `pedeef-1.10.0.apk` (signed with the app's built-in debug key).
+2. Download `pedeef-1.11.0.apk` (signed with the app's built-in debug key).
 3. Tap the file to install. If Android warns about unknown sources, allow installing from your browser or file manager.
 4. Open Pedeef. On first use of the Files tab, allow the file access it asks for so your files land in Download/Pedeef.
 
@@ -260,7 +261,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       entry point
       engine/               PDF engine (PdfBox), pure ops + android ops
-      tools/                tool catalog (31 tools, EN + ID)
+      tools/                tool catalog (32 tools, EN + ID)
       ui/                   screens: home, tool, files, viewer, settings, scan
       ui/theme/             themes (Ember, Cherry, Arctic) + typography
       i18n/                 English and Bahasa Indonesia strings
