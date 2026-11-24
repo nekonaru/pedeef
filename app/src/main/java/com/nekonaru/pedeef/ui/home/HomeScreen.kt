@@ -280,7 +280,7 @@ private fun ToolCard(tool: Tool, indonesian: Boolean, pinnedIds: List<String>, o
         IconButton(onClick = onTogglePin) {
           Icon(
             if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-            contentDescription = if (pinned) "Unpin" else "Pin",
+            contentDescription = if (pinned) (if (indonesian) "Lepas sematan" else "Unpin") else (if (indonesian) "Sematkan" else "Pin"),
             tint = pinTint,
           )
         }

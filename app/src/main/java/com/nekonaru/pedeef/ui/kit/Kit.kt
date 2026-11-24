@@ -198,7 +198,7 @@ fun Options(defs: List<OptDef>, value: Opts, indonesian: Boolean, onChange: (Opt
               val filtered = def.strip?.let { r -> raw.filterNot { r.matches(it.toString()) } } ?: raw
               onChange(value.with(def.key, filtered))
             },
-            placeholder = { Text(def.placeholder) },
+            placeholder = { Text(if (indonesian && def.placeholderId.isNotEmpty()) def.placeholderId else def.placeholder) },
             singleLine = true,
             shape = RoundedCornerShape(Dimens.ControlRadius),
             visualTransformation = if (def.isPassword) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,

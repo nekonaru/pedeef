@@ -27,7 +27,7 @@ inline fun <reified T> Opts.put(k: String, v: T): Opts =
 sealed class OptDef(val key: String, val en: String, val id: String, val visible: ((Opts) -> Boolean)?) {
   class Seg(key: String, en: String, id: String, val choices: List<Triple<String, String, String>>, val def: String, visible: ((Opts) -> Boolean)? = null) :
     OptDef(key, en, id, visible)
-  class Text(key: String, en: String, id: String, val def: String, val placeholder: String = "", val keyboard: Int = 0, val strip: Regex? = null, visible: ((Opts) -> Boolean)? = null) :
+  class Text(key: String, en: String, id: String, val def: String, val placeholder: String = "", val keyboard: Int = 0, val strip: Regex? = null, val placeholderId: String = "", visible: ((Opts) -> Boolean)? = null) :
     OptDef(key, en, id, visible) {
   /** keyboard == 1 renders as a password field (masked). */
   val isPassword get() = keyboard == 1
@@ -86,8 +86,8 @@ const val SECTION_NEW = 6
 private fun seg(key: String, en: String, id: String, choices: List<Triple<String, String, String>>, def: String, visible: ((Opts) -> Boolean)? = null) =
   OptDef.Seg(key, en, id, choices, def, visible)
 
-private fun text(key: String, en: String, id: String, def: String, placeholder: String = "", strip: Regex? = null, visible: ((Opts) -> Boolean)? = null) =
-  OptDef.Text(key, en, id, def, placeholder, 0, strip, visible)
+private fun text(key: String, en: String, id: String, def: String, placeholder: String = "", strip: Regex? = null, visible: ((Opts) -> Boolean)? = null, placeholderId: String = "") =
+  OptDef.Text(key, en, id, def, placeholder, 0, strip, placeholderId, visible)
 
 private fun num(key: String, en: String, id: String, def: String, placeholder: String) =
   text(key, en, id, def, placeholder, Regex("[^0-9.]"))
@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -367,7 +367,7 @@ val TOOLS: List<Tool> = listOf(
     "Set password", "Setel kata sandi", "Encrypting", "Mengenkripsi", Input.Pdf, noPreview = true,
     opts = listOf(
       OptDef.Text("password", "Password", "Kata sandi", "", "Type a password", 1),
-      OptDef.Text("owner", "Owner password (optional)", "Kata sandi pemilik (opsional)", "", "For full access, defaults to the password", 1),
+      OptDef.Text("owner", "Owner password (optional)", "Kata sandi pemilik (opsional)", "", "For full access, defaults to the password", 1, placeholderId = "Untuk akses penuh, kosongkan untuk menyamakan kata sandi"),
     ),
   ) { files, o ->
     val pw = o.str("password")
@@ -451,6 +451,28 @@ val TOOLS: List<Tool> = listOf(
     "Hapus halaman yang benar-benar kosong dari PDF dan tulis laporan nomor halaman yang dihapus.",
     "Remove blanks", "Hapus kosong", "Scanning pages", "Memindai halaman", Input.Pdf, noPreview = true,
     run = { files, _ -> removeBlankPages(files[0].bytes, ToolContext.cacheDir) },
+  ),
+  Tool(
+    "textToPdf", SECTION_NEW,
+    "Text to PDF", "Teks ke PDF",
+    "Write plain text into a new PDF with automatic line wrapping and page breaks; choose page size and font size.",
+    "Tulis teks biasa ke PDF baru dengan pembungkusan baris dan halaman otomatis; pilih ukuran halaman dan huruf.",
+    "Create PDF", "Buat PDF", "Building PDF", "Membuat PDF", Input.None, noPreview = true,
+    opts = listOf(
+      seg("size", "Page size", "Ukuran halaman", listOf(Triple("A4", "A4", "A4"), Triple("A5", "A5", "A5"), Triple("Letter", "Letter", "Letter"), Triple("Legal", "Legal", "Legal")), "A4"),
+      seg("font", "Font size", "Ukuran huruf", listOf(Triple("10", "Small", "Kecil"), Triple("12", "Normal", "Normal"), Triple("16", "Large", "Besar")), "12"),
+      OptDef.Text("text", "Text", "Teks", "", "Type or paste text", 0, placeholderId = "Ketik atau tempel teks"),
+    ),
+    run = { _, o -> listOf(Output("text-document", textToPdf(o.str("text"), o.str("size"), o.str("font").toIntOrNull() ?: 12))) },
+  ),
+  Tool(
+    "resizePdf", SECTION_ARRANGE,
+    "Resize Pages", "Ukur Ulang Halaman",
+    "Fit every page onto A4, A5, Letter or Legal while keeping the aspect ratio and page orientation.",
+    "Sesuaikan setiap halaman ke A4, A5, Letter atau Legal dengan menjaga rasio dan orientasi halaman.",
+    "Resize pages", "Ukur ulang", "Resizing pages", "Mengukur ulang halaman", Input.Pdf, noPreview = true,
+    opts = listOf(seg("size", "Page size", "Ukuran halaman", listOf(Triple("A4", "A4", "A4"), Triple("A5", "A5", "A5"), Triple("Letter", "Letter", "Letter"), Triple("Legal", "Legal", "Legal")), "A4")),
+    run = { files, o -> listOf(Output("resized", resizePages(files[0].bytes, o.str("size")))) },
   ),
   Tool(
     "cariDuplikat", SECTION_NEW,

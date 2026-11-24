@@ -2,6 +2,26 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.15.0
+
+Text to PDF and Resize Pages, plus a seventh audit round that fixes the owner-password role swap.
+
+### New features
+
+- **Text to PDF.** New tool: write typed or pasted text into a new PDF with automatic line wrapping and page breaks; choose A4/A5/Letter/Legal and small/normal/large font size.
+- **Resize Pages.** New tool: fit every page onto a standard paper size while preserving aspect ratio and orientation, using native PDF form XObjects (no rasterization).
+
+### Improvements
+
+- **Tool catalog:** 38 tools; catalog test and README EN/ID updated.
+- **Indonesian option hints:** text option placeholders now have localized versions; pin button accessibility labels localized.
+
+### Bug fixes
+
+- **Owner password role swap (Medium).** PDFBox's `StandardProtectionPolicy` takes (owner, user) in that order; the previous code passed the open password as owner and vice versa. Corrected, and a distinct owner password now applies sensible restrictions (no modify, annotations, form fill, assembly or extraction for the opening password).
+- **Startup cache sweep.** Added prefixes for `blank-`, `dup-`, `lint-`, `report-`, `compare-` temp PDFs, so force-stop during those tools no longer leaves plaintext copies in cache.
+- **Text tool placeholder** is localized for Bahasa Indonesia.
+
 ## v1.14.0
 
 Build Bookmarks, a separate owner password, and a sixth audit round that fixes a blank-page detection data-loss bug.

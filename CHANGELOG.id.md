@@ -2,6 +2,26 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.15.0
+
+Teks ke PDF dan Ukur Ulang Halaman, plus audit ronde ketujuh yang memperbaiki tertukarnya peran kata sandi.
+
+### Fitur baru
+
+- **Teks ke PDF.** Alat baru: menulis teks yang diketik/ditempel ke PDF baru dengan pembungkusan baris dan halaman otomatis; pilih A4/A5/Letter/Legal dan ukuran huruf kecil/normal/besar.
+- **Ukur Ulang Halaman.** Alat baru: menyesuaikan tiap halaman ke ukuran kertas standar dengan menjaga rasio dan orientasi, memakai form XObject PDF asli (tanpa rasterisasi).
+
+### Peningkatan
+
+- **Katalog alat:** 38 alat; tes katalog dan README EN/ID diperbarui.
+- **Petunjuk opsi Bahasa Indonesia:** placeholder opsi teks kini punya versi lokal; label aksesibilitas tombol sematan dilokalisir.
+
+### Perbaikan bug
+
+- **Peran kata sandi tertukar (Medium).** `StandardProtectionPolicy` PDFBox menerima (owner, user) dalam urutan itu; kode sebelumnya memasukkan kata sandi buka sebagai owner. Diperbaiki, dan kata sandi pemilik yang berbeda kini menerapkan batasan yang masuk akal (tanpa ubah, anotasi, isi formulir, susun, atau ekstrak untuk kata sandi buka).
+- **Sapuan cache saat mulai.** Prefix `blank-`, `dup-`, `lint-`, `report-`, `compare-` ditambahkan, sehingga force-stop saat alat tersebut tidak menyisakan salinan teks biasa di cache.
+- **Placeholder alat teks** dilokalisir untuk Bahasa Indonesia.
+
 ## v1.14.0
 
 Buat Bookmark, kata sandi pemilik terpisah, dan audit ronde keenam yang memperbaiki bug kehilangan data pada deteksi halaman kosong.

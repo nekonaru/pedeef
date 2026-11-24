@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
     // Clear temp files left by a kill: they hold plaintext document content. Off the main thread.
     scope.launch(kotlinx.coroutines.Dispatchers.IO) {
       cacheDir.listFiles()?.forEach { f ->
-        if (f.isFile && listOf("ocr-", "redact-", "export-", "viewer-", "page-", "pagetext-", "search-", "searchhl-", "sizes-", "thread", "share-", "incoming-", "print-").any { f.name.startsWith(it) }) f.delete()
+        if (f.isFile && listOf("ocr-", "redact-", "export-", "viewer-", "page-", "pagetext-", "search-", "searchhl-", "sizes-", "thread", "share-", "incoming-", "print-", "blank-", "dup-", "lint-", "report-", "compare-").any { f.name.startsWith(it) }) f.delete()
         if (f.isDirectory && f.name == "share") f.deleteRecursively()
       }
     }
