@@ -146,6 +146,8 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Ukur Ulang Halaman** | Sesuaikan tiap halaman ke A4, A5, Letter atau Legal dengan menjaga rasio dan orientasi. |
 | **PDF Abu-abu** | Render halaman abu-abu untuk e-ink atau cetak; resolusi standar/tinggi. |
 | **Balik Warna Halaman** | Balik warna halaman untuk baca latar gelap atau cetak negatif. |
+| **Hapus Anotasi** | Hapus komentar, sorotan, tautan, dan kolom formulir sebelum membagikan PDF. |
+| **Ekstrak Lampiran** | Simpan file yang tertanam di dalam PDF ke penyimpanan aplikasi. |
 
 ---
 
@@ -180,7 +182,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.16.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-1.17.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
@@ -270,7 +272,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       titik masuk
       engine/               mesin PDF (PdfBox), operasi murni + operasi android
-      tools/                katalog alat (40 alat, EN + ID)
+      tools/                katalog alat (42 alat, EN + ID)
       ui/                   layar: home, tool, files, viewer, settings, scan
       ui/theme/             tema (Ember, Cherry, Arctic) + tipografi
       i18n/                 string English dan Bahasa Indonesia
@@ -339,7 +341,7 @@ pedeef/
 <details>
 <summary><b>Apakah Pedeef berfungsi tanpa internet?</b></summary>
 
-Ya. Pedeef tidak punya izin jaringan sama sekali. Semua alat, pemindai dan OCR berjalan di ponselmu.
+Ya. Semua alat, pemindai dan OCR berjalan di ponselmu. Aplikasi mendeklarasikan izin INTERNET hanya untuk cek pembaruan opsional, yang dijalankan saat kamu mengetuknya; cek itu mengirim satu permintaan GET HTTPS ke GitHub dan tidak ada lagi.
 </details>
 
 <details>

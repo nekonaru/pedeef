@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf", "grayscalePdf", "invertPdf")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -451,6 +451,26 @@ val TOOLS: List<Tool> = listOf(
     "Hapus halaman yang benar-benar kosong dari PDF dan tulis laporan nomor halaman yang dihapus.",
     "Remove blanks", "Hapus kosong", "Scanning pages", "Memindai halaman", Input.Pdf, noPreview = true,
     run = { files, _ -> removeBlankPages(files[0].bytes, ToolContext.cacheDir) },
+  ),
+  Tool(
+    "removeAnnotations", SECTION_PROTECT,
+    "Remove Annotations", "Hapus Anotasi",
+    "Strip all comments, highlights, links and form fields from a PDF before sharing it.",
+    "Hapus semua komentar, sorotan, tautan, dan kolom formulir dari PDF sebelum dibagikan.",
+    "Remove annotations", "Hapus anotasi", "Cleaning pages", "Membersihkan halaman", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("clean", removeAnnotations(files[0].bytes))) },
+  ),
+  Tool(
+    "extractAttachments", SECTION_PROTECT,
+    "Extract Attachments", "Ekstrak Lampiran",
+    "Save every file attached inside a PDF to the app's file tree.",
+    "Simpan setiap file yang terlampir di dalam PDF ke penyimpanan aplikasi.",
+    "Extract files", "Ekstrak file", "Reading attachments", "Membaca lampiran", Input.Pdf, noPreview = true,
+    run = { files, _ ->
+      val found = extractAttachments(files[0].bytes)
+      if (found.isEmpty()) fail("This PDF has no embedded attachments.")
+      found
+    },
   ),
   Tool(
     "grayscalePdf", SECTION_FILL,

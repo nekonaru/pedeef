@@ -2,6 +2,26 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.17.0
+
+Two privacy tools (Remove Annotations, Extract Attachments) plus a ninth audit round.
+
+### New features
+
+- **Remove Annotations.** Strip every comment, highlight, link and form field from all pages before sharing. Also drops the AcroForm dictionary.
+- **Extract Attachments.** Save files embedded in the PDF name tree to the app's file tree, with sanitized names.
+
+### Improvements
+
+- **Tool catalog:** 42 tools; catalog test and README EN/ID updated.
+- **README privacy FAQ corrected.** It no longer claims there is no network permission: `INTERNET` is used only for the on-demand update check.
+
+### Bug fixes
+
+- **Viewer back during decrypt (Medium).** `BackHandler` was registered after early returns, so system back during the empty-password decrypt spinner bypassed it and re-opened the viewer with stale payload. Moved before the early returns; disabled only while the password dialog is shown.
+- **Redundant alpha in filtered PDFs.** Grayscale/invert output pages no longer carry an unnecessary all-opaque soft mask.
+- **Changelog accuracy.** Corrected the description of non-Latin text handling in Text to PDF (characters are dropped, not replaced with `?`).
+
 ## v1.16.0
 
 Grayscale and inverted page filters, plus an eighth audit round that fixes a critical blank-page bug in Text to PDF.
@@ -19,7 +39,7 @@ Grayscale and inverted page filters, plus an eighth audit round that fixes a cri
 
 - **Text to PDF was blank (Critical).** `beginText()` leaves the PDF text matrix at identity, but the code never positioned the first line, so every generated page was empty. First line is now positioned absolutely at the left/top margin; later lines use relative offsets. Added a unit test that extracts text back from the generated PDF.
 - **Viewer system-back trap (High).** The hardware/system back key bypassed the viewer's `onBack`, leaving plaintext bytes in `ViewerPayload` and bouncing straight back into the viewer. Added a `BackHandler` in the viewer.
-- **Non-Latin text crashed Text to PDF (Medium).** Input is now normalized with `winAnsi()` (as in watermark/fillSign/OCR), so curly quotes and CJK become '?' instead of crashing the tool.
+- **Non-Latin text crashed Text to PDF (Medium).** Input is now normalized with `winAnsi()` (as in watermark/fillSign/OCR), so curly quotes and CJK are dropped instead of crashing the tool.
 - **Overlong words clipped (Medium).** Words wider than the page are hard-split into chunks; empty input now fails with "Enter some text." instead of producing a blank PDF.
 - **Warm-start temp sweep.** Added `filter-` prefix so a force-stop during grayscale/invert no longer leaves plaintext PDF copies in cache.
 - **ID/EN sync:** Indonesian README test count corrected.

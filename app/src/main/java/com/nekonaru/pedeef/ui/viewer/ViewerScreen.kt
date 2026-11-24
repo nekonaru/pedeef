@@ -148,6 +148,9 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
       else unlockBytes(bytes, "")?.let { AutoDecrypt.Ok(it) } ?: AutoDecrypt.NeedsPassword
     }
   }
+  // System back must also clear the in-memory payload. Register before any early return so it is
+  // active during the decrypt spinner; the password dialog handles its own dismissal.
+  androidx.activity.compose.BackHandler(enabled = autoDecrypt !is AutoDecrypt.NeedsPassword, onBack = onBack)
   when (val a = autoDecrypt) {
     AutoDecrypt.Working -> {
       Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -291,7 +294,6 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   val n = sizes?.size ?: 0
   val currentPage = if (n > 0) (firstVisible + 1).coerceIn(1, n) else 0
 
-  androidx.activity.compose.BackHandler(enabled = true, onBack = onBack)
   Scaffold(
     topBar = {
       Column {

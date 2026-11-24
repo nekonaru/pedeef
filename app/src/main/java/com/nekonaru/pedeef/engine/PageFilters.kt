@@ -38,6 +38,7 @@ fun filterPages(bytes: ByteArray, cacheDir: java.io.File, filter: PageFilter, ma
             page.render(source, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
             val target = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
             Canvas(target).drawBitmap(source, 0f, 0f, filterPaint(filter))
+            target.setHasAlpha(false) // avoid a redundant all-opaque /SMASK in the output PDF
             source.recycle()
             val pdfPage = PDPage(PDRectangle(page.width.toFloat(), page.height.toFloat()))
             out.addPage(pdfPage)
