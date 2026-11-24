@@ -48,7 +48,7 @@ fun removeBlankPages(bytes: ByteArray, cacheDir: java.io.File, maxPages: Int = 4
 private const val BLANK_WIDTH = 150
 
 private fun isBlankPage(page: PdfRenderer.Page): Boolean {
-  val scale = BLANK_WIDTH.toFloat() / page.width
+  val scale = BLANK_WIDTH.toFloat() / maxOf(1, page.width)
   val bmp = Bitmap.createBitmap(BLANK_WIDTH, maxOf(1, (page.height * scale).toInt()), Bitmap.Config.ARGB_8888)
   page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
   return try {
