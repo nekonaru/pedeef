@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -423,6 +423,22 @@ val TOOLS: List<Tool> = listOf(
       if (files.size != 2) fail("Pick exactly two PDFs: a before and an after.")
       listOf(Output("comparison", comparePdfs(files[0].name, files[0].bytes, files[1].name, files[1].bytes), ext = "txt"))
     },
+  ),
+  Tool(
+    "reversePages", SECTION_ARRANGE,
+    "Reverse Pages", "Balik Halaman",
+    "Reverse the page order of a PDF, e.g. after scanning a document back to front. Pages can be reordered again in Organize Pages.",
+    "Balik urutan halaman PDF, misal setelah memindai dokumen dari belakang ke depan. Halaman bisa diatur ulang lagi di Atur Halaman.",
+    "Reverse pages", "Balik halaman", "Reversing pages", "Membalik halaman", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("reversed", reversePages(files[0].bytes))) },
+  ),
+  Tool(
+    "hapusKosong", SECTION_ARRANGE,
+    "Remove Blank Pages", "Hapus Halaman Kosong",
+    "Remove fully blank pages from a PDF and write a text report of the removed page numbers.",
+    "Hapus halaman yang benar-benar kosong dari PDF dan tulis laporan nomor halaman yang dihapus.",
+    "Remove blanks", "Hapus kosong", "Scanning pages", "Memindai halaman", Input.Pdf, noPreview = true,
+    run = { files, _ -> removeBlankPages(files[0].bytes, ToolContext.cacheDir) },
   ),
   Tool(
     "cariDuplikat", SECTION_NEW,

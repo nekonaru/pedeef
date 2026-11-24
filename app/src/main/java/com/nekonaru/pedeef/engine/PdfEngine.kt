@@ -49,7 +49,7 @@ fun PDDocument.bytes(): ByteArray = ByteArrayOutputStream().use { save(it); it.t
 private val PDPage.rot: Int get() = ((rotation % 360) + 360) % 360
 
 /** Copies a page into this document, keeping the resources it relies on. */
-private fun PDDocument.adopt(p: PDPage): PDPage {
+internal fun PDDocument.adopt(p: PDPage): PDPage {
   val n = importPage(p)
   if (!n.cosObject.containsKey(COSName.RESOURCES)) n.resources = p.resources ?: PDResources()
   return n
