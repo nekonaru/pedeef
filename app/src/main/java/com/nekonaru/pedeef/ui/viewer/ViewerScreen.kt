@@ -291,6 +291,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   val n = sizes?.size ?: 0
   val currentPage = if (n > 0) (firstVisible + 1).coerceIn(1, n) else 0
 
+  androidx.activity.compose.BackHandler(enabled = true, onBack = onBack)
   Scaffold(
     topBar = {
       Column {
