@@ -2,6 +2,28 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.14.0
+
+Buat Bookmark, kata sandi pemilik terpisah, dan audit ronde keenam yang memperbaiki bug kehilangan data pada deteksi halaman kosong.
+
+### Fitur baru
+
+- **Buat Bookmark.** Alat baru: menambahkan outline/bookmark ke PDF dari baris seperti `1=Pendahuluan, 5=Bab Satu`; nomor halaman mulai dari 1 dan baris invalid dilewati. Navigasi bookmark di viewer akan menampilkannya.
+- **Kata sandi pemilik.** Alat Set Password kini punya opsi kata sandi pemilik terpisah dari kata sandi buka; default mengikuti kata sandi buka bila kosong.
+
+### Peningkatan
+
+- **Sisa UI lokal.** "Reset", "Warna" dan label aksesibilitas halaman kini lokal di Atur Halaman, Isi & Tanda, Crop, Redaksi, dan viewer.
+- **Jumlah unit test** di README diperbarui sesuai suite (46 tes).
+
+### Perbaikan bug
+
+- **Deteksi halaman kosong (High).** Pemeriksaan putih membandingkan seluruh integer RGB 24-bit, sehingga tanda merah/kuning bisa dihitung putih dan halaman dihapus. Sekarang tiap kanal diperiksa terpisah.
+- **Render halaman kosong.** Halaman dirender tanpa mengosongkan bitmap ke putih lebih dulu, sehingga halaman kosong vektor tidak terdeteksi dan duplikat putih-vs-transparen terlewat. Ditambahkan `eraseColor(WHITE)` di kedua deteksi.
+- **Ukuran bitmap dibatasi.** Tinggi halaman hasil render dibatasi 3200 px di kedua alat, mencegah alokasi besar pada halaman sempit-tinggi.
+- **PDF masuk dari aplikasi lain.** Berbagi PDF saat layar alat/viewer terbuka kini langsung dibuka saat kembali ke shell.
+- **Page adoption cetak.** PrintOps kini memakai helper `adopt` bersama, bukan salinan lokal.
+
 ## v1.13.0
 
 Tiga alat perapian halaman untuk dokumen hasil pindai dan gabung, plus hardening audit.

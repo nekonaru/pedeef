@@ -71,10 +71,4 @@ private class PdfPrintAdapter(private val file: File, private val displayName: S
       }
     }
   }
-
-  private fun PDDocument.adopt(p: com.tom_roush.pdfbox.pdmodel.PDPage): com.tom_roush.pdfbox.pdmodel.PDPage {
-    val n = importPage(p)
-    if (!n.cosObject.containsKey(com.tom_roush.pdfbox.cos.COSName.RESOURCES)) n.resources = p.resources ?: com.tom_roush.pdfbox.pdmodel.PDResources()
-    return n
-  }
 }

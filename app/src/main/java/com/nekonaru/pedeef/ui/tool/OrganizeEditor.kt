@@ -63,7 +63,7 @@ fun OrganizeEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opt
     Row(verticalAlignment = Alignment.CenterVertically) {
       Text("$kept / ${order.size}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
       OutlinedButton(onClick = { apply(order.map { it.copy(rot = (it.rot + 90) % 360) }) }) { Text(s.rotateAll) }
-      OutlinedButton(onClick = { apply((0 until count).map { PageOrder(it) }) }) { Text("Reset") }
+      OutlinedButton(onClick = { apply((0 until count).map { PageOrder(it) }) }) { Text(s.reset) }
     }
     LazyVerticalGrid(
       columns = GridCells.Fixed(3),
@@ -79,7 +79,7 @@ fun OrganizeEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opt
             modifier = Modifier.padding(6.dp).alpha(if (page.del) 0.35f else 1f),
           ) {
             if (image != null) {
-              Image(image, contentDescription = "Page ${page.i + 1}", contentScale = ContentScale.Fit, modifier = Modifier.size(72.dp))
+              Image(image, contentDescription = "${s.pageName} ${page.i + 1}", contentScale = ContentScale.Fit, modifier = Modifier.size(72.dp))
             }
             Text("${page.i + 1}", style = MaterialTheme.typography.labelLarge)
             Row {

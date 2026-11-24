@@ -128,7 +128,7 @@ fun RedactEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opts)
         },
     ) {
       if (image != null) {
-        Image(image, contentDescription = "Page ${page + 1}", contentScale = ContentScale.FillBounds, modifier = Modifier.fillMaxWidth().aspectRatio(ratio))
+        Image(image, contentDescription = "${s.pageName} ${page + 1}", contentScale = ContentScale.FillBounds, modifier = Modifier.fillMaxWidth().aspectRatio(ratio))
       }
       Canvas(Modifier.fillMaxWidth().aspectRatio(ratio)) {
         for (b in pageBoxes) {

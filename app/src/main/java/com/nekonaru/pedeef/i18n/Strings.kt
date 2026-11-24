@@ -49,7 +49,7 @@ class Strings(
   // update check and sponsor
   val versionRow: String, val checkingUpdates: String, val upToDate: String, val updateAvailable: String,
   val checkFailed: String, val sponsor: String, val sponsorBody: String,
-  val developer: String, val viewOnGithub: String, val pageThumbs: String, val fileOne: String, val fileMany: String, val searchInFolder: String,
+  val developer: String, val viewOnGithub: String, val pageThumbs: String, val fileOne: String, val fileMany: String, val searchInFolder: String, val reset: String, val color: String, val pageName: String,
 )
 
 val En = Strings(
@@ -94,7 +94,7 @@ val En = Strings(
   // update check and sponsor
   "Check for updates", "Checking…", "You are on the latest version.", "Version %1\$s is available.",
   "Could not check. Check your connection.", "Sponsor", "Pedeef is free and always will be. If it is useful to you, you can support the developer:",
-  "Developer", "View on GitHub", "Page thumbnails", "File", "Files", "Search in this folder",
+  "Developer", "View on GitHub", "Page thumbnails", "File", "Files", "Search in this folder", "Reset", "Color", "Page",
 )
 
 val Id = Strings(
@@ -139,7 +139,7 @@ val Id = Strings(
   // update check and sponsor
   "Periksa pembaruan", "Memeriksa…", "Kamu memakai versi terbaru.", "Versi %1\$s tersedia.",
   "Tidak bisa memeriksa. Periksa koneksimu.", "Sponsor", "Pedeef gratis dan akan selalu gratis. Kalau kamu merasa terbantu, kamu bisa mendukung pengembangnya:",
-  "Pengembang", "Lihat di GitHub", "Thumbnail halaman", "File", "File", "Cari di folder ini",
+  "Pengembang", "Lihat di GitHub", "Thumbnail halaman", "File", "File", "Cari di folder ini", "Atur ulang", "Warna", "Halaman",
 )
 
 val LocalPedeefStrings = staticCompositionLocalOf { En }

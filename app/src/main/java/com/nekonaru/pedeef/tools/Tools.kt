@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -365,11 +365,14 @@ val TOOLS: List<Tool> = listOf(
     "Set Password", "Setel Kata Sandi",
     "Lock a PDF so it asks for a password before it opens.", "Kunci PDF agar meminta kata sandi saat dibuka.",
     "Set password", "Setel kata sandi", "Encrypting", "Mengenkripsi", Input.Pdf, noPreview = true,
-    opts = listOf(OptDef.Text("password", "Password", "Kata sandi", "", "Type a password", 1)),
+    opts = listOf(
+      OptDef.Text("password", "Password", "Kata sandi", "", "Type a password", 1),
+      OptDef.Text("owner", "Owner password (optional)", "Kata sandi pemilik (opsional)", "", "For full access, defaults to the password", 1),
+    ),
   ) { files, o ->
     val pw = o.str("password")
     if (pw.isEmpty()) fail("Enter a password.")
-    listOf(Output("protected", setPdfPassword(files[0].bytes, pw) ?: fail("This PDF already has a password.")))
+    listOf(Output("protected", setPdfPassword(files[0].bytes, pw, o.str("owner").ifEmpty { pw }) ?: fail("This PDF already has a password.")))
   },
   // New in Pedeef
   Tool(
@@ -423,6 +426,15 @@ val TOOLS: List<Tool> = listOf(
       if (files.size != 2) fail("Pick exactly two PDFs: a before and an after.")
       listOf(Output("comparison", comparePdfs(files[0].name, files[0].bytes, files[1].name, files[1].bytes), ext = "txt"))
     },
+  ),
+  Tool(
+    "bookmarks", SECTION_ARRANGE,
+    "Build Bookmarks", "Buat Bookmark",
+    "Add bookmarks to a PDF from lines like 1=Introduction, 5=Chapter One. Page numbers are 1-based.",
+    "Tambahkan bookmark ke PDF dari baris seperti 1=Pendahuluan, 5=Bab Satu. Nomor halaman mulai dari 1.",
+    "Add bookmarks", "Tambah bookmark", "Writing bookmarks", "Menulis bookmark", Input.Pdf, noPreview = true,
+    opts = listOf(text("outline", "Bookmarks (page=title)", "Bookmark (halaman=judul)", "1=Introduction", "1=Introduction, 5=Chapter One")),
+    run = { files, o -> listOf(Output("bookmarked", setBookmarks(files[0].bytes, o.str("outline")))) },
   ),
   Tool(
     "reversePages", SECTION_ARRANGE,
