@@ -137,6 +137,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Bandingkan PDF** | Bandingkan dua PDF halaman demi halaman dan dapatkan laporan teks: halaman identik, halaman berubah, dan baris yang tepat berbeda. |
 | **Laporan Dokumen** | Laporan teks tentang halaman, metadata, gambar tertanam, dan kolom formulir sebuah PDF. |
 | **Pemeriksa PDF** | Pemeriksaan masalah intern sebuah PDF: font yang tidak ter-embed, versi ganjil, enkripsi, producer. |
+| **Cari Duplikat** | Laporkan halaman yang secara visual identik dalam PDF (misal pindaian ganda) sebagai file teks. |
 
 ---
 
@@ -171,7 +172,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.11.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-1.12.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
@@ -261,7 +262,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       titik masuk
       engine/               mesin PDF (PdfBox), operasi murni + operasi android
-      tools/                katalog alat (32 alat, EN + ID)
+      tools/                katalog alat (33 alat, EN + ID)
       ui/                   layar: home, tool, files, viewer, settings, scan
       ui/theme/             tema (Ember, Cherry, Arctic) + tipografi
       i18n/                 string English dan Bahasa Indonesia

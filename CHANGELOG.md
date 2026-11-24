@@ -2,6 +2,22 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.12.0
+
+Find Duplicates: a PDF tool that reports visually identical pages (e.g. repeated scan pages), plus audit hardening.
+
+### New features
+
+- **Find Duplicates.** New tool: renders each page at low res and hashes the pixels; groups pages that are visually identical and writes a plain-text report of the page numbers. Capped at 400 pages with a bounded bitmap size, so a large scan job does not blow up memory or time.
+
+### Improvements
+
+- **Tool catalog:** 33 tools, catalog test updated; `cariDuplikat` excluded from workflow steps (it produces a report, not a PDF).
+
+### Bug fixes
+
+- **Audit hardening:** no new defects found; Strings alignment enforced by regression tests.
+
 ## v1.11.0
 
 New tools: PDF Lint and extension sorting. Fifth audit round across the app.
