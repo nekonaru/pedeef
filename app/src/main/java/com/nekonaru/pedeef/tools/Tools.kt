@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -423,6 +423,13 @@ val TOOLS: List<Tool> = listOf(
       if (files.size != 2) fail("Pick exactly two PDFs: a before and an after.")
       listOf(Output("comparison", comparePdfs(files[0].name, files[0].bytes, files[1].name, files[1].bytes), ext = "txt"))
     },
+  ),
+  Tool(
+    "cariDuplikat", SECTION_NEW,
+    "Find Duplicates", "Cari Duplikat",
+    "Report pages that are visually identical in a PDF (e.g. after scanning or merging).", "Laporkan halaman yang secara visual identik dalam PDF (misal setelah scan atau merge).",
+    "Find duplicates", "Cari duplikat", "Reading pages", "Membaca halaman", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("duplicates", findDuplicatePages(files[0].name, files[0].bytes, ToolContext.cacheDir), ext = "txt")) },
   ),
   Tool(
     "lintPdf", SECTION_PROTECT,

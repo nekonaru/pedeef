@@ -2,6 +2,22 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.12.0
+
+Cari Duplikat: alat PDF yang melaporkan halaman identik secara visual (misal halaman pindai yang terulang), plus hardening audit.
+
+### Fitur baru
+
+- **Cari Duplikat.** Alat baru: merender tiap halaman dengan resolusi rendah lalu melakukan hash piksel; mengelompokkan halaman yang secara visual identik dan menulis laporan teks bernomor halaman. Dibatasi 400 halaman dengan ukuran bitmap yang dibatasi, sehingga pekerjaan pindai besar tidak meledakkan memori atau waktu.
+
+### Peningkatan
+
+- **Katalog alat:** 33 alat, tes katalog diperbarui; `cariDuplikat` tidak termasuk langkah workflow (menghasilkan laporan, bukan PDF).
+
+### Perbaikan bug
+
+- **Hardening audit:** tidak ada cacat baru; keselarasan Strings dijamin oleh tes regresi.
+
 ## v1.11.0
 
 Alat baru: PDF Lint dan sort berdasarkan ekstensi. Audit lima ronde di seluruh aplikasi.
