@@ -2,6 +2,28 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.14.0
+
+Build Bookmarks, a separate owner password, and a sixth audit round that fixes a blank-page detection data-loss bug.
+
+### New features
+
+- **Build Bookmarks.** New tool: add an outline/bookmarks to a PDF from lines like `1=Introduction, 5=Chapter One`; page numbers are 1-based and invalid lines are skipped. The viewer's bookmark navigation picks them up.
+- **Owner password.** The Set Password tool now has an optional owner password, separate from the open password; it defaults to the open password when left blank.
+
+### Improvements
+
+- **Localized UI leftovers.** "Reset", "Color" and page accessibility labels are now localized in Organize, Fill & Sign, Crop, Redact and the viewer.
+- **Unit test count** in README updated to match the suite (46 tests).
+
+### Bug fixes
+
+- **Blank-page detection (High).** The all-white check compared the whole 24-bit RGB integer, so a red or yellow mark could be counted as white and the page silently deleted. Now checks each channel separately.
+- **Blank rendering.** Pages were rendered without clearing the bitmap to white first, so vector/empty blank pages reported as not blank and duplicates of white-vs-transparent pages were missed. Added `eraseColor(WHITE)` in both blank-page and duplicate detection.
+- **Bitmap size bound.** Rendered page height is capped at 3200 px in both tools, preventing huge allocations on narrow/tall pages.
+- **Incoming PDF delivery.** Sharing a PDF into the app while a tool/viewer screen is open now opens it on return to the shell (route added to the effect keys).
+- **Print page adoption.** PrintOps now uses the shared `adopt` helper instead of a local copy.
+
 ## v1.13.0
 
 Three page-cleanup tools for scanned and merged documents, plus audit hardening.

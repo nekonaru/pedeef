@@ -459,6 +459,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
 
 @Composable
 private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewport: androidx.compose.ui.unit.Dp, zoomFactor: Float, isMatch: Boolean, highlights: List<android.graphics.RectF> = emptyList(), nightMode: Boolean = false) {
+  val s = LocalPedeefStrings.current
   val image by produceState<android.graphics.Bitmap?>(initialValue = null, bytes, index, zoomFactor) {
     value = com.nekonaru.pedeef.ui.kit.renderPage(bytes, index, (1200 * zoomFactor).toInt(), ToolContext.cacheDir)
   }
@@ -476,7 +477,7 @@ private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewpor
     ) {
       val bmp = image
       if (bmp != null) {
-        Image(bmp.asImageBitmap(), contentDescription = "Page ${index + 1}", colorFilter = if (nightMode) androidx.compose.ui.graphics.ColorFilter.colorMatrix(invertColors) else null, modifier = Modifier.fillMaxSize())
+        Image(bmp.asImageBitmap(), contentDescription = "${s.pageName} ${index + 1}", colorFilter = if (nightMode) androidx.compose.ui.graphics.ColorFilter.colorMatrix(invertColors) else null, modifier = Modifier.fillMaxSize())
       } else {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(strokeWidth = 2.dp) }
       }
@@ -497,6 +498,7 @@ private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewpor
 
 @Composable
 private fun ThumbItem(bytes: ByteArray, index: Int, selected: Boolean, nightMode: Boolean = false, onClick: () -> Unit) {
+  val s = LocalPedeefStrings.current
   val image by produceState<android.graphics.Bitmap?>(initialValue = null, bytes, index) {
     value = com.nekonaru.pedeef.ui.kit.renderPage(bytes, index, 180, ToolContext.cacheDir)
   }
@@ -516,7 +518,7 @@ private fun ThumbItem(bytes: ByteArray, index: Int, selected: Boolean, nightMode
     ) {
       val bmp = image
       if (bmp != null) {
-        Image(bmp.asImageBitmap(), contentDescription = "Page ${index + 1}", colorFilter = if (nightMode) androidx.compose.ui.graphics.ColorFilter.colorMatrix(invertColors) else null, contentScale = androidx.compose.ui.layout.ContentScale.Fit, modifier = Modifier.fillMaxSize())
+        Image(bmp.asImageBitmap(), contentDescription = "${s.pageName} ${index + 1}", colorFilter = if (nightMode) androidx.compose.ui.graphics.ColorFilter.colorMatrix(invertColors) else null, contentScale = androidx.compose.ui.layout.ContentScale.Fit, modifier = Modifier.fillMaxSize())
       } else {
         CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
       }

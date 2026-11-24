@@ -33,8 +33,8 @@ class ToolCatalogTest {
 
   @Test
   fun catalogCoversTheOriginalsPlusNew() {
-    assertEquals(35, TOOLS.size)
-    for (id in listOf("merge", "alternate", "compress", "split", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "stripMetadata", "lintPdf", "cariDuplikat", "hapusKosong", "reversePages", "blankPdf", "scan")) {
+    assertEquals(36, TOOLS.size)
+    for (id in listOf("merge", "alternate", "compress", "split", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "stripMetadata", "lintPdf", "cariDuplikat", "hapusKosong", "reversePages", "bookmarks", "blankPdf", "scan")) {
       // scan is not a catalog tool; the rest must exist
       if (id == "scan") assertNull(toolById(id)) else assertNotNull(toolById(id))
     }

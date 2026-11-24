@@ -232,7 +232,7 @@ fun removePassword(bytes: ByteArray): ByteArray = loadPdf(bytes).use { doc ->
 }
 
 /** AES-256. Null when the PDF is already encrypted. */
-fun setPdfPassword(bytes: ByteArray, password: String): ByteArray? {
+fun setPdfPassword(bytes: ByteArray, password: String, ownerPassword: String = password): ByteArray? {
   val doc = try {
     PDDocument.load(bytes)
   } catch (_: InvalidPasswordException) {
@@ -240,7 +240,7 @@ fun setPdfPassword(bytes: ByteArray, password: String): ByteArray? {
   }
   doc.use {
     if (it.isEncrypted) return null
-    it.protect(StandardProtectionPolicy(password, password, AccessPermission()).apply { encryptionKeyLength = 256 })
+    it.protect(StandardProtectionPolicy(password, ownerPassword, AccessPermission()).apply { encryptionKeyLength = 256 })
     return it.bytes()
   }
 }

@@ -49,12 +49,15 @@ private const val BLANK_WIDTH = 150
 
 private fun isBlankPage(page: PdfRenderer.Page): Boolean {
   val scale = BLANK_WIDTH.toFloat() / maxOf(1, page.width)
-  val bmp = Bitmap.createBitmap(BLANK_WIDTH, maxOf(1, (page.height * scale).toInt()), Bitmap.Config.ARGB_8888)
+  val bmp = Bitmap.createBitmap(BLANK_WIDTH, maxOf(1, minOf(3200, (page.height * scale).toInt())), Bitmap.Config.ARGB_8888)
+  bmp.eraseColor(android.graphics.Color.WHITE)
   page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
   return try {
     val px = IntArray(bmp.width * bmp.height)
     bmp.getPixels(px, 0, bmp.width, 0, 0, bmp.width, bmp.height)
-    px.all { (it and 0xFFFFFF) >= 0xF8F8F8 }
+    px.all { c ->
+      ((c shr 16) and 0xFF) >= 0xF8 && ((c shr 8) and 0xFF) >= 0xF8 && (c and 0xFF) >= 0xF8
+    }
   } finally {
     bmp.recycle()
   }

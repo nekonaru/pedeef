@@ -177,7 +177,7 @@ fun FillSignEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opt
         },
     ) {
       if (image != null) {
-        Image(image, contentDescription = "Page ${page + 1}", contentScale = ContentScale.FillBounds, modifier = Modifier.fillMaxWidth().aspectRatio(ratio))
+        Image(image, contentDescription = "${s.pageName} ${page + 1}", contentScale = ContentScale.FillBounds, modifier = Modifier.fillMaxWidth().aspectRatio(ratio))
       }
       BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(ratio)) {
         for (item in pageItems) ItemOverlay(item, this@BoxWithConstraints.maxWidth, this@BoxWithConstraints.maxHeight, cacheDir)
@@ -213,7 +213,7 @@ fun FillSignEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opt
               it.copy(color = next)
             } else it
           })
-        }) { Text("Color", color = if (item.color != null) parseHex(item.color) else MaterialTheme.colorScheme.onSurface) }
+        }) { Text(s.color, color = if (item.color != null) parseHex(item.color) else MaterialTheme.colorScheme.onSurface) }
         androidx.compose.material3.IconButton(onClick = { apply(items.filterIndexed { i, _ -> i != index }) }) {
           Icon(Icons.Default.Delete, contentDescription = null)
         }

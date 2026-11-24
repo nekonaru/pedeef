@@ -25,6 +25,9 @@ class StringsTest {
     assertEquals("File", Id.fileOne)
     assertEquals("File", Id.fileMany)
     assertEquals("Cari di folder ini", Id.searchInFolder)
+    assertEquals("Atur ulang", Id.reset)
+    assertEquals("Warna", Id.color)
+    assertEquals("Halaman", Id.pageName)
   }
 
   @Test
@@ -37,5 +40,8 @@ class StringsTest {
     assertEquals("File", En.fileOne)
     assertEquals("Files", En.fileMany)
     assertEquals("Search in this folder", En.searchInFolder)
+    assertEquals("Reset", En.reset)
+    assertEquals("Color", En.color)
+    assertEquals("Page", En.pageName)
   }
 }

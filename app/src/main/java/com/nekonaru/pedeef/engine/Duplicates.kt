@@ -41,7 +41,8 @@ private const val DUP_WIDTH = 150
 /** MD5 hex of the bitmap's pixel bytes. */
 private fun hashPage(page: PdfRenderer.Page): String {
   val scale = DUP_WIDTH.toFloat() / maxOf(1, page.width)
-  val bmp = Bitmap.createBitmap(DUP_WIDTH, maxOf(1, (page.height * scale).toInt()), Bitmap.Config.ARGB_8888)
+  val bmp = Bitmap.createBitmap(DUP_WIDTH, maxOf(1, minOf(3200, (page.height * scale).toInt())), Bitmap.Config.ARGB_8888)
+  bmp.eraseColor(android.graphics.Color.WHITE)
   page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
   try {
     val buf = java.nio.ByteBuffer.allocate(bmp.byteCount)
