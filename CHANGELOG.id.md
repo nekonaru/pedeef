@@ -2,6 +2,26 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.17.0
+
+Dua alat privasi (Hapus Anotasi, Ekstrak Lampiran) plus audit ronde kesembilan.
+
+### Fitur baru
+
+- **Hapus Anotasi.** Hapus semua komentar, sorotan, tautan, dan kolom formulir dari semua halaman sebelum membagikan. Kamus AcroForm juga dihapus.
+- **Ekstrak Lampiran.** Simpan file yang tertanam di pohon nama PDF ke penyimpanan aplikasi dengan nama yang disanitasi.
+
+### Peningkatan
+
+- **Katalog alat:** 42 alat; tes katalog dan README EN/ID diperbarui.
+- **FAQ privasi README diperbaiki.** Tidak lagi mengklaim aplikasi tanpa izin jaringan: `INTERNET` hanya dipakai cek pembaruan sesuai permintaan.
+
+### Perbaikan bug
+
+- **Back viewer saat dekripsi (Medium).** `BackHandler` terdaftar setelah early return, sehingga tombol back sistem saat spinner kata sandi kosong melewatinya dan membuka viewer lagi dengan payload lama. Dipindah sebelum early return; dinonaktifkan hanya saat dialog kata sandi tampil.
+- **Alpha berlebih di PDF hasil filter.** Halaman abu-abu/balik warna tidak lagi membawa soft mask bening yang tidak perlu.
+- **Akurasi changelog.** Deskripsi penanganan teks non-Latin di Teks ke PDF diperbaiki (karakter dihapus, bukan diganti `?`).
+
 ## v1.16.0
 
 Filter halaman abu-abu dan balik warna, plus audit ronde kedelapan yang memperbaiki bug halaman kosong kritis pada Teks ke PDF.
@@ -19,7 +39,7 @@ Filter halaman abu-abu dan balik warna, plus audit ronde kedelapan yang memperba
 
 - **Teks ke PDF menghasilkan halaman kosong (Critical).** `beginText()` membiarkan matriks teks PDF pada identitas, tetapi kode tidak pernah memposisikan baris pertama, sehingga setiap halaman hasil kosong. Baris pertama kini diposisikan secara absolut di margin kiri/atas; baris berikutnya memakai offset relatif. Ditambah unit test yang mengekstrak teks kembali dari PDF hasil.
 - **Jebakan tombol kembali sistem di viewer (High).** Tombol back perangkat melewati `onBack` viewer, menyisakan byte plaintext di `ViewerPayload` dan langsung kembali ke viewer. Ditambahkan `BackHandler` di viewer.
-- **Teks non-Latin menggagalkan Teks ke PDF (Medium).** Input kini dinormalisasi dengan `winAnsi()` (seperti watermark/fillSign/OCR), sehingga tanda kutip melengkung dan CJK menjadi '?' alih-alih menggagalkan alat.
+- **Teks non-Latin menggagalkan Teks ke PDF (Medium).** Input kini dinormalisasi dengan `winAnsi()` (seperti watermark/fillSign/OCR), sehingga tanda kutip melengkung dan CJK dihapus alih-alih menggagalkan alat.
 - **Kata terlalu panjang terpotong (Medium).** Kata yang lebih lebar dari halaman dipotong menjadi potongan-potongan; input kosong kini gagal dengan pesan "Enter some text." alih-alih menghasilkan PDF kosong.
 - **Sapuan file temp saat warm-start.** Prefix `filter-` ditambahkan, sehingga force-stop saat grayscale/invert tidak menyisakan salinan PDF plaintext di cache.
 - **Sinkron ID/EN:** jumlah test di README Bahasa Indonesia diperbaiki.

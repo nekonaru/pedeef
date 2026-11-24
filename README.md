@@ -146,6 +146,8 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Resize Pages** | Fit every page onto A4, A5, Letter or Legal while keeping aspect and orientation. |
 | **Grayscale PDF** | Render pages in grayscale for e-ink or print; optional standard/high resolution. |
 | **Invert Pages** | Invert page colors for dark-background reading or negative printing. |
+| **Remove Annotations** | Strip comments, highlights, links and form fields before sharing a PDF. |
+| **Extract Attachments** | Save files embedded inside a PDF to the app's file tree. |
 
 ---
 
@@ -180,7 +182,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 ### Option A: Download the APK (easiest)
 
 1. Open the [latest release](https://github.com/nekonaru/pedeef/releases/latest).
-2. Download `pedeef-1.16.0.apk` (signed with the app's built-in debug key).
+2. Download `pedeef-1.17.0.apk` (signed with the app's built-in debug key).
 3. Tap the file to install. If Android warns about unknown sources, allow installing from your browser or file manager.
 4. Open Pedeef. On first use of the Files tab, allow the file access it asks for so your files land in Download/Pedeef.
 
@@ -270,7 +272,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       entry point
       engine/               PDF engine (PdfBox), pure ops + android ops
-      tools/                tool catalog (40 tools, EN + ID)
+      tools/                tool catalog (42 tools, EN + ID)
       ui/                   screens: home, tool, files, viewer, settings, scan
       ui/theme/             themes (Ember, Cherry, Arctic) + typography
       i18n/                 English and Bahasa Indonesia strings
@@ -339,7 +341,7 @@ pedeef/
 <details>
 <summary><b>Does Pedeef work without internet?</b></summary>
 
-Yes. It has no network permission at all. Every tool, the scanner and OCR run on your phone.
+Yes. All tools, the scanner and OCR run on your phone. The app declares the INTERNET permission only for the optional update check, which runs when you tap it; the check sends one HTTPS GET to GitHub and nothing else.
 </details>
 
 <details>
