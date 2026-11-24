@@ -2,6 +2,28 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.16.0
+
+Grayscale and inverted page filters, plus an eighth audit round that fixes a critical blank-page bug in Text to PDF.
+
+### New features
+
+- **Grayscale PDF.** New tool: renders every page in grayscale at standard or high resolution, for e-ink readers and printing. Text becomes part of the page image.
+- **Invert Pages.** New tool: inverts page colors for dark-background reading or negative printing. Text becomes part of the page image.
+
+### Improvements
+
+- **Tool catalog:** 40 tools; catalog test and README EN/ID updated; unit test count updated to 48.
+
+### Bug fixes
+
+- **Text to PDF was blank (Critical).** `beginText()` leaves the PDF text matrix at identity, but the code never positioned the first line, so every generated page was empty. First line is now positioned absolutely at the left/top margin; later lines use relative offsets. Added a unit test that extracts text back from the generated PDF.
+- **Viewer system-back trap (High).** The hardware/system back key bypassed the viewer's `onBack`, leaving plaintext bytes in `ViewerPayload` and bouncing straight back into the viewer. Added a `BackHandler` in the viewer.
+- **Non-Latin text crashed Text to PDF (Medium).** Input is now normalized with `winAnsi()` (as in watermark/fillSign/OCR), so curly quotes and CJK become '?' instead of crashing the tool.
+- **Overlong words clipped (Medium).** Words wider than the page are hard-split into chunks; empty input now fails with "Enter some text." instead of producing a blank PDF.
+- **Warm-start temp sweep.** Added `filter-` prefix so a force-stop during grayscale/invert no longer leaves plaintext PDF copies in cache.
+- **ID/EN sync:** Indonesian README test count corrected.
+
 ## v1.15.0
 
 Text to PDF and Resize Pages, plus a seventh audit round that fixes the owner-password role swap.

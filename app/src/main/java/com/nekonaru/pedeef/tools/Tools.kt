@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf", "grayscalePdf", "invertPdf")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -453,6 +453,24 @@ val TOOLS: List<Tool> = listOf(
     run = { files, _ -> removeBlankPages(files[0].bytes, ToolContext.cacheDir) },
   ),
   Tool(
+    "grayscalePdf", SECTION_FILL,
+    "Grayscale PDF", "PDF Abu-abu",
+    "Render every page in grayscale, ideal for e-ink readers or print. Text becomes part of the page image.",
+    "Render setiap halaman dalam warna abu-abu, cocok untuk pembaca e-ink atau cetak. Teks menjadi bagian dari gambar halaman.",
+    "Convert", "Ubah", "Rendering pages", "Merender halaman", Input.Pdf, noPreview = true,
+    opts = listOf(seg("res", "Resolution", "Resolusi", listOf(Triple("1200", "Standard", "Standar"), Triple("1800", "High", "Tinggi")), "1200")),
+    run = { files, o -> listOf(Output("grayscale", filterPages(files[0].bytes, ToolContext.cacheDir, PageFilter.GRAYSCALE, o.str("res").toIntOrNull() ?: 1200))) },
+  ),
+  Tool(
+    "invertPdf", SECTION_FILL,
+    "Invert Pages", "Balik Warna Halaman",
+    "Invert page colors for dark-background reading or printing negatives. Text becomes part of the page image.",
+    "Balik warna halaman untuk membaca dengan latar gelap atau mencetak negatif. Teks menjadi bagian dari gambar halaman.",
+    "Invert", "Balik", "Rendering pages", "Merender halaman", Input.Pdf, noPreview = true,
+    opts = listOf(seg("res", "Resolution", "Resolusi", listOf(Triple("1200", "Standard", "Standar"), Triple("1800", "High", "Tinggi")), "1200")),
+    run = { files, o -> listOf(Output("inverted", filterPages(files[0].bytes, ToolContext.cacheDir, PageFilter.INVERT, o.str("res").toIntOrNull() ?: 1200))) },
+  ),
+  Tool(
     "textToPdf", SECTION_NEW,
     "Text to PDF", "Teks ke PDF",
     "Write plain text into a new PDF with automatic line wrapping and page breaks; choose page size and font size.",
@@ -463,7 +481,7 @@ val TOOLS: List<Tool> = listOf(
       seg("font", "Font size", "Ukuran huruf", listOf(Triple("10", "Small", "Kecil"), Triple("12", "Normal", "Normal"), Triple("16", "Large", "Besar")), "12"),
       OptDef.Text("text", "Text", "Teks", "", "Type or paste text", 0, placeholderId = "Ketik atau tempel teks"),
     ),
-    run = { _, o -> listOf(Output("text-document", textToPdf(o.str("text"), o.str("size"), o.str("font").toIntOrNull() ?: 12))) },
+    run = { _, o -> listOf(Output("text-document", textToPdf(winAnsi(o.str("text")), o.str("size"), o.str("font").toIntOrNull() ?: 12))) },
   ),
   Tool(
     "resizePdf", SECTION_ARRANGE,

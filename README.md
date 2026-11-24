@@ -144,6 +144,8 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Owner password** | Optional separate owner password when locking a PDF (defaults to the open password). |
 | **Text to PDF** | Turn typed or pasted text into a PDF with automatic wrapping and page breaks. |
 | **Resize Pages** | Fit every page onto A4, A5, Letter or Legal while keeping aspect and orientation. |
+| **Grayscale PDF** | Render pages in grayscale for e-ink or print; optional standard/high resolution. |
+| **Invert Pages** | Invert page colors for dark-background reading or negative printing. |
 
 ---
 
@@ -178,7 +180,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 ### Option A: Download the APK (easiest)
 
 1. Open the [latest release](https://github.com/nekonaru/pedeef/releases/latest).
-2. Download `pedeef-1.15.0.apk` (signed with the app's built-in debug key).
+2. Download `pedeef-1.16.0.apk` (signed with the app's built-in debug key).
 3. Tap the file to install. If Android warns about unknown sources, allow installing from your browser or file manager.
 4. Open Pedeef. On first use of the Files tab, allow the file access it asks for so your files land in Download/Pedeef.
 
@@ -268,7 +270,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       entry point
       engine/               PDF engine (PdfBox), pure ops + android ops
-      tools/                tool catalog (38 tools, EN + ID)
+      tools/                tool catalog (40 tools, EN + ID)
       ui/                   screens: home, tool, files, viewer, settings, scan
       ui/theme/             themes (Ember, Cherry, Arctic) + typography
       i18n/                 English and Bahasa Indonesia strings
@@ -317,7 +319,7 @@ pedeef/
 | Check | Requirement |
 |-------|-------------|
 | Kotlin compile | Zero errors |
-| Unit tests | All pass (46 tests) |
+| Unit tests | All pass (48 tests) |
 | Debug APK | Builds successfully |
 | Lint | Zero errors |
 | Secret scan | gitleaks reports zero findings |
