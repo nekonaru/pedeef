@@ -2,6 +2,24 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.13.0
+
+Three page-cleanup tools for scanned and merged documents, plus audit hardening.
+
+### New features
+
+- **Remove Blank Pages.** Detects fully blank pages by low-res rendering and removes them; writes the cleaned PDF plus a text report of the removed page numbers. Capped at 400 analyzed pages.
+- **Reverse Pages.** Reverses the page order of a PDF (e.g. a document scanned back to front), with a unit test that checks the new order and page sizes.
+- **Find Duplicates** (v1.12.0) and **Remove Blank Pages** complement each other after scan + merge workflows.
+
+### Improvements
+
+- **Tool catalog:** 35 tools; catalog test and README EN/ID updated. Blank-page removal is excluded from workflow steps (it produces two outputs).
+
+### Bug fixes
+
+- **Page adoption shared.** The internal `adopt` helper is now shared between page-engine operations so reversed/rebuilt documents keep page resources.
+
 ## v1.12.0
 
 Find Duplicates: a PDF tool that reports visually identical pages (e.g. repeated scan pages), plus audit hardening.

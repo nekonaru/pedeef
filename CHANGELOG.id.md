@@ -2,6 +2,24 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.13.0
+
+Tiga alat perapian halaman untuk dokumen hasil pindai dan gabung, plus hardening audit.
+
+### Fitur baru
+
+- **Hapus Halaman Kosong.** Mendeteksi halaman benar-benar kosong lewat render resolusi rendah lalu menghapusnya; menulis PDF bersih plus laporan teks nomor halaman yang dihapus. Dibatasi 400 halaman yang dianalisis.
+- **Balik Halaman.** Membalik urutan halaman PDF (misal dokumen yang dipindai dari belakang ke depan), dengan unit test yang memeriksa urutan baru dan ukuran halaman.
+- **Cari Duplikat** (v1.12.0) dan **Hapus Halaman Kosong** saling melengkapi setelah alur scan + gabung.
+
+### Peningkatan
+
+- **Katalog alat:** 35 alat; tes katalog dan README EN/ID diperbarui. Hapus halaman kosong tidak termasuk langkah workflow (menghasilkan dua keluaran).
+
+### Perbaikan bug
+
+- **Page adoption dibagikan.** Helper internal `adopt` kini dipakai bersama antar operasi engine halaman, sehingga dokumen yang dibalik/dibangun ulang tetap menyimpan resource halaman.
+
 ## v1.12.0
 
 Cari Duplikat: alat PDF yang melaporkan halaman identik secara visual (misal halaman pindai yang terulang), plus hardening audit.

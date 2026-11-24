@@ -138,6 +138,8 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Document report** | A plain-text report of a PDF's pages, metadata, embedded images and form fields. |
 | **PDF Lint** | Lint a PDF for internal issues: fonts that are not embedded, odd versions, encryption, producer. |
 | **Find Duplicates** | Report visually identical pages in a PDF (e.g. duplicate scans) as a plain-text file. |
+| **Remove Blank Pages** | Delete blank pages from a scan and get a text report of the removed page numbers. |
+| **Reverse Pages** | Reverse the page order of a PDF, e.g. after scanning a document back to front. |
 
 ---
 
@@ -172,7 +174,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 ### Option A: Download the APK (easiest)
 
 1. Open the [latest release](https://github.com/nekonaru/pedeef/releases/latest).
-2. Download `pedeef-1.12.0.apk` (signed with the app's built-in debug key).
+2. Download `pedeef-1.13.0.apk` (signed with the app's built-in debug key).
 3. Tap the file to install. If Android warns about unknown sources, allow installing from your browser or file manager.
 4. Open Pedeef. On first use of the Files tab, allow the file access it asks for so your files land in Download/Pedeef.
 
@@ -262,7 +264,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       entry point
       engine/               PDF engine (PdfBox), pure ops + android ops
-      tools/                tool catalog (33 tools, EN + ID)
+      tools/                tool catalog (35 tools, EN + ID)
       ui/                   screens: home, tool, files, viewer, settings, scan
       ui/theme/             themes (Ember, Cherry, Arctic) + typography
       i18n/                 English and Bahasa Indonesia strings

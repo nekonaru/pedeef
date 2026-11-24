@@ -1,5 +1,6 @@
 package com.nekonaru.pedeef
 
+import com.nekonaru.pedeef.engine.reversePages
 import com.nekonaru.pedeef.engine.extractText
 import com.nekonaru.pedeef.engine.merge
 import com.nekonaru.pedeef.engine.Named
@@ -20,6 +21,22 @@ private fun blankPdf(pages: Int): ByteArray {
 }
 
 class EngineSmokeTest {
+  @Test
+  fun reversePagesFlipsOrder() {
+    val src = PDDocument().use { doc ->
+      doc.addPage(PDPage(PDRectangle(200f, 300f)))
+      doc.addPage(PDPage(PDRectangle(400f, 300f)))
+      doc.addPage(PDPage(PDRectangle(200f, 500f)))
+      ByteArrayOutputStream().use { doc.save(it); it.toByteArray() }
+    }
+    PDDocument.load(reversePages(src)).use { doc ->
+      assertEquals(3, doc.numberOfPages)
+      assertEquals(200f, doc.getPage(0).mediaBox.width)
+      assertEquals(500f, doc.getPage(0).mediaBox.height)
+      assertEquals(400f, doc.getPage(1).mediaBox.width)
+    }
+  }
+
   @Test
   fun mergeCombinesDocuments() {
     val a = blankPdf(2)
