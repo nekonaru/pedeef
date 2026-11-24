@@ -240,7 +240,17 @@ fun setPdfPassword(bytes: ByteArray, password: String, ownerPassword: String = p
   }
   doc.use {
     if (it.isEncrypted) return null
-    it.protect(StandardProtectionPolicy(password, ownerPassword, AccessPermission()).apply { encryptionKeyLength = 256 })
+    // PDFBox arg order is (ownerPassword, userPassword). A distinct owner password also applies
+    // sensible restrictions so the owner role is meaningful.
+    val perms = AccessPermission()
+    if (ownerPassword != password) {
+      perms.setCanModify(false)
+      perms.setCanModifyAnnotations(false)
+      perms.setCanFillInForm(false)
+      perms.setCanAssembleDocument(false)
+      perms.setCanExtractContent(false)
+    }
+    it.protect(StandardProtectionPolicy(ownerPassword, password, perms).apply { encryptionKeyLength = 256 })
     return it.bytes()
   }
 }
@@ -346,6 +356,33 @@ private fun PDPageContentStream.drawShown(e: Shown, x: Float, y: Float, s: Float
 private fun PDDocument.newPage(w: Float, h: Float) = PDPage(PDRectangle(w, h)).also { addPage(it) }
 private fun PDDocument.draw(p: PDPage, block: PDPageContentStream.() -> Unit) =
   PDPageContentStream(this, p, PDPageContentStream.AppendMode.APPEND, true, true).use(block)
+
+/**
+ * Fits every page onto pages of the chosen size, preserving aspect ratio and orientation.
+ * Uses the same form-XObject embedding as the n-up/flip tools so text and vector art stay native.
+ */
+fun resizePages(bytes: ByteArray, size: String, marginPt: Float = 18f): ByteArray {
+  val (tw, th) = SIZES[size] ?: fail("Unknown page size.")
+  val margin = marginPt.coerceIn(0f, 72f)
+  return loadPdf(bytes).use { src ->
+    PDDocument().use { out ->
+      for (p in src.pages) {
+        val e = out.embedShown(p)
+        val rot = ((p.rotation % 360) + 360) % 360
+        val landscape = rot % 180 != 0
+        val targetW = if (landscape) th else tw
+        val targetH = if (landscape) tw else th
+        val availW = targetW - 2 * margin
+        val availH = targetH - 2 * margin
+        if (availW <= 0 || availH <= 0) fail("Margin is too large for this page size.")
+        val s = minOf(availW / e.shownW, availH / e.shownH)
+        val page = out.newPage(targetW, targetH)
+        out.draw(page) { drawShown(e, (targetW - e.shownW * s) / 2, (targetH - e.shownH * s) / 2, s) }
+      }
+      out.bytes()
+    }
+  }
+}
 
 fun flip(bytes: ByteArray, axis: String): ByteArray = loadPdf(bytes).use { src ->
   PDDocument().use { out ->
