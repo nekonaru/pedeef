@@ -453,6 +453,15 @@ val TOOLS: List<Tool> = listOf(
     run = { files, _ -> removeBlankPages(files[0].bytes, ToolContext.cacheDir) },
   ),
   Tool(
+    "flattenPdf", SECTION_PROTECT,
+    "Flatten Pages", "Ratakan Halaman",
+    "Freeze the visual appearance of every page into an image, removing editable text, links, forms and annotations. Text is no longer selectable.",
+    "Bekukan tampilan tiap halaman menjadi gambar, menghapus teks yang bisa diedit, tautan, formulir dan anotasi. Teks tidak lagi bisa dipilih.",
+    "Flatten", "Ratakan", "Rendering pages", "Merender halaman", Input.Pdf, noPreview = true,
+    opts = listOf(seg("res", "Resolution", "Resolusi", listOf(Triple("1200", "Standard", "Standar"), Triple("1800", "High", "Tinggi")), "1200")),
+    run = { files, o -> listOf(Output("flattened", filterPages(files[0].bytes, ToolContext.cacheDir, PageFilter.FLATTEN, o.str("res").toIntOrNull() ?: 1200))) },
+  ),
+  Tool(
     "removeAnnotations", SECTION_PROTECT,
     "Remove Annotations", "Hapus Anotasi",
     "Strip all comments, highlights, links and form fields from a PDF before sharing it.",

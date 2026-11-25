@@ -2,6 +2,25 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.18.0
+
+Ratakan Halaman, bacakan keras di viewer, dan audit ronde kesepuluh yang memperbaiki ekstraksi lampiran serta pembersihan privasi.
+
+### Fitur baru
+
+- **Ratakan Halaman.** Alat baru: merender tiap halaman jadi gambar sehingga tampilannya beku. Teks yang bisa diedit, tautan, formulir, dan anotasi tidak lagi ada; teks tidak bisa dipilih. Bisa juga dipakai sebagai langkah workflow.
+- **Bacakan keras.** Viewer punya tombol speaker yang membacakan halaman saat ini memakai text-to-speech perangkat; ketuk lagi untuk berhenti. Memakai ekstraksi teks yang sama dengan salin teks halaman.
+
+### Peningkatan
+
+- **Katalog alat:** 43 alat; tes katalog dan README EN/ID diperbarui.
+
+### Perbaikan bug
+
+- **Lampiran bernama Unicode (Medium).** Ekstraksi kini fallback dari `/EF /UF` ke `/EF /F`, dan memakai nama tampilan file lampiran (bukan kunci numerik pohon nama) beserta ekstensinya. Batas total 128 MB mencegah penggunaan memori berlebih pada file jahat.
+- **Data tanda tangan tertinggal (Medium).** Hapus Anotasi kini juga menghapus entri `/Perms` katalog, sehingga data tanda tangan sertifikasi tidak bertahan setelah pembersihan privasi.
+- **Pembersihan audit.** Penghitung anotasi yang mati dihapus; penanganan error pohon nama rusak tetap ada.
+
 ## v1.17.0
 
 Dua alat privasi (Hapus Anotasi, Ekstrak Lampiran) plus audit ronde kesembilan.
