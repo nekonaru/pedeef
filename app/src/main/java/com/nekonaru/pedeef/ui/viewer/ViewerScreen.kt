@@ -115,7 +115,8 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   val scope = rememberCoroutineScope()
   val clipboard = LocalClipboardManager.current
   val initialBytes = com.nekonaru.pedeef.ui.ViewerPayload.bytes
-  var payload by remember { mutableStateOf(initialBytes) }
+  val payloadVersion = com.nekonaru.pedeef.ui.ViewerPayload.version
+  var payload by remember(payloadVersion) { mutableStateOf(initialBytes) }
   val name = com.nekonaru.pedeef.ui.ViewerPayload.name
   var passwordError by remember { mutableStateOf<String?>(null) }
   var query by remember { mutableStateOf("") }
@@ -125,7 +126,9 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   var matchIndex by remember(matches) { mutableStateOf(0) }
   var pageTextIndex by remember { mutableStateOf<Int?>(null) }
   var pageText by remember { mutableStateOf<String?>(null) }
+  var copyToken by remember { mutableStateOf(0) }
   var speaking by remember { mutableStateOf(false) }
+  var speakToken by remember { mutableStateOf(0) }
   val speaker = remember { PageSpeaker(context, onDone = { speaking = false }) }
   androidx.compose.runtime.DisposableEffect(Unit) { onDispose { speaker.close() } }
   var copyMessage by remember { mutableStateOf<String?>(null) }
@@ -226,11 +229,16 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     }
     if (pageText == null) copyMessage = s.genericError
   }
-  LaunchedEffect(pageText) {
+  LaunchedEffect(pageText, speakToken) {
+    if (!speaking) return@LaunchedEffect
+    val text = pageText ?: return@LaunchedEffect
+    speaker.speak(text)
+  }
+  LaunchedEffect(pageText, copyToken) {
+    if (copyToken == 0) return@LaunchedEffect
     val text = pageText ?: return@LaunchedEffect
     clipboard.setText(AnnotatedString(text))
     copyMessage = s.pageTextCopied
-    if (speaking) speaker.speak(text)
   }
 
   fun runSearch() {
@@ -326,11 +334,11 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
             }
             IconButton(onClick = { showThumbs = !showThumbs }) { Icon(Icons.Default.GridView, contentDescription = s.pageThumbs) }
             IconButton(onClick = { printPdf() }) { Icon(Icons.Default.Print, contentDescription = s.print) }
-            IconButton(onClick = { pageTextIndex = (currentPage - 1).coerceAtLeast(0) }, enabled = n > 0) { Icon(Icons.Default.ContentCopy, contentDescription = s.copyPageText) }
+            IconButton(onClick = { copyToken++; pageTextIndex = (currentPage - 1).coerceAtLeast(0) }, enabled = n > 0) { Icon(Icons.Default.ContentCopy, contentDescription = s.copyPageText) }
             IconButton(
               onClick = {
                 if (speaking) { speaker.stop(); speaking = false }
-                else { speaking = true; pageTextIndex = (currentPage - 1).coerceAtLeast(0) }
+                else { speaking = true; speakToken++; pageTextIndex = (currentPage - 1).coerceAtLeast(0) }
               },
               enabled = n > 0,
             ) { Icon(if (speaking) Icons.Default.Stop else Icons.Default.VolumeUp, contentDescription = if (speaking) s.stopSpeech else s.speakPage) }

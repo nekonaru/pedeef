@@ -2,6 +2,24 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.19.0
+
+Audit ronde kesebelas: menstabilkan Bacakan Keras dan perbaikan pengiriman payload masuk.
+
+### Peningkatan
+
+- **Status bar dan aksesibilitas** tidak berubah; 43 alat dan 48 unit test tetap hijau.
+
+### Perbaikan bug
+
+- **Bacakan Keras memotong halaman panjang (High).** Potongan teks TTS diantre dengan `QUEUE_ADD`, lalu potongan terakhir memakai `QUEUE_FLUSH` yang menghapus potongan sebelumnya. Sekarang potongan pertama flush dan sisanya di-ADD; selesai hanya dipicu pada potongan terakhir dan diposting ke thread utama untuk state Compose.
+- **Bacakan Keras tidak bisa diulang (High).** Ketuk bicara, berhenti, lalu ketuk lagi di halaman yang sama tidak memicu suara. Penghitung permintaan kini jadi kunci effect.
+- **Penemuan mesin TTS.** Query `TTS_SERVICE` ditambahkan ke manifest agar perangkat Android 11+ bisa menemukan mesin bicara.
+- **Teks TTS tertunda terpotong.** Saat synthesizer masih init, hanya 3500 karakter pertama yang disimpan; sekarang seluruh halaman diputar ulang lewat helper chunking.
+- **Bacakan Keras menimpa clipboard.** Jalur speaker tidak lagi menulis ke clipboard atau menampilkan toast "tersalin"; hanya tombol Salin yang melakukannya.
+- **Pengiriman payload masuk (Medium).** `ViewerPayload.version` dan `ShortcutRoute.version` kini state Compose, sehingga PDF/shortcut yang masuk saat di `shell` langsung dinavigasi, dan viewer membaca ulang payload saat dokumen baru tiba saat viewer terbuka.
+- **Penutupan TTS** kini mereset state dan menghapus antrean pending.
+
 ## v1.18.0
 
 Ratakan Halaman, bacakan keras di viewer, dan audit ronde kesepuluh yang memperbaiki ekstraksi lampiran serta pembersihan privasi.

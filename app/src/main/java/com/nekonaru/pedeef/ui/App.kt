@@ -54,20 +54,20 @@ object ViewerPayload {
   var persisted: Boolean = true
 
   /** Bumped on every set or clear; observe with LaunchedEffect(ViewerPayload.version). */
-  var version: Int = 0
+  var version by androidx.compose.runtime.mutableIntStateOf(0)
     private set
 
   fun set(bytes: ByteArray?, name: String, persisted: Boolean) {
     this.bytes = bytes
     this.name = name
     this.persisted = persisted
-    version = version + 1
+    this.version = version + 1
   }
 
   fun clear() {
     bytes = null
     persisted = true
-    version = version + 1
+    this.version = version + 1
   }
 }
 
@@ -75,7 +75,7 @@ object ViewerPayload {
 object ShortcutRoute {
   var target: String? = null
     private set
-  var version: Int = 0
+  var version by androidx.compose.runtime.mutableIntStateOf(0)
     private set
 
   /** route like "scan" or "tool/merge". */
