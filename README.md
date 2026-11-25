@@ -150,6 +150,8 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Extract Attachments** | Save files embedded inside a PDF to the app's file tree. |
 | **Flatten Pages** | Freeze every page's appearance into an image: no editable text, links, forms or annotations. |
 | **Read Aloud** | Listen to the current page from the viewer using on-device text-to-speech. |
+| **Search in PDFs** | Search one or more PDFs for a phrase; get a text report of matching page numbers. |
+| **Header & Footer** | Stamp a short header and/or footer on every page of a PDF. |
 
 ---
 
@@ -184,7 +186,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 ### Option A: Download the APK (easiest)
 
 1. Open the [latest release](https://github.com/nekonaru/pedeef/releases/latest).
-2. Download `pedeef-1.19.0.apk` (signed with the app's built-in debug key).
+2. Download `pedeef-1.20.0.apk` (signed with the app's built-in debug key).
 3. Tap the file to install. If Android warns about unknown sources, allow installing from your browser or file manager.
 4. Open Pedeef. On first use of the Files tab, allow the file access it asks for so your files land in Download/Pedeef.
 
@@ -274,7 +276,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       entry point
       engine/               PDF engine (PdfBox), pure ops + android ops
-      tools/                tool catalog (43 tools, EN + ID)
+      tools/                tool catalog (45 tools, EN + ID)
       ui/                   screens: home, tool, files, viewer, settings, scan
       ui/theme/             themes (Ember, Cherry, Arctic) + typography
       i18n/                 English and Bahasa Indonesia strings

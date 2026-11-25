@@ -137,7 +137,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   var zoomLevel by remember { mutableStateOf(0) } // 0 = 100%, 1 = 125%, 2 = 150%
   val zoomFactor = when (zoomLevel) { 0 -> 1f; 1 -> 1.25f; else -> 1.5f }
   var savedMessage by remember { mutableStateOf<String?>(null) }
-  var persisted by remember { mutableStateOf(com.nekonaru.pedeef.ui.ViewerPayload.persisted) }
+  var persisted by remember(payloadVersion) { mutableStateOf(com.nekonaru.pedeef.ui.ViewerPayload.persisted) }
   val listState = rememberLazyListState()
   val firstVisible by remember { androidx.compose.runtime.derivedStateOf { listState.firstVisibleItemIndex } }
 
@@ -217,6 +217,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   }
   LaunchedEffect(pageTextIndex) {
     val i = pageTextIndex ?: return@LaunchedEffect
+    pageText = null // never speak/copy text from the previous page while extracting a new one
     pageText = withContext(Dispatchers.Default) {
       runCatching {
         withTempPdf(working, ToolContext.cacheDir, "pagetext") { tmp ->
@@ -239,6 +240,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     val text = pageText ?: return@LaunchedEffect
     clipboard.setText(AnnotatedString(text))
     copyMessage = s.pageTextCopied
+    copyToken = 0 // consume: later pageText changes from read-aloud must not overwrite the clipboard
   }
 
   fun runSearch() {

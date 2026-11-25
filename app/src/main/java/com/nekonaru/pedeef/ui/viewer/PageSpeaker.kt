@@ -15,6 +15,7 @@ class PageSpeaker(context: Context, private val onDone: () -> Unit) {
   private var ready = false
   private var pending: String? = null
   private var lastUtterance = ""
+  private var generation = 0
   var speaking = false
     private set
 
@@ -31,7 +32,8 @@ class PageSpeaker(context: Context, private val onDone: () -> Unit) {
     tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
       override fun onStart(utteranceId: String?) {}
       override fun onDone(utteranceId: String?) { if (utteranceId == lastUtterance) finished() }
-      override fun onError(utteranceId: String?) { if (utteranceId == lastUtterance) finished() }
+      // A failed chunk breaks the queue, so finish regardless of which utterance failed.
+      override fun onError(utteranceId: String?) { finished() }
     })
   }
 
@@ -50,25 +52,30 @@ class PageSpeaker(context: Context, private val onDone: () -> Unit) {
     if (clean.isEmpty()) { speaking = false; onDoneMain(); return }
     if (!ready) { speaking = true; pending = clean; return }
     val chunks = clean.chunked(3500)
-    lastUtterance = "pedeef-page-${chunks.size - 1}"
+    generation++
+    lastUtterance = "pedeef-g${generation}-${chunks.size - 1}"
     speaking = true
     chunks.forEachIndexed { i, chunk ->
       tts?.speak(
         chunk,
         if (i == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD,
         null,
-        "pedeef-page-$i",
+        "pedeef-g${generation}-$i",
       )
     }
   }
 
   fun stop() {
     tts?.stop()
+    generation++
+    lastUtterance = ""
     speaking = false
     pending = null
   }
 
   fun close() {
+    generation++
+    lastUtterance = ""
     speaking = false
     pending = null
     tts?.shutdown()

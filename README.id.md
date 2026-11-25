@@ -150,6 +150,8 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Ekstrak Lampiran** | Simpan file yang tertanam di dalam PDF ke penyimpanan aplikasi. |
 | **Ratakan Halaman** | Bekukan tampilan tiap halaman jadi gambar: tanpa teks yang bisa diedit, tautan, formulir atau anotasi. |
 | **Bacakan Keras** | Dengarkan halaman yang sedang dibuka dari viewer memakai text-to-speech di perangkat. |
+| **Cari di PDF** | Cari frasa dalam satu atau beberapa PDF; dapatkan laporan nomor halaman yang cocok. |
+| **Header & Footer** | Tambahkan header dan/atau footer pendek di setiap halaman PDF. |
 
 ---
 
@@ -184,7 +186,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.19.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-1.20.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
@@ -274,7 +276,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       titik masuk
       engine/               mesin PDF (PdfBox), operasi murni + operasi android
-      tools/                katalog alat (43 alat, EN + ID)
+      tools/                katalog alat (45 alat, EN + ID)
       ui/                   layar: home, tool, files, viewer, settings, scan
       ui/theme/             tema (Ember, Cherry, Arctic) + tipografi
       i18n/                 string English dan Bahasa Indonesia
