@@ -33,7 +33,10 @@ class PageSpeaker(context: Context, private val onDone: () -> Unit) {
       override fun onStart(utteranceId: String?) {}
       override fun onDone(utteranceId: String?) { if (utteranceId == lastUtterance) finished() }
       // A failed chunk breaks the queue, so finish regardless of which utterance failed.
-      override fun onError(utteranceId: String?) { finished() }
+      override fun onError(utteranceId: String?) {
+        // Ignore late errors from a stopped/superseded generation.
+        if (utteranceId?.startsWith("pedeef-g$generation-") == true) finished()
+      }
     })
   }
 

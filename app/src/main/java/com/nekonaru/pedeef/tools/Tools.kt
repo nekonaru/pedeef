@@ -453,6 +453,23 @@ val TOOLS: List<Tool> = listOf(
     run = { files, _ -> removeBlankPages(files[0].bytes, ToolContext.cacheDir) },
   ),
   Tool(
+    "splitCount", SECTION_COMBINE,
+    "Split Every N Pages", "Pisah Tiap N Halaman",
+    "Split a PDF into consecutive parts with a fixed number of pages each.",
+    "Pisah PDF menjadi beberapa bagian berurutan dengan jumlah halaman tetap per bagian.",
+    "Split", "Pisah", "Splitting", "Memisahkan", Input.Pdf, noPreview = true,
+    opts = listOf(num("pages", "Pages per part", "Halaman per bagian", "10", "10")),
+    run = { files, o -> splitEveryN(files[0].bytes, o.str("pages").toIntOrNull() ?: 10).map { Output(it.name, it.bytes) } },
+  ),
+  Tool(
+    "autoTrim", SECTION_ARRANGE,
+    "Trim Margins", "Pangkas Margin",
+    "Automatically crop uniform white margins around the visible content of each scanned page.",
+    "Pangkas otomatis margin putih di sekeliling isi halaman hasil pindai.",
+    "Trim margins", "Pangkas margin", "Analyzing pages", "Menganalisis halaman", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("trimmed", autoTrim(files[0].bytes, ToolContext.cacheDir))) },
+  ),
+  Tool(
     "multiSearch", SECTION_AUTOMATE,
     "Search in PDFs", "Cari di PDF",
     "Search one or more PDFs for a phrase and get a text report of matching page numbers.",

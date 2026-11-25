@@ -2,6 +2,28 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.21.0
+
+Two page-layout tools (Split Every N Pages, Trim Margins), plus a thirteenth audit round with a High header/footer placement fix.
+
+### New features
+
+- **Split Every N Pages.** Split a PDF into consecutive parts with a fixed number of pages (1-500) each.
+- **Trim Margins.** Detect non-white content bounds on each scanned page and crop uniform white margins automatically.
+
+### Improvements
+
+- **Tool catalog:** 47 tools; catalog test and README EN/ID updated.
+
+### Bug fixes
+
+- **Footer-only stamping invisible (High).** Footer placement used a relative offset from a non-existent header text matrix, putting it off-page. Both header and footer now use absolute text matrices, correct for non-zero mediaBox origins.
+- **Footer x-position (Medium).** A shadowed variable made the footer inherit the header's x; each line is now centered independently, and text is truncated by measured width.
+- **Clipboard/speak token traps (Medium).** Tokens are consumed even when text extraction yields null, so a later page change cannot silently copy or speak.
+- **Stale document state (Medium).** Search results, highlights and page text are now keyed by payload version, so a PDF arriving while the viewer is open does not inherit the previous file's results.
+- **TTS generation guard (Medium).** Late errors from a stopped/superseded speech run no longer end a new one.
+- **Scanner save crash (Medium).** A failed save now shows a generic error instead of throwing in an unguarded coroutine.
+
 ## v1.20.0
 
 Search in PDFs and Header & Footer, plus a twelfth audit round that fixes the remaining Read Aloud edge cases.
