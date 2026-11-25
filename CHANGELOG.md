@@ -2,6 +2,24 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.19.0
+
+Eleventh audit round: stabilizes Read Aloud and fixes incoming-payload delivery.
+
+### Improvements
+
+- **Status bar and accessibility** unchanged; 43 tools and 48 unit tests remain green.
+
+### Bug fixes
+
+- **Read Aloud truncated long pages (High).** Text-to-speech chunks were queued with `QUEUE_ADD` and the last chunk used `QUEUE_FLUSH`, clearing the earlier chunks. Now the first chunk flushes and the rest are added; completion fires only on the final utterance and is posted to the main thread for Compose state.
+- **Read Aloud did not restart (High).** Tapping speak, stopping, then tapping speak again on the same page did not re-trigger speech. A request counter is now an effect key.
+- **TTS engine discovery.** Added the `TTS_SERVICE` query to the manifest so Android 11+ devices can find the device's speech engine.
+- **Pending TTS text truncated.** While the synthesizer initialized, only the first 3500 characters were saved; the whole page is now replayed through the chunking helper.
+- **Read Aloud clobbered the clipboard.** The speaker path no longer writes to the clipboard or shows the "copied" toast; only the Copy button does.
+- **Incoming payload delivery (Medium).** `ViewerPayload.version` and `ShortcutRoute.version` are now Compose-backed state, so a PDF or shortcut delivered while on `shell` navigates immediately, and the viewer re-reads the payload when a new document arrives while it is open.
+- **TTS shutdown** now resets state and clears pending utterances.
+
 ## v1.18.0
 
 Flatten Pages, read-aloud in the viewer, and a tenth audit round fixing attachment extraction and privacy cleanup.
