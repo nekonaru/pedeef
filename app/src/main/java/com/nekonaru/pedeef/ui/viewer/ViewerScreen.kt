@@ -40,6 +40,8 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -122,6 +124,10 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   var highlights by remember { mutableStateOf<Map<Int, List<android.graphics.RectF>>?>(null) }
   var matchIndex by remember(matches) { mutableStateOf(0) }
   var pageTextIndex by remember { mutableStateOf<Int?>(null) }
+  var pageText by remember { mutableStateOf<String?>(null) }
+  var speaking by remember { mutableStateOf(false) }
+  val speaker = remember { PageSpeaker(context, onDone = { speaking = false }) }
+  androidx.compose.runtime.DisposableEffect(Unit) { onDispose { speaker.close() } }
   var copyMessage by remember { mutableStateOf<String?>(null) }
   var showThumbs by remember { mutableStateOf(false) }
   var showBookmarks by remember { mutableStateOf(false) }
@@ -208,7 +214,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   }
   LaunchedEffect(pageTextIndex) {
     val i = pageTextIndex ?: return@LaunchedEffect
-    val text = withContext(Dispatchers.Default) {
+    pageText = withContext(Dispatchers.Default) {
       runCatching {
         withTempPdf(working, ToolContext.cacheDir, "pagetext") { tmp ->
           com.tom_roush.pdfbox.pdmodel.PDDocument.load(tmp).use { doc ->
@@ -218,12 +224,13 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
         }
       }.getOrNull()
     }
-    if (text == null) {
-      copyMessage = s.genericError
-    } else {
-      clipboard.setText(AnnotatedString(text))
-      copyMessage = s.pageTextCopied
-    }
+    if (pageText == null) copyMessage = s.genericError
+  }
+  LaunchedEffect(pageText) {
+    val text = pageText ?: return@LaunchedEffect
+    clipboard.setText(AnnotatedString(text))
+    copyMessage = s.pageTextCopied
+    if (speaking) speaker.speak(text)
   }
 
   fun runSearch() {
@@ -320,6 +327,13 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
             IconButton(onClick = { showThumbs = !showThumbs }) { Icon(Icons.Default.GridView, contentDescription = s.pageThumbs) }
             IconButton(onClick = { printPdf() }) { Icon(Icons.Default.Print, contentDescription = s.print) }
             IconButton(onClick = { pageTextIndex = (currentPage - 1).coerceAtLeast(0) }, enabled = n > 0) { Icon(Icons.Default.ContentCopy, contentDescription = s.copyPageText) }
+            IconButton(
+              onClick = {
+                if (speaking) { speaker.stop(); speaking = false }
+                else { speaking = true; pageTextIndex = (currentPage - 1).coerceAtLeast(0) }
+              },
+              enabled = n > 0,
+            ) { Icon(if (speaking) Icons.Default.Stop else Icons.Default.VolumeUp, contentDescription = if (speaking) s.stopSpeech else s.speakPage) }
             IconButton(onClick = { shareExternally() }) { Icon(Icons.Default.OpenInNew, contentDescription = s.openElsewhere) }
           },
         )

@@ -18,7 +18,7 @@ import java.io.ByteArrayOutputStream
  * and rebuilds the PDF with one image per page. Text becomes pixels, so this is for print/visual use,
  * not for searching or copying text.
  */
-enum class PageFilter { GRAYSCALE, INVERT }
+enum class PageFilter { GRAYSCALE, INVERT, FLATTEN }
 
 fun filterPages(bytes: ByteArray, cacheDir: java.io.File, filter: PageFilter, maxWidth: Int = 1600): ByteArray = withTempPdf(bytes, cacheDir, "filter") { tmp ->
   val out = PDDocument()
@@ -67,6 +67,7 @@ private fun filterPaint(filter: PageFilter): Paint = Paint().apply {
           0f, 0f, 0f, 1f, 0f,
         )
       )
+      PageFilter.FLATTEN -> ColorMatrix(floatArrayOf(1f, 0f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 0f, 1f, 0f))
     }
   )
 }

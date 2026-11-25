@@ -2,6 +2,25 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.18.0
+
+Flatten Pages, read-aloud in the viewer, and a tenth audit round fixing attachment extraction and privacy cleanup.
+
+### New features
+
+- **Flatten Pages.** New tool: renders each page to an image so its appearance is frozen. Editable text, links, forms and annotations are no longer present; text is no longer selectable. Can also be used as a workflow step.
+- **Read aloud.** The viewer has a speaker button that reads the current page with the device's text-to-speech engine; tap again to stop. Uses the same text extraction as the copy-page-text action.
+
+### Improvements
+
+- **Tool catalog:** 43 tools; catalog test and README EN/ID updated.
+
+### Bug fixes
+
+- **Attachments with Unicode names (Medium).** Extraction now falls back from `/EF /UF` to `/EF /F`, and uses the attachment's own displayed filename (not the numeric name-tree key) with the correct extension. A 128 MB total cap prevents runaway memory use on hostile files.
+- **Signature metadata left behind (Medium).** Remove Annotations now also clears the catalog `/Perms` entry so certification signature data does not survive a privacy cleanup.
+- **Audit cleanup.** Dead annotation counter removed; error handling on malformed name trees retained.
+
 ## v1.17.0
 
 Two privacy tools (Remove Annotations, Extract Attachments) plus a ninth audit round.

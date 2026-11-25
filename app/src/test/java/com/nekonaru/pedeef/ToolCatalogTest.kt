@@ -33,8 +33,8 @@ class ToolCatalogTest {
 
   @Test
   fun catalogCoversTheOriginalsPlusNew() {
-    assertEquals(42, TOOLS.size)
-    for (id in listOf("merge", "alternate", "compress", "split", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "stripMetadata", "lintPdf", "cariDuplikat", "hapusKosong", "reversePages", "bookmarks", "textToPdf", "resizePdf", "grayscalePdf", "invertPdf", "removeAnnotations", "extractAttachments", "blankPdf", "scan")) {
+    assertEquals(43, TOOLS.size)
+    for (id in listOf("merge", "alternate", "compress", "split", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "stripMetadata", "lintPdf", "cariDuplikat", "hapusKosong", "reversePages", "bookmarks", "textToPdf", "resizePdf", "grayscalePdf", "invertPdf", "flattenPdf", "removeAnnotations", "extractAttachments", "blankPdf", "scan")) {
       // scan is not a catalog tool; the rest must exist
       if (id == "scan") assertNull(toolById(id)) else assertNotNull(toolById(id))
     }
