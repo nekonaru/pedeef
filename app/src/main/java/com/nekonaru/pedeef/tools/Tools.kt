@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments", "multiSearch")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -451,6 +451,27 @@ val TOOLS: List<Tool> = listOf(
     "Hapus halaman yang benar-benar kosong dari PDF dan tulis laporan nomor halaman yang dihapus.",
     "Remove blanks", "Hapus kosong", "Scanning pages", "Memindai halaman", Input.Pdf, noPreview = true,
     run = { files, _ -> removeBlankPages(files[0].bytes, ToolContext.cacheDir) },
+  ),
+  Tool(
+    "multiSearch", SECTION_AUTOMATE,
+    "Search in PDFs", "Cari di PDF",
+    "Search one or more PDFs for a phrase and get a text report of matching page numbers.",
+    "Cari satu atau beberapa PDF untuk sebuah frasa dan dapatkan laporan nomor halaman yang cocok.",
+    "Search files", "Cari file", "Searching files", "Mencari file", Input.Pdfs, min = 1, noPreview = true,
+    opts = listOf(OptDef.Text("query", "Find text", "Cari teks", "", "Word or phrase", 0)),
+    run = { files, o -> listOf(Output("search", searchAcrossFiles(files, o.str("query")), ext = "txt")) },
+  ),
+  Tool(
+    "headerFooter", SECTION_FILL,
+    "Header & Footer", "Header & Footer",
+    "Stamp a short header and/or footer on every page of a PDF.",
+    "Tambahkan header dan/atau footer pendek di setiap halaman PDF.",
+    "Apply", "Terapkan", "Stamping pages", "Memberi cap halaman", Input.Pdf, noPreview = true,
+    opts = listOf(
+      text("header", "Header text", "Teks header", "", "Top of every page"),
+      text("footer", "Footer text", "Teks footer", "", "Bottom of every page"),
+    ),
+    run = { files, o -> listOf(Output("stamped", addHeaderFooter(files[0].bytes, o.str("header"), o.str("footer")))) },
   ),
   Tool(
     "flattenPdf", SECTION_PROTECT,

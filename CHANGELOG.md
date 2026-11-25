@@ -2,6 +2,27 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.20.0
+
+Search in PDFs and Header & Footer, plus a twelfth audit round that fixes the remaining Read Aloud edge cases.
+
+### New features
+
+- **Search in PDFs.** New tool: search one or more PDFs for a phrase and get a plain-text report of matching page numbers per file.
+- **Header & Footer.** New tool: stamp a short header and/or footer line on every page, centered, with standard font and text normalization.
+
+### Improvements
+
+- **Tool catalog:** 45 tools; catalog test and README EN/ID updated.
+
+### Bug fixes
+
+- **Read Aloud clipboard leak (Medium).** The copy effect kept its token and re-fired when read-aloud changed `pageText`, overwriting the clipboard. The token is now consumed after one copy.
+- **Read Aloud spoke the previous page (Medium).** `pageText` is now cleared when the requested page changes, so old text is never spoken or copied.
+- **Save button hidden for shared PDFs (Medium).** `persisted` was remembered without a version key; incoming non-persisted PDFs shown in an already-open viewer now correctly offer Save to files.
+- **TTS queue failure (Medium).** An error on any chunk now ends speech instead of leaving the UI stuck in "Stop reading"; utterance IDs include a generation counter so late callbacks from a stopped run cannot end a new one.
+- **Rename errors (Low).** Failed renames now show an error in the dialog instead of silently closing it.
+
 ## v1.19.0
 
 Eleventh audit round: stabilizes Read Aloud and fixes incoming-payload delivery.

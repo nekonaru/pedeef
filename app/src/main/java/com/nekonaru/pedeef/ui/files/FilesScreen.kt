@@ -118,6 +118,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   var showNewFolder by remember { mutableStateOf(false) }
   var renameTarget by remember { mutableStateOf<FileEntry?>(null) }
   var renameText by remember { mutableStateOf("") }
+  var renameError by remember { mutableStateOf<String?>(null) }
   var deleteTarget by remember { mutableStateOf<FileEntry?>(null) }
   var moveTarget by remember { mutableStateOf<FileEntry?>(null) }
   var moveError by remember { mutableStateOf<String?>(null) }
@@ -344,12 +345,16 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
     AlertDialog(
       onDismissRequest = { renameTarget = null },
       title = { Text(s.rename) },
-      text = { OutlinedTextField(value = renameText, onValueChange = { renameText = it }, singleLine = true) },
+      text = {
+        Column {
+          OutlinedTextField(value = renameText, onValueChange = { renameText = it }, singleLine = true)
+          renameError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        }
+      },
       confirmButton = {
         TextButton(onClick = {
-          runCatching { FilesStore.rename(root, entry, renameText) }
-          renameTarget = null
-          refreshTick++
+          val err = runCatching { FilesStore.rename(root, entry, renameText) }.exceptionOrNull()
+          if (err != null) renameError = s.genericError else { renameTarget = null; renameError = null; refreshTick++ }
         }) { Text(s.ok) }
       },
       dismissButton = { TextButton(onClick = { renameTarget = null }) { Text(s.cancel) } },

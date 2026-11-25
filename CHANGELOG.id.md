@@ -2,6 +2,27 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.20.0
+
+Cari di PDF dan Header & Footer, plus audit ronde kedua belas yang memperbaiki sisa edge case Bacakan Keras.
+
+### Fitur baru
+
+- **Cari di PDF.** Alat baru: cari frasa dalam satu atau beberapa PDF dan dapatkan laporan teks nomor halaman yang cocok per file.
+- **Header & Footer.** Alat baru: cap baris header dan/atau footer pendek di tengah setiap halaman dengan font standar dan normalisasi teks.
+
+### Peningkatan
+
+- **Katalog alat:** 45 alat; tes katalog dan README EN/ID diperbarui.
+
+### Perbaikan bug
+
+- **Bacakan Keras menimpa clipboard (Medium).** Efek salin menyimpan token dan terpicu kembali saat Bacakan Keras mengubah `pageText`, menimpa clipboard. Token kini dikonsumsi setelah satu kali salin.
+- **Bacakan Keras membacakan halaman lama (Medium).** `pageText` kini dikosongkan saat halaman yang diminta berubah, sehingga teks lama tidak pernah dibacakan atau disalin.
+- **Tombol Simpan hilang untuk PDF masuk (Medium).** `persisted` diremember tanpa kunci versi; PDF masuk yang tidak tersimpan kini menawarkan Simpan ke file meski viewer sudah terbuka.
+- **Kegagalan antrean TTS (Medium).** Error pada potongan mana pun kini mengakhiri bacaan, bukan membiarkan UI Macet di "Stop reading"; ID utterance memuat penghitung generasi agar callback terlambat dari sesi lama tidak menghentikan sesi baru.
+- **Error rename (Low).** Rename yang gagal kini menampilkan error di dialog, alih-alih diam-diam menutupnya.
+
 ## v1.19.0
 
 Audit ronde kesebelas: menstabilkan Bacakan Keras dan perbaikan pengiriman payload masuk.
