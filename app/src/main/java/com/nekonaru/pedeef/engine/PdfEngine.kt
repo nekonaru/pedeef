@@ -102,6 +102,17 @@ fun split(bytes: ByteArray, mode: String, ranges: String): List<Named> = loadPdf
   groups.map { g -> Named(if (g.size > 1) "pages-${g.first() + 1}-${g.last() + 1}" else "page-${g.first() + 1}", pick(src, g)) }
 }
 
+/** Splits a PDF into consecutive parts of at most [perPart] pages. */
+fun splitEveryN(bytes: ByteArray, perPart: Int): List<Named> {
+  if (perPart !in 1..500) fail("Choose between 1 and 500 pages per part.")
+  return loadPdf(bytes).use { src ->
+    (0 until src.numberOfPages step perPart).map { start ->
+      val end = minOf(start + perPart, src.numberOfPages) - 1
+      Named("pages-${start + 1}-${end + 1}", pick(src, (start..end).toList()))
+    }
+  }
+}
+
 private fun norm(s: String) = s.lowercase().replace(Regex("\\s+"), "")
 
 fun splitByText(bytes: ByteArray, phrase: String): List<Named> {
@@ -317,12 +328,12 @@ fun rotate(bytes: ByteArray, angle: Int, pages: String): ByteArray = loadPdf(byt
 }
 
 /** A form XObject showing what a viewer shows of the page, w x h, its origin at the lower-left. */
-private class Shown(val form: PDFormXObject, val w: Float, val h: Float, val rot: Int) {
+internal class Shown(val form: PDFormXObject, val w: Float, val h: Float, val rot: Int) {
   val shownW get() = if (rot % 180 != 0) h else w
   val shownH get() = if (rot % 180 != 0) w else h
 }
 
-private fun PDDocument.embedShown(p: PDPage): Shown {
+internal fun PDDocument.embedShown(p: PDPage): Shown {
   val cb = p.cropBox
   if (cb.width <= 0f || cb.height <= 0f) fail("This page has no usable size.")
   val form = PDFormXObject(PDStream(this, p.contents, COSName.FLATE_DECODE))

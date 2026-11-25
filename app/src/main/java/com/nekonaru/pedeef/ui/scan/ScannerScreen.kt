@@ -80,9 +80,15 @@ fun ScannerScreen(onBack: () -> Unit, onOpenViewer: (ByteArray, String) -> Unit)
         out = withContext(Dispatchers.Default) { runCatching { ocrPdf(bytes, ToolContext.cacheDir) }.getOrDefault(bytes) }
       }
       val public = com.nekonaru.pedeef.data.PublicFiles.root(context)
-      val file = withContext(Dispatchers.IO) { FilesStore.saveBytes(public ?: root, null, baseName, "pdf", out) }
-      savedName = file.name
-      savedBytes = out
+      val done = withContext(Dispatchers.IO) {
+        runCatching { FilesStore.saveBytes(public ?: root, null, baseName, "pdf", out) }
+      }
+      if (done.isFailure) {
+        error = s.genericError
+      } else {
+        savedName = done.getOrThrow().name
+        savedBytes = out
+      }
       busy = false
     }
   }

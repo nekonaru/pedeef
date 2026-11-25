@@ -2,6 +2,28 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.21.0
+
+Dua alat tata letak halaman (Pisah Tiap N Halaman, Pangkas Margin), plus audit ronde ketigabelas dengan perbaikan High pada penempatan header/footer.
+
+### Fitur baru
+
+- **Pisah Tiap N Halaman.** Pisah PDF menjadi bagian berurutan dengan jumlah halaman tetap (1-500).
+- **Pangkas Margin.** Deteksi batas isi non-putih pada tiap halaman pindai dan pangkas margin putih otomatis.
+
+### Peningkatan
+
+- **Katalog alat:** 47 alat; tes katalog dan README EN/ID diperbarui.
+
+### Perbaikan bug
+
+- **Footer saja tidak terlihat (High).** Penempatan footer memakai offset relatif dari matriks teks header yang tidak ada, sehingga berada di luar halaman. Header dan footer kini memakai matriks teks absolut, benar untuk mediaBox dengan titik awal bukan nol.
+- **Posisi x footer (Medium).** Variabel yang tertutup membuat footer mewarisi x header; tiap baris kini dipusatkan sendiri, dan teks dipotong menurut lebar terukur.
+- **Jebakan token clipboard/bicara (Medium).** Token dikonsumsi meski ekstraksi teks menghasilkan null, sehingga perubahan halaman berikutnya tidak menyalin atau membacakan secara diam-diam.
+- **State dokumen lama (Medium).** Hasil pencarian, sorotan, dan teks halaman kini ber-kunci versi payload, jadi PDF yang masuk saat viewer terbuka tidak mewarisi hasil file sebelumnya.
+- **Penjaga generasi TTS (Medium).** Error terlambat dari sesi bicara lama tidak menghentikan sesi baru.
+- **Crash penyimpanan scanner (Medium).** Penyimpanan gagal kini menampilkan error generik, bukan melempar exception di coroutine tanpa penangan.
+
 ## v1.20.0
 
 Cari di PDF dan Header & Footer, plus audit ronde kedua belas yang memperbaiki sisa edge case Bacakan Keras.

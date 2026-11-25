@@ -118,11 +118,11 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   val payloadVersion = com.nekonaru.pedeef.ui.ViewerPayload.version
   var payload by remember(payloadVersion) { mutableStateOf(initialBytes) }
   val name = com.nekonaru.pedeef.ui.ViewerPayload.name
-  var passwordError by remember { mutableStateOf<String?>(null) }
-  var query by remember { mutableStateOf("") }
-  var searching by remember { mutableStateOf(false) }
-  var matches by remember { mutableStateOf<List<Int>?>(null) }
-  var highlights by remember { mutableStateOf<Map<Int, List<android.graphics.RectF>>?>(null) }
+  var passwordError by remember(payloadVersion) { mutableStateOf<String?>(null) }
+  var query by remember(payloadVersion) { mutableStateOf("") }
+  var searching by remember(payloadVersion) { mutableStateOf(false) }
+  var matches by remember(payloadVersion) { mutableStateOf<List<Int>?>(null) }
+  var highlights by remember(payloadVersion) { mutableStateOf<Map<Int, List<android.graphics.RectF>>?>(null) }
   var matchIndex by remember(matches) { mutableStateOf(0) }
   var pageTextIndex by remember { mutableStateOf<Int?>(null) }
   var pageText by remember { mutableStateOf<String?>(null) }
@@ -232,12 +232,20 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   }
   LaunchedEffect(pageText, speakToken) {
     if (!speaking) return@LaunchedEffect
-    val text = pageText ?: return@LaunchedEffect
+    val text = pageText
+    if (text == null) {
+      // No text on this page: do not leave the UI stuck in "Stop reading".
+      speaking = false
+      speakToken = 0
+      return@LaunchedEffect
+    }
+    speakToken = 0
     speaker.speak(text)
   }
   LaunchedEffect(pageText, copyToken) {
     if (copyToken == 0) return@LaunchedEffect
-    val text = pageText ?: return@LaunchedEffect
+    val text = pageText
+    if (text == null) { copyToken = 0; return@LaunchedEffect }
     clipboard.setText(AnnotatedString(text))
     copyMessage = s.pageTextCopied
     copyToken = 0 // consume: later pageText changes from read-aloud must not overwrite the clipboard
