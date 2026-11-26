@@ -22,6 +22,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -31,6 +34,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.ChromeReaderMode
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -134,12 +139,18 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   androidx.compose.runtime.DisposableEffect(Unit) { onDispose { speaker.close() } }
   var copyMessage by remember { mutableStateOf<String?>(null) }
   var showThumbs by remember { mutableStateOf(false) }
+  var gridThumbs by remember { mutableStateOf(false) }
+  var spread by remember { mutableStateOf(false) }
   var showBookmarks by remember { mutableStateOf(false) }
   var zoomLevel by remember { mutableStateOf(0) } // 0 = 100%, 1 = 125%, 2 = 150%
   val zoomFactor = when (zoomLevel) { 0 -> 1f; 1 -> 1.25f; else -> 1.5f }
   var savedMessage by remember { mutableStateOf<String?>(null) }
   var persisted by remember(payloadVersion) { mutableStateOf(com.nekonaru.pedeef.ui.ViewerPayload.persisted) }
   val listState = rememberLazyListState()
+  fun scrollToPage(page: Int) {
+    scope.launch { listState.animateScrollToItem(if (spread) page / 2 else page) }
+  }
+
   val firstVisible by remember { androidx.compose.runtime.derivedStateOf { listState.firstVisibleItemIndex } }
 
   val bytes = payload
@@ -214,7 +225,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
 
   LaunchedEffect(matches) {
     val m = matches ?: return@LaunchedEffect
-    if (m.isNotEmpty()) listState.animateScrollToItem(m[matchIndex.coerceIn(0, m.size - 1)])
+    if (m.isNotEmpty()) scrollToPage(m[matchIndex.coerceIn(0, m.size - 1)])
   }
   LaunchedEffect(pageTextIndex) {
     val i = pageTextIndex ?: return@LaunchedEffect
@@ -319,7 +330,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   }
 
   val n = sizes?.size ?: 0
-  val currentPage = if (n > 0) (firstVisible + 1).coerceIn(1, n) else 0
+  val currentPage = if (n > 0) (if (spread) firstVisible * 2 + 1 else firstVisible + 1).coerceIn(1, n) else 0
 
   Scaffold(
     topBar = {
@@ -345,6 +356,8 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
               IconButton(onClick = { saveToFiles() }) { Icon(Icons.Default.SaveAlt, contentDescription = s.saveToFiles) }
             }
             IconButton(onClick = { showThumbs = !showThumbs }) { Icon(Icons.Default.GridView, contentDescription = s.pageThumbs) }
+            IconButton(onClick = { gridThumbs = !gridThumbs; showThumbs = true }) { Icon(Icons.Default.Dashboard, contentDescription = s.thumbnails) }
+            IconButton(onClick = { spread = !spread }) { Icon(Icons.Default.ChromeReaderMode, contentDescription = s.spread) }
             IconButton(onClick = { printPdf() }) { Icon(Icons.Default.Print, contentDescription = s.print) }
             IconButton(onClick = { copyToken++; pageTextIndex = (currentPage - 1).coerceAtLeast(0) }, enabled = n > 0) { Icon(Icons.Default.ContentCopy, contentDescription = s.copyPageText) }
             IconButton(
@@ -380,8 +393,8 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
               modifier = Modifier.weight(1f),
             )
             if (m.isNotEmpty()) {
-              IconButton(onClick = { matchIndex = (matchIndex - 1 + m.size) % m.size; scope.launch { listState.animateScrollToItem(m[matchIndex]) } }) { Icon(Icons.Default.KeyboardArrowUp, contentDescription = s.prevMatch) }
-              IconButton(onClick = { matchIndex = (matchIndex + 1) % m.size; scope.launch { listState.animateScrollToItem(m[matchIndex]) } }) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = s.nextMatch) }
+              IconButton(onClick = { matchIndex = (matchIndex - 1 + m.size) % m.size; scrollToPage(m[matchIndex]) }) { Icon(Icons.Default.KeyboardArrowUp, contentDescription = s.prevMatch) }
+              IconButton(onClick = { matchIndex = (matchIndex + 1) % m.size; scrollToPage(m[matchIndex]) }) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = s.nextMatch) }
               IconButton(onClick = { matches = null; highlights = null; query = "" }) { Icon(Icons.Outlined.Close, contentDescription = s.cancel) }
             }
           }
@@ -424,7 +437,16 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
           verticalArrangement = Arrangement.spacedBy(12.dp),
           modifier = Modifier.fillMaxSize(),
         ) {
-          items(sizes.size) { i -> PageItem(working, i, sizes[i], viewport, zoomFactor, matches?.contains(i) == true, highlights?.get(i) ?: emptyList(), nightMode) }
+          if (spread) {
+            items((sizes.size + 1) / 2) { pair ->
+              Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PageItem(working, pair * 2, sizes[pair * 2], viewport, zoomFactor, matches?.contains(pair * 2) == true, highlights?.get(pair * 2) ?: emptyList(), nightMode)
+                if (pair * 2 + 1 < sizes.size) PageItem(working, pair * 2 + 1, sizes[pair * 2 + 1], viewport, zoomFactor, matches?.contains(pair * 2 + 1) == true, highlights?.get(pair * 2 + 1) ?: emptyList(), nightMode)
+              }
+            }
+          } else {
+            items(sizes.size) { i -> PageItem(working, i, sizes[i], viewport, zoomFactor, matches?.contains(i) == true, highlights?.get(i) ?: emptyList(), nightMode) }
+          }
         }
       }
       // Bookmarks panel overlay (top-aligned)
@@ -446,7 +468,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
                 modifier = Modifier
                   .fillMaxWidth()
                   .clip(RoundedCornerShape(10.dp))
-                  .clickable { scope.launch { listState.animateScrollToItem(page) }; showBookmarks = false }
+                  .clickable { scrollToPage(page); showBookmarks = false }
                   .padding(horizontal = 12.dp, vertical = 8.dp),
               ) {
                 Icon(Icons.Default.BookmarkBorder, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -468,13 +490,22 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
             Surface(
               color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
               shape = RoundedCornerShape(18.dp),
-              modifier = Modifier.padding(bottom = 8.dp).width(340.dp),
+              modifier = Modifier.padding(bottom = 8.dp).width(340.dp).heightIn(max = 320.dp),
             ) {
-              LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 8.dp),
-              ) {
-                items(sizes.size) { i -> ThumbItem(working, i, i == currentPage - 1, nightMode) { scope.launch { listState.animateScrollToItem(i) } } }
+              if (gridThumbs) {
+                LazyVerticalGrid(
+                  columns = GridCells.Adaptive(64.dp),
+                  contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp),
+                ) {
+                  items(sizes.size) { i -> ThumbItem(working, i, i == currentPage - 1, nightMode) { scrollToPage(i) } }
+                }
+              } else {
+                LazyRow(
+                  horizontalArrangement = Arrangement.spacedBy(10.dp),
+                  contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                ) {
+                  items(sizes.size) { i -> ThumbItem(working, i, i == currentPage - 1, nightMode) { scrollToPage(i) } }
+                }
               }
             }
           }
@@ -484,9 +515,9 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
           shape = RoundedCornerShape(18.dp),
         ) {
           Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)) {
-            IconButton(onClick = { scope.launch { listState.animateScrollToItem((currentPage - 2).coerceAtLeast(0)) } }, enabled = currentPage > 1) { Icon(Icons.Default.KeyboardArrowUp, contentDescription = null) }
+            IconButton(onClick = { scrollToPage(if (spread) (currentPage - 3).coerceAtLeast(0) else (currentPage - 2).coerceAtLeast(0)) }, enabled = currentPage > 1) { Icon(Icons.Default.KeyboardArrowUp, contentDescription = null) }
             Text("$currentPage ${s.pageOf} $n", style = MaterialTheme.typography.labelLarge)
-            IconButton(onClick = { scope.launch { listState.animateScrollToItem((currentPage).coerceAtMost(n - 1)) } }, enabled = currentPage < n) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null) }
+            IconButton(onClick = { scrollToPage(if (spread) (currentPage + 1).coerceAtMost(n - 1) else currentPage.coerceAtMost(n - 1)) }, enabled = currentPage < n) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null) }
           }
         }
       }

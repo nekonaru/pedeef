@@ -19,6 +19,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.SelectAll
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Delete
@@ -115,6 +120,9 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   var query by remember { mutableStateOf("") }
   var refreshTick by remember { mutableStateOf(0) }
   var sort by remember { mutableStateOf("name") } // name | recent | size | extension
+  var selectionMode by remember { mutableStateOf(false) }
+  var selected by remember { mutableStateOf<Set<String>>(emptySet()) }
+  var starred by remember { mutableStateOf(com.nekonaru.pedeef.data.Starred.load(context).toSet()) }
   var showNewFolder by remember { mutableStateOf(false) }
   var renameTarget by remember { mutableStateOf<FileEntry?>(null) }
   var renameText by remember { mutableStateOf("") }
@@ -220,13 +228,25 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
     topBar = {
       Column {
         TopAppBar(
-          title = { Text(s.filesTitle) },
+          title = { Text(if (selectionMode) "${selected.size} ${s.selected}" else s.filesTitle) },
           navigationIcon = {
-            if (currentDir != root) {
+            if (selectionMode) {
+              IconButton(onClick = { selectionMode = false; selected = emptySet() }) { Icon(Icons.Default.Close, contentDescription = s.cancel) }
+            } else if (currentDir != root) {
               IconButton(onClick = { currentDir = currentDir.parentFile ?: root }) { Icon(Icons.Default.ArrowBack, contentDescription = s.back) }
             }
           },
           actions = {
+            if (selectionMode) {
+              IconButton(onClick = { selected = if (selected.size == items?.size) emptySet() else (items ?: emptyList()).map { it.file.absolutePath }.toSet() }) { Icon(Icons.Default.SelectAll, contentDescription = s.selectAll) }
+              IconButton(onClick = {
+                scope.launch(Dispatchers.IO) {
+                  selected.forEach { runCatching { FilesStore.delete(root, java.io.File(it)) } }
+                  com.nekonaru.pedeef.data.Starred.prune(context, root.walkTopDown().filter { it.isFile }.map { it.absolutePath }.toSet())
+                  withContext(Dispatchers.Main) { selectionMode = false; selected = emptySet(); refreshTick++ }
+                }
+              }) { Icon(Icons.Default.Delete, contentDescription = s.delete) }
+            }
             var sortMenu by remember { mutableStateOf(false) }
             Box {
               IconButton(onClick = { sortMenu = true }) { Icon(Icons.Default.Sort, contentDescription = s.sortName) }
@@ -236,6 +256,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
                 }
               }
             }
+            if (!selectionMode) IconButton(onClick = { selectionMode = true }) { Icon(Icons.Default.Checklist, contentDescription = s.selectAll) }
             IconButton(onClick = { showNewFolder = true }) { Icon(Icons.Default.CreateNewFolder, contentDescription = s.newFolder) }
           },
         )
@@ -283,7 +304,14 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
           }
           Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable { openEntry(entry) }.padding(horizontal = 10.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable {
+              if (selectionMode) {
+                val path = entry.file.absolutePath
+                selected = if (path in selected) selected - path else selected + path
+              } else {
+                openEntry(entry)
+              }
+            }.padding(horizontal = 10.dp, vertical = 10.dp),
           ) {
             Box(
               Modifier.size(40.dp).background(MaterialTheme.colorScheme.primaryContainer, androidx.compose.foundation.shape.CircleShape),
@@ -300,6 +328,9 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
               )
             }
             if (!entry.isDir) {
+              IconButton(onClick = { starred = com.nekonaru.pedeef.data.Starred.toggle(context, entry.file.absolutePath).toSet() }) {
+                Icon(if (entry.file.absolutePath in starred) Icons.Default.Star else Icons.Default.StarBorder, contentDescription = if (entry.file.absolutePath in starred) s.unstar else s.star)
+              }
               IconButton(onClick = { shareFile(entry) }) { Icon(Icons.Default.Share, contentDescription = s.share) }
             } else {
               Box(Modifier.size(48.dp))
@@ -372,6 +403,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
       onConfirm = {
         scope.launch(Dispatchers.IO) {
           runCatching { FilesStore.delete(root, entry.file) }
+          starred = com.nekonaru.pedeef.data.Starred.prune(context, root.walkTopDown().filter { it.isFile }.map { it.absolutePath }.toSet()).toSet()
           withContext(Dispatchers.Main) { deleteTarget = null; refreshTick++ }
         }
       },

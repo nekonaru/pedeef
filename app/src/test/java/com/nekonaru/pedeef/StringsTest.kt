@@ -28,6 +28,10 @@ class StringsTest {
     assertEquals("Atur ulang", Id.reset)
     assertEquals("Warna", Id.color)
     assertEquals("Halaman", Id.pageName)
+    assertEquals("Bacakan halaman", Id.speakPage)
+    assertEquals("Simpan preset", Id.savePreset)
+    assertEquals("Jalankan di folder", Id.batchRun)
+    assertEquals("Dua halaman", Id.spread)
   }
 
   @Test
@@ -43,5 +47,9 @@ class StringsTest {
     assertEquals("Reset", En.reset)
     assertEquals("Color", En.color)
     assertEquals("Page", En.pageName)
+    assertEquals("Read page aloud", En.speakPage)
+    assertEquals("Save preset", En.savePreset)
+    assertEquals("Run on folder", En.batchRun)
+    assertEquals("Two pages", En.spread)
   }
 }
