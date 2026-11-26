@@ -2,6 +2,29 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.22.0
+
+Archive Copy and Page Size Report, plus a fourteenth audit round with High fixes for Trim Margins and text-page requests.
+
+### New features
+
+- **Archive Copy.** Writes a minimal PDF/A-1b XMP identification marker and sets PDF version 1.7. Full conformance is not validated (no font check), and the tool says so.
+- **Page Size Report.** Lists every distinct page size in points, millimetres and inches.
+
+### Improvements
+
+- **Tool catalog:** 49 tools; catalog test and README EN/ID updated.
+
+### Bug fixes
+
+- **Trim Margins vertical crop inverted (High).** Pixel bounds are top-down while PDF form space is bottom-up; the crop window is now converted to bottom-up coordinates before placing the page form.
+- **Trim Margins ignored page rotation (High).** The trimmed form is now placed with the rotation-aware helper; displayed crop bounds apply to the displayed page.
+- **Copy/Read Aloud no-op on first tap (High).** Tokens are kept until text for the requested page is ready, instead of being consumed when `pageText` is temporarily null.
+- **Stale page text on incoming PDF (Medium).** `pageText` and `pageTextIndex` are now keyed by payload version.
+- **Header/footer on rotated pages (Medium).** Uses the same rotation-aware placement as page numbers.
+- **Temp sweep.** Added `trim-` prefix so a force-stop during Trim Margins no longer leaves a plaintext PDF copy in cache.
+- **Split Every N Pages** now names single-page parts `page-N` consistently.
+
 ## v1.21.0
 
 Two page-layout tools (Split Every N Pages, Trim Margins), plus a thirteenth audit round with a High header/footer placement fix.

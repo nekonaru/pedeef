@@ -124,8 +124,9 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   var matches by remember(payloadVersion) { mutableStateOf<List<Int>?>(null) }
   var highlights by remember(payloadVersion) { mutableStateOf<Map<Int, List<android.graphics.RectF>>?>(null) }
   var matchIndex by remember(matches) { mutableStateOf(0) }
-  var pageTextIndex by remember { mutableStateOf<Int?>(null) }
-  var pageText by remember { mutableStateOf<String?>(null) }
+  var pageTextIndex by remember(payloadVersion) { mutableStateOf<Int?>(null) }
+  var pageTextForIndex by remember(payloadVersion) { mutableStateOf(-1) }
+  var pageText by remember(payloadVersion) { mutableStateOf<String?>(null) }
   var copyToken by remember { mutableStateOf(0) }
   var speaking by remember { mutableStateOf(false) }
   var speakToken by remember { mutableStateOf(0) }
@@ -217,8 +218,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   }
   LaunchedEffect(pageTextIndex) {
     val i = pageTextIndex ?: return@LaunchedEffect
-    pageText = null // never speak/copy text from the previous page while extracting a new one
-    pageText = withContext(Dispatchers.Default) {
+    val extracted = withContext(Dispatchers.Default) {
       runCatching {
         withTempPdf(working, ToolContext.cacheDir, "pagetext") { tmp ->
           com.tom_roush.pdfbox.pdmodel.PDDocument.load(tmp).use { doc ->
@@ -228,13 +228,15 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
         }
       }.getOrNull()
     }
-    if (pageText == null) copyMessage = s.genericError
+    pageText = extracted
+    pageTextForIndex = i
+    if (extracted == null) copyMessage = s.genericError
   }
-  LaunchedEffect(pageText, speakToken) {
+  LaunchedEffect(pageText, pageTextForIndex, pageTextIndex, speakToken) {
     if (!speaking) return@LaunchedEffect
+    if (pageTextForIndex != pageTextIndex) return@LaunchedEffect // still extracting the requested page
     val text = pageText
     if (text == null) {
-      // No text on this page: do not leave the UI stuck in "Stop reading".
       speaking = false
       speakToken = 0
       return@LaunchedEffect
@@ -242,13 +244,13 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     speakToken = 0
     speaker.speak(text)
   }
-  LaunchedEffect(pageText, copyToken) {
+  LaunchedEffect(pageText, pageTextForIndex, pageTextIndex, copyToken) {
     if (copyToken == 0) return@LaunchedEffect
-    val text = pageText
-    if (text == null) { copyToken = 0; return@LaunchedEffect }
+    if (pageTextForIndex != pageTextIndex) return@LaunchedEffect
+    val text = pageText ?: run { copyToken = 0; return@LaunchedEffect }
     clipboard.setText(AnnotatedString(text))
     copyMessage = s.pageTextCopied
-    copyToken = 0 // consume: later pageText changes from read-aloud must not overwrite the clipboard
+    copyToken = 0
   }
 
   fun runSearch() {
