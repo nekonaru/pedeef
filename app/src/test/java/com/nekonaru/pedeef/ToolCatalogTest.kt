@@ -33,8 +33,8 @@ class ToolCatalogTest {
 
   @Test
   fun catalogCoversTheOriginalsPlusNew() {
-    assertEquals(49, TOOLS.size)
-    for (id in listOf("merge", "alternate", "compress", "split", "splitCount", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "autoTrim", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "stripMetadata", "lintPdf", "cariDuplikat", "hapusKosong", "reversePages", "bookmarks", "textToPdf", "resizePdf", "grayscalePdf", "invertPdf", "flattenPdf", "removeAnnotations", "extractAttachments", "multiSearch", "headerFooter", "archiveCopy", "pageSizeReport", "blankPdf", "scan")) {
+    assertEquals(51, TOOLS.size)
+    for (id in listOf("merge", "alternate", "compress", "split", "splitCount", "splitBlanks", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "autoTrim", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "stripMetadata", "lintPdf", "cariDuplikat", "hapusKosong", "reversePages", "keepOddEven", "bookmarks", "textToPdf", "resizePdf", "grayscalePdf", "invertPdf", "flattenPdf", "removeAnnotations", "extractAttachments", "multiSearch", "headerFooter", "archiveCopy", "pageSizeReport", "blankPdf", "scan")) {
       // scan is not a catalog tool; the rest must exist
       if (id == "scan") assertNull(toolById(id)) else assertNotNull(toolById(id))
     }

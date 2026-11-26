@@ -156,6 +156,8 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Trim Margins** | Auto-crop uniform white margins around scanned page content. |
 | **Archive Copy** | Write a PDF/A-1b identification marker and set version 1.7 (not full conformance validation). |
 | **Page Size Report** | List distinct page sizes in points, millimetres and inches. |
+| **Split at Blank Pages** | Split a scan into parts at blank separator pages and drop them. |
+| **Keep Odd/Even Pages** | Keep only odd- or even-numbered pages from duplex scans. |
 
 ---
 
@@ -190,7 +192,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 ### Option A: Download the APK (easiest)
 
 1. Open the [latest release](https://github.com/nekonaru/pedeef/releases/latest).
-2. Download `pedeef-1.22.0.apk` (signed with the app's built-in debug key).
+2. Download `pedeef-1.23.0.apk` (signed with the app's built-in debug key).
 3. Tap the file to install. If Android warns about unknown sources, allow installing from your browser or file manager.
 4. Open Pedeef. On first use of the Files tab, allow the file access it asks for so your files land in Download/Pedeef.
 
@@ -280,7 +282,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       entry point
       engine/               PDF engine (PdfBox), pure ops + android ops
-      tools/                tool catalog (49 tools, EN + ID)
+      tools/                tool catalog (51 tools, EN + ID)
       ui/                   screens: home, tool, files, viewer, settings, scan
       ui/theme/             themes (Ember, Cherry, Arctic) + typography
       i18n/                 English and Bahasa Indonesia strings

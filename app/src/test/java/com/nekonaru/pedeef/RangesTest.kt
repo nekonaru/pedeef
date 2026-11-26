@@ -70,7 +70,7 @@ class RangesTest {
 
   @Test
   fun unrotate_oneEighty() {
-    assertEquals(listOf(0.6f, 0.5f, 0.3f, 0.4f), unrotate(listOf(0.1f, 0.5f, 0.3f, 0.4f), 180).let { listOf(round2(it[0]), it[1], it[2], it[3]) })
+    assertEquals(listOf(0.6f, 0.1f, 0.3f, 0.4f), unrotate(listOf(0.1f, 0.5f, 0.3f, 0.4f), 180).let { listOf(round2(it[0]), round2(it[1]), it[2], it[3]) })
   }
 
   @Test

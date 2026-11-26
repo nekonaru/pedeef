@@ -233,7 +233,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     if (extracted == null) copyMessage = s.genericError
   }
   LaunchedEffect(pageText, pageTextForIndex, pageTextIndex, speakToken) {
-    if (!speaking) return@LaunchedEffect
+    if (!speaking || speakToken == 0) return@LaunchedEffect
     if (pageTextForIndex != pageTextIndex) return@LaunchedEffect // still extracting the requested page
     val text = pageText
     if (text == null) {

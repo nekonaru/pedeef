@@ -146,7 +146,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
       val secret = ArrayList<Pair<String, ByteArray>>()
       for (f in out) {
         if (!mentionsEncrypt(f.bytes)) { plain.add(f); continue }
-        val unlocked = unlockBytes(f.bytes, "")
+        val unlocked = withContext(Dispatchers.Default) { unlockBytes(f.bytes, "") }
         if (unlocked != null) plain.add(PickedFile(f.name, unlocked)) else secret.add(f.name to f.bytes)
       }
       if (plain.isNotEmpty()) addFiles(plain)
@@ -170,14 +170,16 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
     val q = locked ?: return
     if (q.isEmpty()) { locked = null; unlockError = null; return }
     val (name, bytes) = q.first()
-    val unlocked = unlockBytes(bytes, password)
-    if (unlocked == null) {
-      unlockError = s.passwordWrong
-      return
+    scope.launch {
+      val unlocked = withContext(Dispatchers.Default) { unlockBytes(bytes, password) }
+      if (unlocked == null) {
+        unlockError = s.passwordWrong
+        return@launch
+      }
+      unlockError = null
+      addFiles(listOf(PickedFile(name.replace(Regex("\\.pdf$", RegexOption.IGNORE_CASE), "") + ".pdf", unlocked)), merge = true)
+      locked = q.drop(1).ifEmpty { null }
     }
-    unlockError = null
-    addFiles(listOf(PickedFile(name.replace(Regex("\\.pdf$", RegexOption.IGNORE_CASE), "") + ".pdf", unlocked)), merge = true)
-    locked = q.drop(1).ifEmpty { null }
   }
 
   fun run() {

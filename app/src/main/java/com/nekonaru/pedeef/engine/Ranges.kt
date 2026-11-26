@@ -45,7 +45,7 @@ fun unrotate(b: Box, rot: Int): Box {
   val (x, y, w, h) = b
   return when (rot) {
     90 -> listOf(y, x, h, w)
-    180 -> listOf(1 - x - w, y, w, h)
+    180 -> listOf(1 - x - w, 1 - y - h, w, h)
     270 -> listOf(1 - y - h, 1 - x - w, h, w)
     else -> listOf(x, 1 - y - h, w, h)
   }

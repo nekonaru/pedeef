@@ -5,7 +5,7 @@ fun pageSizeReport(name: String, bytes: ByteArray): ByteArray = loadPdf(bytes).u
   val seen = LinkedHashMap<Pair<Int, Int>, MutableList<Int>>()
   for (i in 0 until doc.numberOfPages) {
     val box = doc.getPage(i).cropBox
-    val key = (box.width * 10).toInt() to (box.height * 10).toInt()
+    val key = kotlin.math.round(box.width * 10).toInt() to kotlin.math.round(box.height * 10).toInt()
     seen.getOrPut(key) { mutableListOf() }.add(i + 1)
   }
   val sb = StringBuilder()
