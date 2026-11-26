@@ -158,6 +158,14 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 | **Page Size Report** | List distinct page sizes in points, millimetres and inches. |
 | **Split at Blank Pages** | Split a scan into parts at blank separator pages and drop them. |
 | **Keep Odd/Even Pages** | Keep only odd- or even-numbered pages from duplex scans. |
+| **Stamp Image** | Place a logo or image on every PDF page. |
+| **Highlight Phrase** | Automatically highlight every occurrence of a phrase. |
+| **Replace / Overlay PDFs** | Replace selected pages from another PDF or overlay a second PDF. |
+| **Booklet & Poster** | Impose two pages per sheet or tile a page for printing. |
+| **Bates & Text Stamp** | Bates numbering and text stamps at a chosen position. |
+| **Presets & Batch** | Save tool configurations and run them on every PDF in a folder. |
+| **Files Workspace** | Multi-select, starred files and search history. |
+| **Two-page Viewer** | Book-style two-page mode and a full page thumbnail grid. |
 
 ---
 
@@ -192,7 +200,7 @@ It is an original reimplementation of the open-source PDF Tools app (MIT, (c) 20
 ### Option A: Download the APK (easiest)
 
 1. Open the [latest release](https://github.com/nekonaru/pedeef/releases/latest).
-2. Download `pedeef-1.23.0.apk` (signed with the app's built-in debug key).
+2. Download `pedeef-2.0.0.apk` (signed with the app's built-in debug key).
 3. Tap the file to install. If Android warns about unknown sources, allow installing from your browser or file manager.
 4. Open Pedeef. On first use of the Files tab, allow the file access it asks for so your files land in Download/Pedeef.
 
@@ -282,7 +290,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       entry point
       engine/               PDF engine (PdfBox), pure ops + android ops
-      tools/                tool catalog (51 tools, EN + ID)
+      tools/                tool catalog (75 tools, EN + ID)
       ui/                   screens: home, tool, files, viewer, settings, scan
       ui/theme/             themes (Ember, Cherry, Arctic) + typography
       i18n/                 English and Bahasa Indonesia strings
@@ -331,7 +339,7 @@ pedeef/
 | Check | Requirement |
 |-------|-------------|
 | Kotlin compile | Zero errors |
-| Unit tests | All pass (48 tests) |
+| Unit tests | All pass (54 tests) |
 | Debug APK | Builds successfully |
 | Lint | Zero errors |
 | Secret scan | gitleaks reports zero findings |

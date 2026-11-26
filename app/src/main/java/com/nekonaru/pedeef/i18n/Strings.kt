@@ -49,7 +49,7 @@ class Strings(
   // update check and sponsor
   val versionRow: String, val checkingUpdates: String, val upToDate: String, val updateAvailable: String,
   val checkFailed: String, val sponsor: String, val sponsorBody: String,
-  val developer: String, val viewOnGithub: String, val pageThumbs: String, val fileOne: String, val fileMany: String, val searchInFolder: String, val reset: String, val color: String, val pageName: String, val speakPage: String, val stopSpeech: String,
+  val developer: String, val viewOnGithub: String, val pageThumbs: String, val fileOne: String, val fileMany: String, val searchInFolder: String, val reset: String, val color: String, val pageName: String, val speakPage: String, val stopSpeech: String, val savePreset: String, val loadPreset: String, val presets: String, val batchRun: String, val batchSelect: String, val batchProgress: String, val batchDone: String, val star: String, val unstar: String, val selected: String, val selectAll: String, val quickActions: String, val searchHistory: String, val clearHistory: String, val spread: String, val thumbnails: String,
 )
 
 val En = Strings(
@@ -94,7 +94,7 @@ val En = Strings(
   // update check and sponsor
   "Check for updates", "Checking…", "You are on the latest version.", "Version %1\$s is available.",
   "Could not check. Check your connection.", "Sponsor", "Pedeef is free and always will be. If it is useful to you, you can support the developer:",
-  "Developer", "View on GitHub", "Page thumbnails", "File", "Files", "Search in this folder", "Reset", "Color", "Page", "Read page aloud", "Stop reading",
+  "Developer", "View on GitHub", "Page thumbnails", "File", "Files", "Search in this folder", "Reset", "Color", "Page", "Read page aloud", "Stop reading", "Save preset", "Load preset", "Presets", "Run on folder", "Choose preset", "Progress", "Batch complete", "Star", "Unstar", "Selected", "Select all", "Quick actions", "Recent searches", "Clear history", "Two pages", "All pages",
 )
 
 val Id = Strings(
@@ -139,7 +139,7 @@ val Id = Strings(
   // update check and sponsor
   "Periksa pembaruan", "Memeriksa…", "Kamu memakai versi terbaru.", "Versi %1\$s tersedia.",
   "Tidak bisa memeriksa. Periksa koneksimu.", "Sponsor", "Pedeef gratis dan akan selalu gratis. Kalau kamu merasa terbantu, kamu bisa mendukung pengembangnya:",
-  "Pengembang", "Lihat di GitHub", "Thumbnail halaman", "File", "File", "Cari di folder ini", "Atur ulang", "Warna", "Halaman", "Bacakan halaman", "Hentikan bacaan",
+  "Pengembang", "Lihat di GitHub", "Thumbnail halaman", "File", "File", "Cari di folder ini", "Atur ulang", "Warna", "Halaman", "Bacakan halaman", "Hentikan bacaan", "Simpan preset", "Muat preset", "Preset", "Jalankan di folder", "Pilih preset", "Progres", "Batch selesai", "Bintangi", "Hapus bintang", "Dipilih", "Pilih semua", "Aksi cepat", "Pencarian terakhir", "Hapus riwayat", "Dua halaman", "Semua halaman",
 )
 
 val LocalPedeefStrings = staticCompositionLocalOf { En }

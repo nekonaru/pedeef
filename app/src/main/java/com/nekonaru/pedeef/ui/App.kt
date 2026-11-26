@@ -181,6 +181,7 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
               Tab.Tools -> HomeScreen(
                 onOpenTool = { nav.navigate("tool/$it") },
                 onScan = { nav.navigate("scan") },
+              onBatch = { nav.navigate("batch") },
                 onOpenViewer = { bytes, name ->
                   ViewerPayload.set(bytes, name, persisted = true)
                   nav.navigate("viewer")
@@ -194,6 +195,7 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
             }
           }
         }
+        composable("batch") { com.nekonaru.pedeef.ui.batch.BatchScreen(onBack = { nav.popBackStack() }) }
         composable("tool/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
           val id = entry.arguments?.getString("id").orEmpty()
           ToolScreen(

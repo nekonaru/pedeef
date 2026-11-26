@@ -122,7 +122,7 @@ internal val TOOL_ICONS: Map<String, androidx.compose.ui.graphics.vector.ImageVe
 )
 
 @Composable
-fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onOpenViewer: (ByteArray, String) -> Unit) {
+fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> Unit, onOpenViewer: (ByteArray, String) -> Unit) {
   val s = LocalPedeefStrings.current
   val indonesian = s === Id
   val context = LocalContext.current
@@ -130,6 +130,7 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onOpenViewer: (
   val pinnedIds by Pins.ids.collectAsState()
   var query by remember { mutableStateOf("") }
   var section by remember { mutableStateOf(-1) }
+  var history by remember { mutableStateOf(com.nekonaru.pedeef.data.SearchHistory.load(context)) }
   val recent by androidx.compose.runtime.produceState<List<com.nekonaru.pedeef.data.FileEntry>>(initialValue = emptyList()) {
     value = withContext(kotlinx.coroutines.Dispatchers.IO) { com.nekonaru.pedeef.data.RecentFiles.list(context) }
   }
@@ -172,6 +173,7 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onOpenViewer: (
           onValueChange = { query = it },
           placeholder = { Text(s.searchHint) },
           leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+          keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { history = com.nekonaru.pedeef.data.SearchHistory.add(context, query) }),
           singleLine = true,
           shape = RoundedCornerShape(28.dp),
           modifier = Modifier.fillMaxWidth(),
@@ -204,6 +206,23 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onOpenViewer: (
               )
             }
             Icon(Icons.Default.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+          }
+        }
+        Box(Modifier.height(12.dp))
+        // Quick actions: batch runner and the four most used pinned tools.
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          androidx.compose.material3.FilterChip(selected = false, onClick = onBatch, label = { Text(s.batchRun) })
+          TOOLS.filter { it.id in pinnedIds }.take(4).forEach { tool ->
+            androidx.compose.material3.FilterChip(selected = false, onClick = { onOpenTool(tool.id) }, label = { Text(tool.title(indonesian)) })
+          }
+        }
+        if (query.isBlank() && history.isNotEmpty()) {
+          Text(s.searchHistory.uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 10.dp, bottom = 2.dp))
+          Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            history.forEach { h ->
+              androidx.compose.material3.AssistChip(onClick = { query = h }, label = { Text(h) })
+            }
+            androidx.compose.material3.AssistChip(onClick = { com.nekonaru.pedeef.data.SearchHistory.clear(context); history = emptyList() }, label = { Text(s.clearHistory) })
           }
         }
         Box(Modifier.height(12.dp))

@@ -2,6 +2,31 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v2.0.0
+
+Major release: 24 new PDF tools, presets and batch processing, a richer workspace, and a two-page viewer.
+
+### New features
+
+- **24 new tools.** Image stamp, highlight phrase, replace pages, overlay PDFs, booklet, poster tiles, insert blank pages, duplicate pages, page border, Bates numbering, text stamp, black and white, blank page report, extract comments, remove attachments, remove JavaScript, detailed protection, owner password unlock, PDF to long image, images to long image, text with page markers, checksum manifest, integrity check and sanitize everything.
+- **Presets.** Save a tool configuration with a name and load it later from the same tool screen.
+- **Batch runner.** Choose a preset and run it on up to 100 PDFs in the file tree. Results go to a timestamped folder with a text report.
+- **Files workspace.** Multi-select files for bulk delete, star important files, and choose all.
+- **Search history.** Recent phrases appear as chips on Home and can be cleared.
+- **Quick actions.** Batch runner and the four most used pinned tools appear above the tool grid.
+- **Viewer Pro basics.** Two-page book mode and a full thumbnail grid, alongside the existing strip and strip zoom.
+- **Input.Any.** Tools can now accept mixed PDF and image files in one picker.
+
+### Improvements
+
+- **Tool catalog:** 75 tools, catalog test and README EN/ID updated; unit suite is now 54 tests.
+- **Engine reuse:** page placement, form embedding and cleanup operations share the same internal helpers as the older tools.
+- **Spec and review:** every new tool follows the same English first, Indonesian translation pattern.
+
+### Bug fixes
+
+- **No known regression at release.** New code passed 54 unit tests and lint before CI.
+
 ## v1.23.0
 
 Split at Blank Pages and Keep Odd/Even Pages, plus a fifteenth audit round.

@@ -44,7 +44,7 @@ fun defaults(defs: List<OptDef>): Opts = JsonObject(defs.associate {
   }
 })
 
-enum class Input { Pdf, Pdfs, Images, None }
+enum class Input { Pdf, Pdfs, Images, None, Any }
 
 class Tool(
   val id: String,
@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments", "multiSearch", "pageSizeReport")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments", "multiSearch", "pageSizeReport", "blankPageReport", "extractComments", "checksumManifest", "integrityCheck", "extractTextPages", "protectDetailed", "unlockPassword")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -617,6 +617,241 @@ val TOOLS: List<Tool> = listOf(
       num("pages", "Pages", "Halaman", "1", "1"),
     ),
     run = { _, o -> listOf(Output("blank", blankPdf(o.str("pages").toIntOrNull() ?: 1, o.str("size")))) },
+  ),
+  Tool(
+    "imageStamp", SECTION_FILL,
+    "Stamp Image", "Cap Gambar",
+    "Place an image or logo on every page. Pick one PDF and one image together.",
+    "Tempel gambar atau logo di setiap halaman. Pilih satu PDF dan satu gambar sekaligus.",
+    "Stamp image", "Cap gambar", "Stamping image", "Memasang gambar", Input.Any, noPreview = true,
+    opts = listOf(
+      num("x", "Horizontal position %", "Posisi horizontal %", "50", "50"),
+      num("y", "Vertical position %", "Posisi vertikal %", "50", "50"),
+      num("size", "Width %", "Lebar %", "20", "20"),
+      num("opacity", "Opacity %", "Opasitas %", "60", "60"),
+    ),
+    run = { files, o ->
+      listOf(Output("stamped", stampImage(files, (o.str("x").toFloatOrNull() ?: 50f) / 100f, (o.str("y").toFloatOrNull() ?: 50f) / 100f, (o.str("size").toFloatOrNull() ?: 20f) / 100f, (o.str("opacity").toFloatOrNull() ?: 60f) / 100f)))
+    },
+  ),
+  Tool(
+    "highlightPhrase", SECTION_FILL,
+    "Highlight Phrase", "Sorot Frasa",
+    "Draw a translucent highlight over every occurrence of a phrase, then save the marked PDF.",
+    "Gambar sorotan translusen di setiap kemunculan frasa, lalu simpan PDF hasilnya.",
+    "Highlight", "Sorot", "Highlighting", "Menyorot", Input.Pdf, noPreview = true,
+    opts = listOf(text("phrase", "Phrase", "Frasa", "", "Word or phrase")),
+    run = { files, o -> listOf(Output("highlighted", highlightPhrase(files[0].bytes, o.str("phrase")))) },
+  ),
+  Tool(
+    "replacePages", SECTION_COMBINE,
+    "Replace Pages", "Ganti Halaman",
+    "Replace selected pages of the first PDF with pages from the second PDF.",
+    "Ganti halaman tertentu pada PDF pertama dengan halaman dari PDF kedua.",
+    "Replace pages", "Ganti halaman", "Replacing", "Mengganti", Input.Pdfs, min = 2, noPreview = true,
+    opts = listOf(pageList("pages", "Pages to replace", "Halaman yang diganti", "1, 3-5")),
+    run = { files, o -> listOf(Output("replaced", replacePages(files[0].bytes, files[1].bytes, o.str("pages")))) },
+  ),
+  Tool(
+    "overlayPdf", SECTION_COMBINE,
+    "Overlay PDFs", "Timpa PDF",
+    "Overlay the second PDF on the first, for forms, letterheads or stamps.",
+    "Timpa PDF kedua di atas PDF pertama, untuk formulir, kop surat, atau cap.",
+    "Overlay", "Timpa", "Overlaying", "Menimpa", Input.Pdfs, min = 2, noPreview = true,
+    run = { files, _ -> listOf(Output("overlaid", overlayPdfs(files[0].bytes, files[1].bytes))) },
+  ),
+  Tool(
+    "booklet", SECTION_ARRANGE,
+    "Booklet", "Booklet",
+    "Put two pages side by side on each sheet for folding or printing.",
+    "Letakkan dua halaman berdampingan per lembar untuk dilipat atau dicetak.",
+    "Make booklet", "Buat booklet", "Imposing", "Menata booklet", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("booklet", makeBooklet(files[0].bytes))) },
+  ),
+  Tool(
+    "poster", SECTION_ARRANGE,
+    "Poster Tiles", "Ubah ke Poster",
+    "Split each page into a grid of printable tiles with a small overlap.",
+    "Pecah tiap halaman menjadi petak cetak dengan sedikit tumpang tindih.",
+    "Tile pages", "Petak halaman", "Tiling", "Memetak", Input.Pdf, noPreview = true,
+    opts = listOf(
+      seg("cols", "Columns", "Kolom", listOf(Triple("2", "2", "2"), Triple("3", "3", "3"), Triple("4", "4", "4")), "2"),
+      seg("rows", "Rows", "Baris", listOf(Triple("2", "2", "2"), Triple("3", "3", "3"), Triple("4", "4", "4")), "2"),
+    ),
+    run = { files, o -> listOf(Output("poster", makePoster(files[0].bytes, o.str("cols").toIntOrNull() ?: 2, o.str("rows").toIntOrNull() ?: 2))) },
+  ),
+  Tool(
+    "insertBlank", SECTION_ARRANGE,
+    "Insert Blank Pages", "Sisip Halaman Kosong",
+    "Insert blank pages after the chosen page.",
+    "Sisipkan halaman kosong setelah halaman yang dipilih.",
+    "Insert", "Sisip", "Inserting", "Menyisip", Input.Pdf, noPreview = true,
+    opts = listOf(
+      num("after", "After page", "Setelah halaman", "0", "0"),
+      num("count", "How many", "Berapa banyak", "1", "1"),
+    ),
+    run = { files, o -> listOf(Output("pages", insertBlankPages(files[0].bytes, o.str("after").toIntOrNull() ?: 0, o.str("count").toIntOrNull() ?: 1))) },
+  ),
+  Tool(
+    "duplicatePages", SECTION_ARRANGE,
+    "Duplicate Pages", "Duplikat Halaman",
+    "Repeat chosen pages once or several times.",
+    "Ulangi halaman pilihan satu kali atau beberapa kali.",
+    "Duplicate", "Duplikat", "Duplicating", "Menduplikat", Input.Pdf, noPreview = true,
+    opts = listOf(pageList("pages", "Pages", "Halaman", "1, 3")),
+    run = { files, o -> listOf(Output("pages", duplicatePages(files[0].bytes, o.str("pages")))) },
+  ),
+  Tool(
+    "borderPages", SECTION_FILL,
+    "Page Border", "Bingkai Halaman",
+    "Draw a simple colored frame on every page.",
+    "Gambar bingkai berwarna sederhana di setiap halaman.",
+    "Add border", "Tambah bingkai", "Drawing border", "Menggambar bingkai", Input.Pdf, noPreview = true,
+    opts = listOf(num("width", "Line width pt", "Ketebalan pt", "2", "2")),
+    run = { files, o -> listOf(Output("bordered", borderPages(files[0].bytes, o.str("width").toFloatOrNull() ?: 2f))) },
+  ),
+  Tool(
+    "batesNumber", SECTION_FILL,
+    "Bates Numbering", "Nomor Bates",
+    "Stamp a prefix and sequential number on every page.",
+    "Cap prefiks dan nomor urut di setiap halaman.",
+    "Number pages", "Nomori halaman", "Numbering", "Menomori", Input.Pdf, noPreview = true,
+    opts = listOf(
+      text("prefix", "Prefix", "Prefiks", "DOC-", "DOC-"),
+      num("start", "Start at", "Mulai dari", "1", "1"),
+    ),
+    run = { files, o -> listOf(Output("numbered", batesNumber(files[0].bytes, o.str("prefix"), o.str("start").toIntOrNull() ?: 1))) },
+  ),
+  Tool(
+    "textStamp", SECTION_FILL,
+    "Text Stamp", "Cap Teks",
+    "Stamp the same short text at one position on every page.",
+    "Cap teks pendek yang sama di satu posisi di setiap halaman.",
+    "Stamp text", "Cap teks", "Stamping", "Memasang", Input.Pdf, noPreview = true,
+    opts = listOf(
+      text("text", "Text", "Teks", "", "Approved"),
+      num("x", "Horizontal %", "Horizontal %", "50", "50"),
+      num("y", "Vertical %", "Vertikal %", "90", "90"),
+    ),
+    run = { files, o -> listOf(Output("stamped", stampText(files[0].bytes, o.str("text"), (o.str("x").toFloatOrNull() ?: 50f) / 100f, (o.str("y").toFloatOrNull() ?: 90f) / 100f))) },
+  ),
+  Tool(
+    "blackWhite", SECTION_FILL,
+    "Black and White", "Hitam Putih",
+    "Rasterize every page into pure black and white at a chosen threshold.",
+    "Rasterisasi tiap halaman menjadi hitam putih murni dengan ambang tertentu.",
+    "Convert", "Ubah", "Converting", "Mengubah", Input.Pdf, noPreview = true,
+    opts = listOf(num("threshold", "Threshold", "Ambang", "160", "160"), seg("res", "Resolution", "Resolusi", listOf(Triple("1000", "Standard", "Standar"), Triple("1500", "High", "Tinggi")), "1000")),
+    run = { files, o -> listOf(Output("black-white", blackWhitePages(files[0].bytes, ToolContext.cacheDir, o.str("threshold").toIntOrNull() ?: 160, o.str("res").toIntOrNull() ?: 1000))) },
+  ),
+  Tool(
+    "blankPageReport", SECTION_NEW,
+    "Find Blank Pages", "Cari Halaman Kosong",
+    "Get a text report of fully blank pages without changing the PDF.",
+    "Dapatkan laporan halaman yang benar-benar kosong tanpa mengubah PDF.",
+    "Find blanks", "Cari kosong", "Scanning pages", "Memindai halaman", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("blank-report", blankPageReport(files[0].bytes, ToolContext.cacheDir), ext = "txt")) },
+  ),
+  Tool(
+    "extractComments", SECTION_NEW,
+    "Extract Comments", "Ekstrak Komentar",
+    "Collect all annotation and comment text into a .txt report.",
+    "Kumpulkan semua teks anotasi dan komentar ke laporan .txt.",
+    "Extract", "Ekstrak", "Reading comments", "Membaca komentar", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("comments", extractComments(files[0].bytes), ext = "txt")) },
+  ),
+  Tool(
+    "removeEmbedded", SECTION_PROTECT,
+    "Remove Attachments", "Hapus Lampiran",
+    "Remove the embedded file attachment tree from a PDF.",
+    "Hapus pohon lampiran berkas tertanam dari PDF.",
+    "Remove", "Hapus", "Removing", "Menghapus", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("clean", removeEmbeddedFiles(files[0].bytes))) },
+  ),
+  Tool(
+    "removeJavaScript", SECTION_PROTECT,
+    "Remove JavaScript", "Hapus JavaScript",
+    "Strip JavaScript, launch actions and annotation actions from a PDF.",
+    "Buang JavaScript, aksi peluncuran, dan aksi anotasi dari PDF.",
+    "Remove", "Hapus", "Removing", "Menghapus", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("clean", removeJavaScript(files[0].bytes))) },
+  ),
+  Tool(
+    "protectDetailed", SECTION_PROTECT,
+    "Protect With Permissions", "Lindungi Dengan Izin",
+    "Encrypt a PDF with separate open and owner passwords and granular permissions.",
+    "Enkripsi PDF dengan kata sandi buka dan pemilik terpisah serta izin terperinci.",
+    "Protect", "Lindungi", "Encrypting", "Mengenkripsi", Input.Pdf, noPreview = true,
+    opts = listOf(
+      OptDef.Text("open", "Open password", "Kata sandi buka", "", "Required", 1),
+      OptDef.Text("owner", "Owner password", "Kata sandi pemilik", "", "Defaults to open password", 1),
+      toggle("print", "Allow printing", "Izinkan cetak", true),
+      toggle("copy", "Allow copying", "Izinkan salin", true),
+      toggle("modify", "Allow modifying", "Izinkan ubah", true),
+      toggle("annotate", "Allow annotations", "Izinkan anotasi", true),
+      toggle("fill", "Allow form filling", "Izinkan isi formulir", true),
+      toggle("assemble", "Allow assembly", "Izinkan susun", true),
+    ),
+    run = { files, o ->
+      listOf(Output("protected", protectWithPermissions(files[0].bytes, o.str("open"), o.str("owner"), o.bool("print"), o.bool("copy"), o.bool("modify"), o.bool("annotate"), o.bool("fill"), o.bool("assemble")) ?: fail("This PDF already has a password.")))
+    },
+  ),
+  Tool(
+    "unlockPassword", SECTION_PROTECT,
+    "Unlock With Password", "Buka Dengan Kata Sandi",
+    "Save a decrypted copy using the PDF's user or owner password.",
+    "Simpan salinan tanpa enkripsi memakai kata sandi pengguna atau pemilik PDF.",
+    "Unlock", "Buka", "Unlocking", "Membuka", Input.Pdf, noPreview = true,
+    opts = listOf(OptDef.Text("password", "Password", "Kata sandi", "", "PDF password", 1)),
+    run = { files, o -> listOf(Output("unlocked", unlockWithPassword(files[0].bytes, o.str("password")) ?: fail("Wrong password or unreadable PDF."))) },
+  ),
+  Tool(
+    "pdfToLongImage", SECTION_NEW,
+    "PDF to Long Image", "PDF ke Gambar Panjang",
+    "Render all pages into one tall PNG.",
+    "Render semua halaman menjadi satu PNG panjang.",
+    "Create image", "Buat gambar", "Rendering", "Merender", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("long", pdfToLongImage(files[0].bytes, ToolContext.cacheDir), ext = "png")) },
+  ),
+  Tool(
+    "imagesToLongImage", SECTION_NEW,
+    "Images to Long Image", "Gambar ke Gambar Panjang",
+    "Stack several JPG or PNG images into one tall PNG.",
+    "Tumpuk beberapa gambar JPG atau PNG jadi satu PNG panjang.",
+    "Create image", "Buat gambar", "Combining", "Menggabung", Input.Images, noPreview = true,
+    run = { files, _ -> listOf(Output("long", imagesToLongImage(files), ext = "png")) },
+  ),
+  Tool(
+    "extractTextPages", SECTION_NEW,
+    "Text With Page Markers", "Teks Bermarker Halaman",
+    "Extract text as one file with clear page markers.",
+    "Ekstrak teks jadi satu file dengan penanda halaman yang jelas.",
+    "Extract", "Ekstrak", "Reading pages", "Membaca halaman", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("text-pages", extractTextByPage(files[0].bytes), ext = "txt")) },
+  ),
+  Tool(
+    "checksumManifest", SECTION_AUTOMATE,
+    "Checksum Manifest", "Manifest Checksum",
+    "Generate a SHA-256 list for the selected files.",
+    "Buat daftar SHA-256 untuk file yang dipilih.",
+    "Generate", "Buat", "Hashing", "Menghitung", Input.Pdfs, min = 1, noPreview = true,
+    run = { files, _ -> listOf(Output("sha256", checksumManifest(files), ext = "txt")) },
+  ),
+  Tool(
+    "integrityCheck", SECTION_PROTECT,
+    "Check Integrity", "Cek Integritas",
+    "Read every page and report any unreadable content.",
+    "Baca setiap halaman dan laporkan bagian yang tidak bisa dibaca.",
+    "Check", "Cek", "Checking", "Memeriksa", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("integrity", integrityCheck(files[0].bytes), ext = "txt")) },
+  ),
+  Tool(
+    "sanitizeAll", SECTION_PROTECT,
+    "Sanitize Everything", "Bersihkan Semua",
+    "One tap: strip metadata, annotations, attachments, JavaScript and XMP.",
+    "Satu ketukan: hapus metadata, anotasi, lampiran, JavaScript, dan XMP.",
+    "Sanitize", "Bersihkan", "Sanitizing", "Membersihkan", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("sanitized", sanitizeAll(files[0].bytes))) },
   ),
 )
 

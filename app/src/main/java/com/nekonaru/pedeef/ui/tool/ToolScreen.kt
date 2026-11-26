@@ -94,6 +94,8 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
   var error by remember { mutableStateOf<String?>(null) }
   var results by remember { mutableStateOf<List<Output>?>(null) }
   var savedMessage by remember { mutableStateOf<String?>(null) }
+  var presets by remember { mutableStateOf(com.nekonaru.pedeef.data.Presets.load(context)) }
+  var presetMenu by remember { mutableStateOf(false) }
   var locked by remember { mutableStateOf<List<Pair<String, ByteArray>>?>(null) } // queued locked PDFs: name to bytes
   var unlockError by remember { mutableStateOf<String?>(null) }
 
@@ -129,9 +131,9 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
   }
 
   fun addFiles(new: List<PickedFile>, merge: Boolean = false) {
-    val images = tool.input == Input.Images
+    val append = tool.input == Input.Images || tool.input == Input.Pdfs || tool.input == Input.Any
     val next = when {
-      images || tool.input == Input.Pdfs || merge -> picked + new
+      append || merge -> picked + new
       else -> new.take(1)
     }
     picked = next
@@ -162,6 +164,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
 
   fun pick() = when (tool.input) {
     Input.Images -> imagePicker.launch("image/*")
+    Input.Any -> imagePicker.launch("*/*")
     Input.None -> Unit
     else -> pdfPicker.launch("application/pdf")
   }
@@ -193,7 +196,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
       try {
         val outs = withContext(Dispatchers.Default) {
           when (tool.input) {
-            Input.Images, Input.Pdfs -> tool.run(picked.map { com.nekonaru.pedeef.engine.Named(it.name, it.bytes) }, opts)
+            Input.Images, Input.Pdfs, Input.Any -> tool.run(picked.map { com.nekonaru.pedeef.engine.Named(it.name, it.bytes) }, opts)
             Input.Pdf -> picked.flatMap { f -> tool.run(listOf(com.nekonaru.pedeef.engine.Named(f.name, f.bytes)), opts) }
             Input.None -> tool.run(emptyList(), opts)
           }
@@ -311,6 +314,30 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
       }
 
       if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+
+      // Presets
+      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = {
+          val stamp = java.text.SimpleDateFormat("MMdd-HHmm", java.util.Locale.US).format(java.util.Date())
+          val name = tool.title(indonesian) + " " + stamp
+          presets = com.nekonaru.pedeef.data.Presets.save(context, com.nekonaru.pedeef.data.Preset("${tool.id}-${System.currentTimeMillis()}", name, tool.id, opts))
+          savedMessage = s.savedTo
+        }, modifier = Modifier.weight(1f)) { Text(s.savePreset) }
+        Box(modifier = Modifier.weight(1f)) {
+          OutlinedButton(onClick = { presetMenu = true }, modifier = Modifier.fillMaxWidth()) { Text(s.loadPreset) }
+          androidx.compose.material3.DropdownMenu(expanded = presetMenu, onDismissRequest = { presetMenu = false }) {
+            val mine = presets.filter { it.toolId == tool.id }
+            if (mine.isEmpty()) androidx.compose.material3.DropdownMenuItem(text = { Text(s.presets) }, onClick = { presetMenu = false })
+            mine.forEach { p ->
+              androidx.compose.material3.DropdownMenuItem(text = { Text(p.name) }, onClick = {
+                opts = p.opts
+                results = null
+                presetMenu = false
+              })
+            }
+          }
+        }
+      }
 
       // CTA
       Btn(
