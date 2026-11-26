@@ -26,19 +26,19 @@ fun autoTrim(bytes: ByteArray, cacheDir: java.io.File, threshold: Int = 245, pad
             val box = contentBounds(bmp, threshold)
             bmp.recycle()
             val content = out.embedShown(page)
+            // PdfRenderer bounds are displayed-space and top-down; PdfBox form space is bottom-up.
+            // Convert the displayed crop box into bottom-up coordinates on the shown page.
             val sx = content.shownW / w
             val sy = content.shownH / h
-            val left = (box[0] * sx - padPt).coerceAtLeast(0f)
-            val top = (box[1] * sy - padPt).coerceAtLeast(0f)
-            val cw = ((box[2] - box[0]) * sx + 2 * padPt).coerceAtMost(content.shownW - left)
-            val ch = ((box[3] - box[1]) * sy + 2 * padPt).coerceAtMost(content.shownH - top)
+            val shownLeft = (box[0] * sx - padPt).coerceAtLeast(0f)
+            val shownRight = (box[2] * sx + padPt).coerceAtMost(content.shownW)
+            val shownBottom = (content.shownH - box[3] * sy - padPt).coerceAtLeast(0f)
+            val shownTop = (content.shownH - box[1] * sy + padPt).coerceAtMost(content.shownH)
+            val cw = (shownRight - shownLeft).coerceAtLeast(1f)
+            val ch = (shownTop - shownBottom).coerceAtLeast(1f)
             val np = PDPage(com.tom_roush.pdfbox.pdmodel.common.PDRectangle(cw, ch)).also { out.addPage(it) }
-            PDPageContentStream(out, np).use { cs ->
-              cs.saveGraphicsState()
-              cs.transform(com.tom_roush.pdfbox.util.Matrix.getTranslateInstance(-left, -top))
-              cs.drawForm(content.form)
-              cs.restoreGraphicsState()
-            }
+            // drawShown handles the page's /Rotate; shift the form so the crop window starts at 0,0.
+            out.draw(np) { drawShown(content, -shownLeft, -shownBottom, 1f) }
           }
         }
       }

@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments", "multiSearch")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments", "multiSearch", "pageSizeReport")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -451,6 +451,22 @@ val TOOLS: List<Tool> = listOf(
     "Hapus halaman yang benar-benar kosong dari PDF dan tulis laporan nomor halaman yang dihapus.",
     "Remove blanks", "Hapus kosong", "Scanning pages", "Memindai halaman", Input.Pdf, noPreview = true,
     run = { files, _ -> removeBlankPages(files[0].bytes, ToolContext.cacheDir) },
+  ),
+  Tool(
+    "archiveCopy", SECTION_PROTECT,
+    "Archive Copy", "Salinan Arsip",
+    "Write a PDF/A-1b identification marker and set version 1.7. Full conformance is not guaranteed (no font check or validation).",
+    "Tulis penanda identifikasi PDF/A-1b dan tetapkan versi 1.7. Konformitas penuh tidak dijamin (tanpa cek font atau validasi).",
+    "Mark for archive", "Tandai arsip", "Writing marker", "Menulis penanda", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("archive", markForArchiving(files[0].bytes))) },
+  ),
+  Tool(
+    "pageSizeReport", SECTION_NEW,
+    "Page Size Report", "Laporan Ukuran Halaman",
+    "Report every distinct page size in points, millimetres and inches.",
+    "Laporkan setiap ukuran halaman yang berbeda dalam point, milimeter, dan inci.",
+    "Generate report", "Buat laporan", "Measuring pages", "Mengukur halaman", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("page-sizes", pageSizeReport(files[0].name, files[0].bytes), ext = "txt")) },
   ),
   Tool(
     "splitCount", SECTION_COMBINE,

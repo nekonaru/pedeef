@@ -46,7 +46,7 @@ fun loadPdf(bytes: ByteArray): PDDocument = try {
 
 fun PDDocument.bytes(): ByteArray = ByteArrayOutputStream().use { save(it); it.toByteArray() }
 
-private val PDPage.rot: Int get() = ((rotation % 360) + 360) % 360
+internal val PDPage.rot: Int get() = ((rotation % 360) + 360) % 360
 
 /** Copies a page into this document, keeping the resources it relies on. */
 internal fun PDDocument.adopt(p: PDPage): PDPage {
@@ -108,7 +108,7 @@ fun splitEveryN(bytes: ByteArray, perPart: Int): List<Named> {
   return loadPdf(bytes).use { src ->
     (0 until src.numberOfPages step perPart).map { start ->
       val end = minOf(start + perPart, src.numberOfPages) - 1
-      Named("pages-${start + 1}-${end + 1}", pick(src, (start..end).toList()))
+      Named(if (start == end) "page-${start + 1}" else "pages-${start + 1}-${end + 1}", pick(src, (start..end).toList()))
     }
   }
 }
@@ -352,7 +352,7 @@ private fun PDPageContentStream.place(form: PDFormXObject, x: Float, y: Float, s
   restoreGraphicsState()
 }
 
-private fun PDPageContentStream.drawShown(e: Shown, x: Float, y: Float, s: Float) {
+internal fun PDPageContentStream.drawShown(e: Shown, x: Float, y: Float, s: Float) {
   val w = e.w * s
   val h = e.h * s
   val (ox, oy) = when (e.rot) {
@@ -365,7 +365,7 @@ private fun PDPageContentStream.drawShown(e: Shown, x: Float, y: Float, s: Float
 }
 
 private fun PDDocument.newPage(w: Float, h: Float) = PDPage(PDRectangle(w, h)).also { addPage(it) }
-private fun PDDocument.draw(p: PDPage, block: PDPageContentStream.() -> Unit) =
+internal fun PDDocument.draw(p: PDPage, block: PDPageContentStream.() -> Unit) =
   PDPageContentStream(this, p, PDPageContentStream.AppendMode.APPEND, true, true).use(block)
 
 /**
@@ -502,7 +502,7 @@ private fun PDPageContentStream.alpha(a: Float) {
   setGraphicsStateParameters(PDExtendedGraphicsState().apply { nonStrokingAlphaConstant = a; strokingAlphaConstant = a })
 }
 
-private fun PDPageContentStream.putText(font: PDType1Font, size: Float, text: String, x: Float, y: Float, deg: Float) {
+internal fun PDPageContentStream.putText(font: PDType1Font, size: Float, text: String, x: Float, y: Float, deg: Float) {
   beginText()
   setFont(font, size)
   setTextMatrix(Matrix.getRotateInstance(Math.toRadians(deg.toDouble()), x, y))

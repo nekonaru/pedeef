@@ -154,6 +154,8 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Header & Footer** | Tambahkan header dan/atau footer pendek di setiap halaman PDF. |
 | **Pisah Tiap N Halaman** | Pisah PDF menjadi bagian berurutan dengan jumlah halaman tetap. |
 | **Pangkas Margin** | Pangkas otomatis margin putih di sekeliling isi halaman pindai. |
+| **Salinan Arsip** | Tulis penanda identifikasi PDF/A-1b dan tetapkan versi 1.7 (bukan validasi konformitas penuh). |
+| **Laporan Ukuran Halaman** | Cantumkan ukuran halaman yang berbeda dalam point, milimeter, dan inci. |
 
 ---
 
@@ -188,7 +190,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.21.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-1.22.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
@@ -278,7 +280,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       titik masuk
       engine/               mesin PDF (PdfBox), operasi murni + operasi android
-      tools/                katalog alat (47 alat, EN + ID)
+      tools/                katalog alat (49 alat, EN + ID)
       ui/                   layar: home, tool, files, viewer, settings, scan
       ui/theme/             tema (Ember, Cherry, Arctic) + tipografi
       i18n/                 string English dan Bahasa Indonesia

@@ -33,8 +33,8 @@ class ToolCatalogTest {
 
   @Test
   fun catalogCoversTheOriginalsPlusNew() {
-    assertEquals(47, TOOLS.size)
-    for (id in listOf("merge", "alternate", "compress", "split", "splitCount", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "autoTrim", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "stripMetadata", "lintPdf", "cariDuplikat", "hapusKosong", "reversePages", "bookmarks", "textToPdf", "resizePdf", "grayscalePdf", "invertPdf", "flattenPdf", "removeAnnotations", "extractAttachments", "multiSearch", "headerFooter", "blankPdf", "scan")) {
+    assertEquals(49, TOOLS.size)
+    for (id in listOf("merge", "alternate", "compress", "split", "splitCount", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "autoTrim", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "stripMetadata", "lintPdf", "cariDuplikat", "hapusKosong", "reversePages", "bookmarks", "textToPdf", "resizePdf", "grayscalePdf", "invertPdf", "flattenPdf", "removeAnnotations", "extractAttachments", "multiSearch", "headerFooter", "archiveCopy", "pageSizeReport", "blankPdf", "scan")) {
       // scan is not a catalog tool; the rest must exist
       if (id == "scan") assertNull(toolById(id)) else assertNotNull(toolById(id))
     }
@@ -43,7 +43,7 @@ class ToolCatalogTest {
   @Test
   fun stepToolsExcludesCustomEditorsAndNonPdfOutputs() {
     val stepIds = stepTools().map { it.id }.toSet()
-    for (excluded in listOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "lintPdf", "cariDuplikat", "hapusKosong", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments", "multiSearch", "blankPdf")) {
+    for (excluded in listOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "lintPdf", "cariDuplikat", "hapusKosong", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments", "multiSearch", "pageSizeReport", "blankPdf")) {
       assertTrue(excluded, excluded !in stepIds)
     }
   }

@@ -2,6 +2,29 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.22.0
+
+Salinan Arsip dan Laporan Ukuran Halaman, plus audit ronde keempatbelas dengan perbaikan High pada Pangkas Margin dan permintaan teks halaman.
+
+### Fitur baru
+
+- **Salinan Arsip.** Menulis penanda identifikasi XMP PDF/A-1b minimal dan menetapkan versi PDF 1.7. Konformitas penuh tidak divalidasi (tanpa cek font), dan alat menyatakannya.
+- **Laporan Ukuran Halaman.** Mencantumkan setiap ukuran halaman yang berbeda dalam point, milimeter, dan inci.
+
+### Peningkatan
+
+- **Katalog alat:** 49 alat; tes katalog dan README EN/ID diperbarui.
+
+### Perbaikan bug
+
+- **Pangkas Margin sumbu vertikal terbalik (High).** Batas piksel berarah atas-bawah sedangkan ruang form PDF bawah-atas; jendela pangkas kini dikonversi ke koordinat bawah-atas sebelum penempatan form.
+- **Pangkas Margin mengabaikan rotasi halaman (High).** Form hasil pangkas kini ditempatkan dengan helper sadar-rotasi; batas tampilan dipakai pada halaman sebagaimana ditampilkan.
+- **Salin/Bacakan Keras no-op pada ketukan pertama (High).** Token disimpan sampai teks halaman yang diminta siap, bukan dikonsumsi saat `pageText` sementara null.
+- **Teks halaman lama saat PDF masuk (Medium).** `pageText` dan `pageTextIndex` kini ber-kunci versi payload.
+- **Header/footer di halaman terputar (Medium).** Memakai penempatan sadar-rotasi yang sama dengan nomor halaman.
+- **Sapuan cache.** Prefix `trim-` ditambahkan, sehingga force-stop saat Pangkas Margin tidak menyisakan salinan PDF plaintext.
+- **Pisah Tiap N Halaman** kini menamai bagian satu halaman `page-N` secara konsisten.
+
 ## v1.21.0
 
 Dua alat tata letak halaman (Pisah Tiap N Halaman, Pangkas Margin), plus audit ronde ketigabelas dengan perbaikan High pada penempatan header/footer.
