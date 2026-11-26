@@ -2,6 +2,29 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v1.23.0
+
+Pisah di Halaman Kosong dan Ambil Halaman Ganjil/Genap, plus audit ronde kelimabelas.
+
+### Fitur baru
+
+- **Pisah di Halaman Kosong.** Mendeteksi halaman pemisah yang benar-benar kosong pada pindai dan memisah PDF menjadi bagian-bagian, membuang pemisahnya. Dibatasi 500 halaman yang dianalisis.
+- **Ambil Halaman Ganjil/Genap.** Mengambil hanya halaman ganjil atau genap, untuk depan atau belakang pindai duplex.
+
+### Peningkatan
+
+- **Katalog alat:** 51 alat; tes katalog dan README EN/ID diperbarui.
+
+### Perbaikan bug
+
+- **Nomor halaman dan penanda di halaman 180 derajat (High).** `unrotate(180)` tidak membalik y, sehingga nomor halaman, header/footer, dan penempatan crop salah sisi. Diperbaiki beserta ekspektasi unit test.
+- **Paket XMP arsip (Medium).** Memakai atribut `begin` kosong yang sesuai spesifikasi serta menyatakan PDF/A-2b (sesuai PDF 1.7), bukan kombinasi PDF/A-1b + 1.7 yang kontradiktif.
+- **Bacakan Keras mulai dua kali (Medium).** Effect bicara tidak lagi menulis salah satu kuncinya sendiri, mencegah flush/ulang halaman yang sama.
+- **PDF terkunci di thread UI (Medium).** Percobaan kata sandi kosong dan dialog kata sandi kini berjalan di dispatcher latar.
+- **Ketuk file terbaru (Low).** Membaca PDF terbaru kini di luar thread utama.
+- **Spinner scanner (Low).** `finish()` yang mengelola state busy; blok `finally` pemanggil tidak membatalkannya lebih awal.
+- **Laporan ukuran halaman (Low).** Membulatkan alih-alih memotong dan melewati dimensi halaman tidak valid.
+
 ## v1.22.0
 
 Salinan Arsip dan Laporan Ukuran Halaman, plus audit ronde keempatbelas dengan perbaikan High pada Pangkas Margin dan permintaan teks halaman.

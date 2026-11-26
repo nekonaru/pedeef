@@ -88,6 +88,7 @@ import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.tools.SECTIONS
 import com.nekonaru.pedeef.tools.TOOLS
 import com.nekonaru.pedeef.tools.Tool
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -213,8 +214,10 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onOpenViewer: (
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
               items(recent) { entry ->
                 RecentCard(entry) {
-                  val bytes = runCatching { entry.file.readBytes() }.getOrNull()
-                  if (bytes != null) onOpenViewer(bytes, entry.name)
+                  scope.launch {
+                    val bytes = withContext(Dispatchers.IO) { runCatching { entry.file.readBytes() }.getOrNull() }
+                    if (bytes != null) onOpenViewer(bytes, entry.name)
+                  }
                 }
               }
             }

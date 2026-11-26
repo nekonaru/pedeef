@@ -97,6 +97,12 @@ fun alternate(files: List<Named>, reverse: Boolean): ByteArray {
   }
 }
 
+/** Copies the given page indices into a new standalone document. */
+internal fun pickIntoNew(src: PDDocument, indices: List<Int>): ByteArray = PDDocument().use { out ->
+  for (i in indices) out.adopt(src.getPage(i))
+  out.bytes()
+}
+
 fun split(bytes: ByteArray, mode: String, ranges: String): List<Named> = loadPdf(bytes).use { src ->
   val groups = if (mode == "ranges") parseRanges(ranges, src.numberOfPages) else (0 until src.numberOfPages).map { listOf(it) }
   groups.map { g -> Named(if (g.size > 1) "pages-${g.first() + 1}-${g.last() + 1}" else "page-${g.first() + 1}", pick(src, g)) }

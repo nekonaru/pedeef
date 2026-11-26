@@ -70,27 +70,25 @@ fun ScannerScreen(onBack: () -> Unit, onOpenViewer: (ByteArray, String) -> Unit)
   var savedBytes by remember { mutableStateOf<ByteArray?>(null) }
   var makeSearchable by remember { mutableStateOf(true) }
 
-  fun finish(bytes: ByteArray, baseName: String) {
-    scope.launch {
-      busy = true
-      busyLabel = s.buildingPdf
-      var out = bytes
-      if (makeSearchable) {
-        busyLabel = s.ocrInProgress
-        out = withContext(Dispatchers.Default) { runCatching { ocrPdf(bytes, ToolContext.cacheDir) }.getOrDefault(bytes) }
-      }
-      val public = com.nekonaru.pedeef.data.PublicFiles.root(context)
-      val done = withContext(Dispatchers.IO) {
-        runCatching { FilesStore.saveBytes(public ?: root, null, baseName, "pdf", out) }
-      }
-      if (done.isFailure) {
-        error = s.genericError
-      } else {
-        savedName = done.getOrThrow().name
-        savedBytes = out
-      }
-      busy = false
+  suspend fun finish(bytes: ByteArray, baseName: String) {
+    busy = true
+    busyLabel = s.buildingPdf
+    var out = bytes
+    if (makeSearchable) {
+      busyLabel = s.ocrInProgress
+      out = withContext(Dispatchers.Default) { runCatching { ocrPdf(bytes, ToolContext.cacheDir) }.getOrDefault(bytes) }
     }
+    val public = com.nekonaru.pedeef.data.PublicFiles.root(context)
+    val done = withContext(Dispatchers.IO) {
+      runCatching { FilesStore.saveBytes(public ?: root, null, baseName, "pdf", out) }
+    }
+    if (done.isFailure) {
+      error = s.genericError
+    } else {
+      savedName = done.getOrThrow().name
+      savedBytes = out
+    }
+    busy = false
   }
 
   val scannerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
@@ -113,7 +111,6 @@ fun ScannerScreen(onBack: () -> Unit, onOpenViewer: (ByteArray, String) -> Unit)
         }
       } catch (_: Exception) {
         error = s.scanFailed
-      } finally {
         busy = false
       }
     }
@@ -141,7 +138,6 @@ fun ScannerScreen(onBack: () -> Unit, onOpenViewer: (ByteArray, String) -> Unit)
         if (images.isEmpty()) error = s.scanFailed else finish(imagesToPdf(images), "scan-" + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date()))
       } catch (_: Exception) {
         error = s.scanFailed
-      } finally {
         busy = false
       }
     }

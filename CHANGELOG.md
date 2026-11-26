@@ -2,6 +2,29 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v1.23.0
+
+Split at Blank Pages and Keep Odd/Even Pages, plus a fifteenth audit round.
+
+### New features
+
+- **Split at Blank Pages.** Detects fully blank separator pages in a scan and splits the PDF into parts, dropping the separators. Capped at 500 analyzed pages.
+- **Keep Odd/Even Pages.** Keeps only odd- or even-numbered pages, for the front or back of duplex scans.
+
+### Improvements
+
+- **Tool catalog:** 51 tools; catalog test and README EN/ID updated.
+
+### Bug fixes
+
+- **Page numbers and markers on 180-degree pages (High).** `unrotate(180)` did not flip y, so page numbers, header/footer and crop placement landed on the wrong edge. Corrected, with the unit-test expectation updated.
+- **Archive XMP packet (Medium).** Uses a spec-conformant empty `begin` attribute and declares PDF/A-2b (matching PDF 1.7) instead of the contradictory PDF/A-1b + 1.7 combination.
+- **Read Aloud double-start (Medium).** The speak effect no longer writes one of its own effect keys, preventing a second flush/restart of the same page.
+- **Locked PDF on the UI thread (Medium).** Empty-password unlock attempts and password-dialog retries now run on a background dispatcher.
+- **Recent file tap (Low).** Reading a recent PDF now happens off the main thread.
+- **Scanner spinner (Low).** `finish()` owns the busy state; caller `finally` blocks no longer cancel it early.
+- **Page size report (Low).** Rounds instead of truncating and skips invalid page dimensions.
+
 ## v1.22.0
 
 Archive Copy and Page Size Report, plus a fourteenth audit round with High fixes for Trim Margins and text-page requests.
