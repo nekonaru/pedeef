@@ -33,8 +33,8 @@ class ToolCatalogTest {
 
   @Test
   fun catalogCoversTheOriginalsPlusNew() {
-    assertEquals(51, TOOLS.size)
-    for (id in listOf("merge", "alternate", "compress", "split", "splitCount", "splitBlanks", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "autoTrim", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "stripMetadata", "lintPdf", "cariDuplikat", "hapusKosong", "reversePages", "keepOddEven", "bookmarks", "textToPdf", "resizePdf", "grayscalePdf", "invertPdf", "flattenPdf", "removeAnnotations", "extractAttachments", "multiSearch", "headerFooter", "archiveCopy", "pageSizeReport", "blankPdf", "scan")) {
+    assertEquals(75, TOOLS.size)
+    for (id in listOf("merge", "alternate", "compress", "split", "splitCount", "splitBlanks", "splitText", "splitBookmarks", "splitHalf", "splitSize", "zip", "organize", "rotate", "flip", "nup", "crop", "autoTrim", "fillSign", "watermark", "pageNumbers", "redact", "ocr", "unlock", "password", "metadata", "workflow", "imagesToPdf", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "stripMetadata", "lintPdf", "cariDuplikat", "hapusKosong", "reversePages", "keepOddEven", "bookmarks", "textToPdf", "resizePdf", "grayscalePdf", "invertPdf", "flattenPdf", "removeAnnotations", "extractAttachments", "multiSearch", "headerFooter", "archiveCopy", "pageSizeReport", "blankPdf", "imageStamp", "highlightPhrase", "replacePages", "overlayPdf", "booklet", "poster", "insertBlank", "duplicatePages", "borderPages", "batesNumber", "textStamp", "blackWhite", "blankPageReport", "extractComments", "removeEmbedded", "removeJavaScript", "protectDetailed", "unlockPassword", "pdfToLongImage", "imagesToLongImage", "extractTextPages", "checksumManifest", "integrityCheck", "sanitizeAll", "scan")) {
       // scan is not a catalog tool; the rest must exist
       if (id == "scan") assertNull(toolById(id)) else assertNotNull(toolById(id))
     }
@@ -43,7 +43,7 @@ class ToolCatalogTest {
   @Test
   fun stepToolsExcludesCustomEditorsAndNonPdfOutputs() {
     val stepIds = stepTools().map { it.id }.toSet()
-    for (excluded in listOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "lintPdf", "cariDuplikat", "hapusKosong", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments", "multiSearch", "pageSizeReport", "blankPdf")) {
+    for (excluded in listOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "lintPdf", "cariDuplikat", "hapusKosong", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments", "multiSearch", "pageSizeReport", "blankPageReport", "extractComments", "checksumManifest", "integrityCheck", "extractTextPages", "protectDetailed", "unlockPassword", "blankPdf")) {
       assertTrue(excluded, excluded !in stepIds)
     }
   }

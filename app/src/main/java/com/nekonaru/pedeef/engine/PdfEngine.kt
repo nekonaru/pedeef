@@ -503,7 +503,7 @@ fun watermarkLayout(text: String, width: Float, height: Float, scale: Float): Wa
   return WatermarkLayout(atan2(height, width), size, w1 * size)
 }
 
-private fun PDPageContentStream.alpha(a: Float) {
+internal fun PDPageContentStream.alpha(a: Float) {
   if (a >= 1f) return
   setGraphicsStateParameters(PDExtendedGraphicsState().apply { nonStrokingAlphaConstant = a; strokingAlphaConstant = a })
 }
