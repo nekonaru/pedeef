@@ -2,6 +2,31 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v2.0.0
+
+Rilis mayor: 24 alat PDF baru, preset dan pemrosesan batch, workspace yang lebih kaya, serta viewer dua halaman.
+
+### Fitur baru
+
+- **24 alat baru.** Cap gambar, sorot frasa, ganti halaman, timpa PDF, booklet, petak poster, sisip halaman kosong, duplikat halaman, bingkai halaman, nomor Bates, cap teks, hitam putih, laporan halaman kosong, ekstrak komentar, hapus lampiran, hapus JavaScript, proteksi terperinci, buka dengan kata sandi pemilik, PDF ke gambar panjang, gambar ke gambar panjang, teks bermarker halaman, manifest checksum, cek integritas, dan bersihkan semua.
+- **Preset.** Simpan konfigurasi alat dengan nama dan muat ulang dari layar alat yang sama.
+- **Batch runner.** Pilih preset dan jalankan ke maksimal 100 PDF di pohon file. Hasil masuk folder bertanggal dengan laporan teks.
+- **Workspace Files.** Pilih banyak file untuk hapus massal, bintangi file penting, dan pilih semua.
+- **Riwayat pencarian.** Frasa terakhir tampil sebagai chip di Home dan bisa dihapus.
+- **Aksi cepat.** Batch runner dan empat alat terpin paling sering tampil di atas grid alat.
+- **Dasar Viewer Pro.** Mode buku dua halaman dan grid thumbnail penuh, melengkapi strip thumbnail dan zoom yang sudah ada.
+- **Input.Any.** Alat kini bisa menerima PDF dan gambar dalam satu pemilih.
+
+### Peningkatan
+
+- **Katalog alat:** 75 alat, tes katalog dan README EN/ID diperbarui; suite unit kini 54 tes.
+- **Pemakaian ulang engine:** penempatan halaman, form embedding, dan operasi pembersihan memakai helper internal yang sama dengan alat lama.
+- **Spek dan review:** setiap alat baru mengikuti pola English source, Indonesian translation.
+
+### Perbaikan bug
+
+- **Tidak ada regresi yang diketahui saat rilis.** Kode baru lolos 54 unit test dan lint sebelum CI.
+
 ## v1.23.0
 
 Pisah di Halaman Kosong dan Ambil Halaman Ganjil/Genap, plus audit ronde kelimabelas.

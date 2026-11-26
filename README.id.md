@@ -158,6 +158,14 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 | **Laporan Ukuran Halaman** | Cantumkan ukuran halaman yang berbeda dalam point, milimeter, dan inci. |
 | **Pisah di Halaman Kosong** | Pisah pindai menjadi bagian-bagian pada halaman pemisah kosong dan buang halaman itu. |
 | **Ambil Halaman Ganjil/Genap** | Ambil hanya halaman ganjil atau genap dari pindai duplex. |
+| **Stamp Gambar** | Tempel logo atau gambar di setiap halaman PDF. |
+| **Sorot Frasa** | Sorot otomatis setiap kemunculan frasa di PDF. |
+| **Ganti / Timpa Halaman** | Ganti halaman dari PDF lain atau timpa konten PDF kedua di atas pertama. |
+| **Booklet & Poster** | Susun dua halaman per lembar atau pecah halaman jadi petak cetak. |
+| **Nomor Bates & Cap Teks** | Penomoran dokumen dan cap teks di posisi tertentu. |
+| **Presets & Batch** | Simpan konfigurasi alat dan jalankan ke seluruh PDF dalam folder. |
+| **Workspace Files** | Pilih banyak file, bintangi file penting, dan riwayat pencarian. |
+| **Viewer Dua Halaman** | Mode buku dua halaman dan grid thumbnail semua halaman. |
 
 ---
 
@@ -192,7 +200,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-1.23.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-2.0.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
@@ -282,7 +290,7 @@ pedeef/
     src/main/java/com/nekonaru/pedeef/
       MainActivity.kt       titik masuk
       engine/               mesin PDF (PdfBox), operasi murni + operasi android
-      tools/                katalog alat (51 alat, EN + ID)
+      tools/                katalog alat (75 alat, EN + ID)
       ui/                   layar: home, tool, files, viewer, settings, scan
       ui/theme/             tema (Ember, Cherry, Arctic) + tipografi
       i18n/                 string English dan Bahasa Indonesia
@@ -331,7 +339,7 @@ pedeef/
 | Pengecekan | Persyaratan |
 |------------|-------------|
 | Kompilasi Kotlin | Nol error |
-| Unit test | Semua lulus (48 test) |
+| Unit test | Semua lulus (54 test) |
 | APK debug | Berhasil dibangun |
 | Lint | Nol error |
 | Pemindaian rahasia | gitleaks melaporkan nol temuan |
