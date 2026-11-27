@@ -15,7 +15,8 @@ fun pdfToTextZip(name: String, bytes: ByteArray): ByteArray =
 fun pdfToHtml(name: String, bytes: ByteArray): ByteArray {
   val body = extractText(bytes)
     .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-  val html = "<!doctype html><html><head><meta charset=\"utf-8\"><title>$name</title></head><body><pre>$body</pre></body></html>"
+  val safeName = name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+  val html = "<!doctype html><html><head><meta charset=\"utf-8\"><title>$safeName</title></head><body><pre>$body</pre></body></html>"
   return html.toByteArray(Charsets.UTF_8)
 }
 
@@ -65,7 +66,7 @@ fun splitByOrientation(bytes: ByteArray): List<Output> = loadPdf(bytes).use { sr
       val page = src.getPage(i)
       val box = page.cropBox
       val target = if (box.height >= box.width) portrait else landscape
-      target.importPage(page)
+      target.adopt(page)
     }
     listOf(
       Output("portrait", portrait.bytes()),
@@ -77,7 +78,11 @@ fun splitByOrientation(bytes: ByteArray): List<Output> = loadPdf(bytes).use { sr
   }
 }
 
-fun pagesToZip(name: String, bytes: ByteArray, cacheDir: File): ByteArray = zipFiles(pdfToJpegs(bytes, cacheDir).map { Named(it.name + "." + it.ext, it.bytes) })
+fun pagesToZip(name: String, bytes: ByteArray, cacheDir: File): ByteArray {
+  val exported = pdfToJpegs(bytes, cacheDir)
+  if (exported.size == 1 && exported[0].ext == "zip") return exported[0].bytes
+  return zipFiles(exported.map { Named(it.name + "." + it.ext, it.bytes) })
+}
 
 fun exportOutline(name: String, bytes: ByteArray): ByteArray {
   val outline = readOutline(bytes)
@@ -89,7 +94,7 @@ fun exportOutline(name: String, bytes: ByteArray): ByteArray {
 fun outlineFromText(bytes: ByteArray): ByteArray {
   val lines = extractText(bytes).lines()
     .map { it.trim() }
-    .filter { Regex("^\\d{1,2}(\\.\\d{1,2})*\\s+\\S").matches(it) }
+    .filter { Regex("^\\d{1,2}(\\.\\d{1,2})*\\s+\\S.*").containsMatchIn(it) }
     .take(80)
   if (lines.isEmpty()) fail("No numbered headings were found in the text layer.")
   // Approximate page position by spreading headings over the document.
@@ -139,8 +144,8 @@ fun coverPage(bytes: ByteArray, title: String): ByteArray = loadPdf(bytes).use {
   loadPdf(cover).use { coverDoc ->
     val out = PDDocument()
     try {
-      for (i in 0 until coverDoc.numberOfPages) out.addPage(PDPage(coverDoc.getPage(i).cropBox))
-      for (i in 0 until doc.numberOfPages) out.addPage(PDPage(doc.getPage(i).cropBox))
+      for (i in 0 until coverDoc.numberOfPages) out.adopt(coverDoc.getPage(i))
+      for (i in 0 until doc.numberOfPages) out.adopt(doc.getPage(i))
       out.bytes()
     } finally {
       out.close()
@@ -166,7 +171,13 @@ fun removeSignatures(bytes: ByteArray): ByteArray = loadPdf(bytes).use { doc ->
     val annotations = page.annotations?.toList().orEmpty()
     val kept = annotations.filter { annotation ->
       val subtype = annotation.subtype ?: ""
-      val skip = subtype.contains("Sig", ignoreCase = true)
+      val cos = annotation.cosObject
+      val ft = runCatching { cos.getDictionaryObject(com.tom_roush.pdfbox.cos.COSName.FT)?.toString().orEmpty() }.getOrDefault("")
+      val parentFt = runCatching {
+        (cos.getDictionaryObject(com.tom_roush.pdfbox.cos.COSName.PARENT) as? com.tom_roush.pdfbox.cos.COSDictionary)
+          ?.getDictionaryObject(com.tom_roush.pdfbox.cos.COSName.FT)?.toString().orEmpty()
+      }.getOrDefault("")
+      val skip = subtype.contains("Sig", ignoreCase = true) || ft.contains("Sig") || parentFt.contains("Sig")
       if (skip) removed++
       !skip
     }

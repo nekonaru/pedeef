@@ -235,7 +235,12 @@ fun PedeefTheme(settings: SettingsState, content: @Composable () -> Unit) {
   val animationScale = runCatching {
     android.provider.Settings.Global.getFloat(context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
   }.getOrDefault(1f)
-  CompositionLocalProvider(LocalMotionSpec provides MotionSpec(animationScale.coerceIn(0f, 2f))) {
+  val effectiveScale = when (settings.motion) {
+    "reduced" -> 0f
+    "full" -> 1f
+    else -> animationScale
+  }
+  CompositionLocalProvider(LocalMotionSpec provides MotionSpec(effectiveScale.coerceIn(0f, 2f))) {
     MaterialTheme(colorScheme = colors, typography = typography(), content = content)
   }
 }

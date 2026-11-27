@@ -874,14 +874,14 @@ val TOOLS: List<Tool> = listOf(
     "PDF to HTML", "PDF ke HTML",
     "Export readable text as a simple HTML page.", "Ekspor teks yang bisa dibaca sebagai halaman HTML sederhana.",
     "Export HTML", "Ekspor HTML", "Exporting", "Mengekspor", Input.Pdf, noPreview = true,
-    run = { files, _ -> listOf(Output("document", pdfToHtml(files[0].baseName, files[0].bytes), ext = "txt")) },
+    run = { files, _ -> listOf(Output("document", pdfToHtml(files[0].baseName, files[0].bytes), ext = "html")) },
   ),
   Tool(
     "pdfToMarkdown", SECTION_NEW,
     "PDF to Markdown", "PDF ke Markdown",
     "Export readable text as a Markdown document.", "Ekspor teks yang bisa dibaca sebagai dokumen Markdown.",
     "Export Markdown", "Ekspor Markdown", "Exporting", "Mengekspor", Input.Pdf, noPreview = true,
-    run = { files, _ -> listOf(Output("document", pdfToMarkdown(files[0].baseName, files[0].bytes), ext = "txt")) },
+    run = { files, _ -> listOf(Output("document", pdfToMarkdown(files[0].baseName, files[0].bytes), ext = "md")) },
   ),
   Tool(
     "appendImages", SECTION_NEW,
@@ -1005,7 +1005,7 @@ val TOOLS: List<Tool> = listOf(
     "Check Signature", "Cek Tanda Tangan",
     "Report whether the PDF contains a signature field.", "Laporkan apakah PDF memiliki kolom tanda tangan.",
     "Check", "Cek", "Checking", "Memeriksa", Input.Pdf, noPreview = true,
-    run = { files, _ -> listOf(Output("signature", verifySignature(files[0].bytes), ext = "txt")) },
+    run = { files, _ -> listOf(Output("signature", verifySignature(files[0].bytes))) },
   ),
   Tool(
     "removeSignatures", SECTION_NEW,
@@ -1030,14 +1030,14 @@ val TOOLS: List<Tool> = listOf(
     "Verify Checksum", "Verifikasi Checksum",
     "Pick a checksum manifest first, then the files to verify.", "Pilih dulu manifest checksum, lalu file yang akan diverifikasi.",
     "Verify", "Verifikasi", "Verifying", "Memverifikasi", Input.Any, min = 2, noPreview = true,
-    run = { files, o -> listOf(Output("checksum", verifyChecksum(files.drop(1), files[0].bytes), ext = "txt")) },
+    run = { files, o -> listOf(Output("checksum", verifyChecksum(files.drop(1), files[0].bytes))) },
   ),
   Tool(
     "duplicateFilesReport", SECTION_NEW,
     "Find Duplicate Files", "Cari File Duplikat",
     "Group files that have the same content hash.", "Kelompokkan file yang punya hash konten sama.",
     "Find", "Cari", "Finding", "Mencari", Input.Any, min = 2, noPreview = true,
-    run = { files, o -> listOf(Output("duplicates", duplicateFilesReport(files), ext = "txt")) },
+    run = { files, o -> listOf(Output("duplicates", duplicateFilesReport(files))) },
   ),
 )
 
