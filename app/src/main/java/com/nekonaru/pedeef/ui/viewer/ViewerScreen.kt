@@ -245,9 +245,9 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   var resumed by remember(working) { mutableStateOf(false) }
   LaunchedEffect(sizes != null) {
     if (resumed || sizes == null) return@LaunchedEffect
-    resumed = true
     val pos = withContext(Dispatchers.IO) { com.nekonaru.pedeef.data.ReadingPositions.pageFor(context, resumeKey) }
     if (pos != null && pos in 2..sizes.size) listState.scrollToItem(pos - 1)
+    resumed = true
   }
   LaunchedEffect(firstVisible, resumed) {
     // Do not save page 1 over the stored position before the resume scroll has landed.

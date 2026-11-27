@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -66,27 +67,29 @@ class PdfRenderSession(bytes: ByteArray, cacheDir: File, tag: String) : AutoClos
    * Thumbnails use RGB_565 to halve memory; full pages keep ARGB_8888 for text clarity.
    */
   suspend fun render(index: Int, widthPx: Int): Bitmap? = withContext(Dispatchers.IO) {
-    if (index < 0 || index >= renderer.pageCount) return@withContext null
-    val bucket = RenderMath.widthBucket(widthPx)
-    val key = "$index:$bucket"
-    cache.get(key)?.let { return@withContext it }
-    lock.withLock {
-      cache.get(key)?.let { return@withLock it }
-      renderer.openPage(index).use { page ->
-        val k = minOf(bucket.toFloat() / page.width, 3f)
-        val w0 = maxOf(1, (page.width * k).toInt())
-        val h0 = maxOf(1, (page.height * k).toInt())
-        val shrink = minOf(1f, 3200f / maxOf(w0, h0))
-        val w = maxOf(1, (w0 * shrink).toInt())
-        val h = maxOf(1, (h0 * shrink).toInt())
-        val config = if (bucket == RenderMath.ThumbnailWidth) Bitmap.Config.RGB_565 else Bitmap.Config.ARGB_8888
-        val bmp = Bitmap.createBitmap(w, h, config)
-        bmp.eraseColor(Color.WHITE)
-        page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-        cache.put(key, bmp)
-        bmp
+    runCatching {
+      val bucket = RenderMath.widthBucket(widthPx)
+      val key = "$index:$bucket"
+      cache.get(key)?.let { return@runCatching it }
+      lock.withLock {
+        if (index < 0 || index >= renderer.pageCount) return@withLock null
+        cache.get(key)?.let { return@withLock it }
+        renderer.openPage(index).use { page ->
+          val k = minOf(bucket.toFloat() / page.width, 3f)
+          val w0 = maxOf(1, (page.width * k).toInt())
+          val h0 = maxOf(1, (page.height * k).toInt())
+          val shrink = minOf(1f, 3200f / maxOf(w0, h0))
+          val w = maxOf(1, (w0 * shrink).toInt())
+          val h = maxOf(1, (h0 * shrink).toInt())
+          val config = if (bucket == RenderMath.ThumbnailWidth) Bitmap.Config.RGB_565 else Bitmap.Config.ARGB_8888
+          val bmp = Bitmap.createBitmap(w, h, config)
+          bmp.eraseColor(Color.WHITE)
+          page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+          cache.put(key, bmp)
+          bmp
+        }
       }
-    }
+    }.getOrNull()
   }
 
   /** Blocks until any in-flight render finishes, then frees native resources. */
@@ -108,13 +111,27 @@ fun rememberPdfSession(bytes: ByteArray?, cacheDir: File, tag: String): PdfRende
   var session by remember { mutableStateOf<PdfRenderSession?>(null) }
   val scope = remember { CoroutineScope(Dispatchers.IO + SupervisorJob()) }
   DisposableEffect(bytes, tag) {
+    var createdRef: PdfRenderSession? = null
     val job = scope.launch {
       val created = bytes?.let { runCatching { PdfRenderSession(it, cacheDir, tag) }.getOrNull() }
-      withContext(Dispatchers.Main) { session = created }
+      createdRef = created
+      if (!isActive) {
+        created?.close()
+        createdRef = null
+        return@launch
+      }
+      try {
+        withContext(Dispatchers.Main) { session = created }
+      } catch (t: Throwable) {
+        created?.close()
+        createdRef = null
+        throw t
+      }
     }
     onDispose {
       job.cancel()
-      val closing = session
+      val closing = createdRef ?: session
+      createdRef = null
       session = null
       if (closing != null) scope.launch { closing.close() }
     }

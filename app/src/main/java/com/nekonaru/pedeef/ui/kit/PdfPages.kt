@@ -5,15 +5,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 /** Page sizes of a PDF held in memory, as [w, h] in points. */
-suspend fun pageSizesOf(bytes: ByteArray, cacheDir: File): List<Pair<Int, Int>> =
+suspend fun pageSizesOf(bytes: ByteArray, cacheDir: File): List<Pair<Int, Int>> = withContext(Dispatchers.IO) {
   PdfRenderSession(bytes, cacheDir, "sizes").use { it.pageSizes() }
+}
 
 /** Renders page `index`, or null when the page cannot be rendered. */
-suspend fun renderPage(bytes: ByteArray, index: Int, widthPx: Int, cacheDir: File): Bitmap? =
+suspend fun renderPage(bytes: ByteArray, index: Int, widthPx: Int, cacheDir: File): Bitmap? = withContext(Dispatchers.IO) {
   runCatching { PdfRenderSession(bytes, cacheDir, "page").use { it.render(index, widthPx) } }.getOrNull()
+}
 
 @Composable
 fun rememberPageSizes(bytes: ByteArray?, cacheDir: File): List<Pair<Int, Int>>? {

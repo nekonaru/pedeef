@@ -23,6 +23,7 @@ object ReadingPositions {
       LinkedHashMap(raw)
     }.getOrDefault(LinkedHashMap())
 
+  @Synchronized
   private fun mapOf(appContext: android.content.Context): LinkedHashMap<String, Int> {
     val path = appContext.filesDir.path
     val current = cached
@@ -34,8 +35,10 @@ object ReadingPositions {
   }
 
   /** Page number (1-based) the user was last on, or null when unknown. */
+  @Synchronized
   fun pageFor(appContext: android.content.Context, key: String): Int? = mapOf(appContext)[key]
 
+  @Synchronized
   fun save(appContext: android.content.Context, key: String, page: Int) {
     if (page < 1) return
     val map = mapOf(appContext)
