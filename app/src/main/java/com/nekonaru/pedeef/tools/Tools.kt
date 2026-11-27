@@ -631,7 +631,7 @@ val TOOLS: List<Tool> = listOf(
       num("opacity", "Opacity %", "Opasitas %", "60", "60"),
     ),
     run = { files, o ->
-      listOf(Output("stamped", stampImage(files, (o.str("x").toFloatOrNull() ?: 50f) / 100f, (o.str("y").toFloatOrNull() ?: 50f) / 100f, (o.str("size").toFloatOrNull() ?: 20f) / 100f, (o.str("opacity").toFloatOrNull() ?: 60f) / 100f)))
+      listOf(Output("stamped", stampImage(files, (o.str("x").toFloatOrNull() ?: 50f).coerceIn(0f, 100f) / 100f, (o.str("y").toFloatOrNull() ?: 50f).coerceIn(0f, 100f) / 100f, (o.str("size").toFloatOrNull() ?: 20f).coerceIn(1f, 100f) / 100f, (o.str("opacity").toFloatOrNull() ?: 60f).coerceIn(0f, 100f) / 100f)))
     },
   ),
   Tool(
@@ -733,7 +733,7 @@ val TOOLS: List<Tool> = listOf(
       num("x", "Horizontal %", "Horizontal %", "50", "50"),
       num("y", "Vertical %", "Vertikal %", "90", "90"),
     ),
-    run = { files, o -> listOf(Output("stamped", stampText(files[0].bytes, o.str("text"), (o.str("x").toFloatOrNull() ?: 50f) / 100f, (o.str("y").toFloatOrNull() ?: 90f) / 100f))) },
+    run = { files, o -> listOf(Output("stamped", stampText(files[0].bytes, o.str("text"), (o.str("x").toFloatOrNull() ?: 50f).coerceIn(0f, 100f) / 100f, (o.str("y").toFloatOrNull() ?: 90f).coerceIn(0f, 100f) / 100f))) },
   ),
   Tool(
     "blackWhite", SECTION_FILL,
