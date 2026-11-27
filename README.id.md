@@ -200,7 +200,7 @@ Pedeef adalah implementasi ulang asli dari aplikasi open source PDF Tools (MIT, 
 ### Opsi A: Unduh APK (paling mudah)
 
 1. Buka [rilis terbaru](https://github.com/nekonaru/pedeef/releases/latest).
-2. Unduh `pedeef-2.0.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
+2. Unduh `pedeef-2.1.0.apk` (ditandatangani dengan key debug bawaan aplikasi).
 3. Ketuk file untuk memasang. Jika Android memperingatkan sumber tidak dikenal, izinkan pemasangan dari browser atau file manager.
 4. Buka Pedeef. Pada pemakaian pertama tab Files, izinkan akses file yang diminta supaya file-mu masuk ke Download/Pedeef.
 
@@ -339,7 +339,7 @@ pedeef/
 | Pengecekan | Persyaratan |
 |------------|-------------|
 | Kompilasi Kotlin | Nol error |
-| Unit test | Semua lulus (54 test) |
+| Unit test | Semua lulus (57 test) |
 | APK debug | Berhasil dibangun |
 | Lint | Nol error |
 | Pemindaian rahasia | gitleaks melaporkan nol temuan |

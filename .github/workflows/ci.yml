@@ -17,6 +17,9 @@ jobs:
   build:
     timeout-minutes: 30
     runs-on: ubuntu-latest
+    env:
+      # Explicit opt-in for CI artifacts. CI never publishes this APK as an official release.
+      ORG_GRADLE_PROJECT_PEDEEF_ALLOW_DEBUG_SIGNING: "true"
     steps:
       - uses: actions/checkout@v4
 
@@ -51,9 +54,14 @@ jobs:
       - name: Build debug APK
         run: chmod +x gradlew && ./gradlew :app:assembleDebug --console=plain
 
-      - name: Upload APK artifact
+      - name: Build release APK
+        run: chmod +x gradlew && ORG_GRADLE_PROJECT_PEDEEF_ALLOW_DEBUG_SIGNING=true ./gradlew :app:assembleRelease --console=plain
+
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: pedeef-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: pedeef-apks
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/app-release.apk
           retention-days: 14

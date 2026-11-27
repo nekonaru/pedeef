@@ -2,6 +2,25 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v2.1.0
+
+Design and usability release: shared motion tokens, clearer tool icons, calmer viewer controls and faster feedback across every screen.
+
+### Improvements
+
+- **Design system:** one spacing and radius scale, one motion vocabulary that follows the system animation setting, and a handwriting wordmark for the app name.
+- **Tool icons:** all 75 tools have a distinct icon, guarded by a unit test.
+- **Home:** clear search button, offline badge, icon quick actions, recent-file skeleton and a fixed date separator on the recent card.
+- **Viewer:** secondary actions moved to an overflow menu, controls that hide while reading and return on tap, animated page indicator, two-page label and a bookmarks bottom sheet.
+- **Screens:** section breadcrumb in tools, path breadcrumb in Files, bottom sheets for privacy and licenses, progress feedback in Batch and Scanner, and Snackbar confirmations instead of inline text.
+- **Navigation:** saved tab position, predictive back on Android 13 and direction-aware screen transitions.
+
+### Bug fixes
+
+- **Viewer spread:** page arrows stop at the last pair and no longer scroll past the document.
+- **Batch:** the run button is disabled while a batch runs, so two runs cannot overlap.
+- **Recent files:** the loading state clears even when the file scan fails.
+
 ## v2.0.0
 
 Major release: 24 new PDF tools, presets and batch processing, a richer workspace, and a two-page viewer.
