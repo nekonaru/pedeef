@@ -54,8 +54,10 @@ import androidx.compose.material.icons.filled.VerticalSplit
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -88,38 +90,12 @@ import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.tools.SECTIONS
 import com.nekonaru.pedeef.tools.TOOLS
 import com.nekonaru.pedeef.tools.Tool
+import com.nekonaru.pedeef.ui.theme.CaveatBrand
+import com.nekonaru.pedeef.ui.theme.Dimens
+import com.nekonaru.pedeef.ui.theme.toolIcon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-internal val TOOL_ICONS: Map<String, androidx.compose.ui.graphics.vector.ImageVector> = mapOf(
-  "workflow" to Icons.Default.AccountTree,
-  "merge" to Icons.Default.MergeType,
-  "alternate" to Icons.Default.Shuffle,
-  "compress" to Icons.Default.Compress,
-  "split" to Icons.Default.CallSplit,
-  "splitText" to Icons.Default.Subject,
-  "splitBookmarks" to Icons.Default.Bookmarks,
-  "splitHalf" to Icons.Default.VerticalSplit,
-  "splitSize" to Icons.Default.Storage,
-  "zip" to Icons.Default.FolderZip,
-  "organize" to Icons.Default.Reorder,
-  "rotate" to Icons.Default.Rotate90DegreesCw,
-  "flip" to Icons.Default.FlipToBack,
-  "nup" to Icons.Default.GridView,
-  "crop" to Icons.Default.Crop,
-  "fillSign" to Icons.Default.Draw,
-  "watermark" to Icons.Default.FormatColorText,
-  "pageNumbers" to Icons.Default.FormatListNumbered,
-  "redact" to Icons.Default.FormatColorFill,
-  "metadata" to Icons.Default.Description,
-  "ocr" to Icons.Default.TextFields,
-  "unlock" to Icons.Default.LockOpen,
-  "password" to Icons.Default.Lock,
-  "imagesToPdf" to Icons.Default.Image,
-  "pdfToImages" to Icons.Default.PhotoLibrary,
-  "extractText" to Icons.Default.ContentCopy,
-)
 
 @Composable
 fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> Unit, onOpenViewer: (ByteArray, String) -> Unit) {
@@ -131,8 +107,10 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> 
   var query by remember { mutableStateOf("") }
   var section by remember { mutableStateOf(-1) }
   var history by remember { mutableStateOf(com.nekonaru.pedeef.data.SearchHistory.load(context)) }
+  var recentLoading by remember { mutableStateOf(true) }
   val recent by androidx.compose.runtime.produceState<List<com.nekonaru.pedeef.data.FileEntry>>(initialValue = emptyList()) {
-    value = withContext(kotlinx.coroutines.Dispatchers.IO) { com.nekonaru.pedeef.data.RecentFiles.list(context) }
+    value = withContext(Dispatchers.IO) { com.nekonaru.pedeef.data.RecentFiles.list(context) }
+    recentLoading = false
   }
 
   val q = query.trim().lowercase()
@@ -163,8 +141,8 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> 
             modifier = Modifier.size(46.dp).clip(RoundedCornerShape(12.dp)),
           )
           Column(Modifier.padding(start = 12.dp)) {
-            Text("Pedeef", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
-            Text(s.homeTagline, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Pedeef", style = CaveatBrand, color = MaterialTheme.colorScheme.primary)
+            Text(s.homeTagline, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
           }
         }
         Box(Modifier.height(14.dp))
@@ -173,6 +151,11 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> 
           onValueChange = { query = it },
           placeholder = { Text(s.searchHint) },
           leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+          trailingIcon = {
+            if (query.isNotEmpty()) IconButton(onClick = { query = "" }, modifier = Modifier.size(Dimens.TouchMin)) {
+              Icon(Icons.Default.Close, contentDescription = s.clearSearch)
+            }
+          },
           keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { history = com.nekonaru.pedeef.data.SearchHistory.add(context, query) }),
           singleLine = true,
           shape = RoundedCornerShape(28.dp),
@@ -182,7 +165,7 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> 
         // Scanner hero card
         Surface(
           onClick = onScan,
-          shape = RoundedCornerShape(22.dp),
+          shape = RoundedCornerShape(Dimens.CardRadiusLg),
           modifier = Modifier.fillMaxWidth(),
         ) {
           Row(
@@ -204,16 +187,29 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> 
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
               )
+              Text(
+                s.offlineBadge,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f),
+                modifier = Modifier.padding(top = 2.dp),
+              )
             }
             Icon(Icons.Default.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
           }
         }
         Box(Modifier.height(12.dp))
         // Quick actions: batch runner and the four most used pinned tools.
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          androidx.compose.material3.FilterChip(selected = false, onClick = onBatch, label = { Text(s.batchRun) })
+        Text(s.quickActions.uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = Dimens.Sm, bottom = Dimens.Xs))
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
+          Button(onClick = onBatch, shape = RoundedCornerShape(Dimens.ControlRadius)) {
+            Icon(Icons.Default.AccountTree, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+            Text(s.batchRun, modifier = Modifier.padding(start = Dimens.Xs))
+          }
           TOOLS.filter { it.id in pinnedIds }.take(4).forEach { tool ->
-            androidx.compose.material3.FilterChip(selected = false, onClick = { onOpenTool(tool.id) }, label = { Text(tool.title(indonesian)) })
+            Button(onClick = { onOpenTool(tool.id) }, shape = RoundedCornerShape(Dimens.ControlRadius)) {
+              Icon(toolIcon(tool.id), contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+              Text(tool.title(indonesian), modifier = Modifier.padding(start = Dimens.Xs))
+            }
           }
         }
         if (query.isBlank() && history.isNotEmpty()) {
@@ -227,6 +223,11 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> 
         }
         Box(Modifier.height(12.dp))
         // Recent files strip
+        if (recentLoading && recent.isEmpty()) {
+          Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Md), modifier = Modifier.padding(bottom = Dimens.Md)) {
+            repeat(2) { RecentSkeleton() }
+          }
+        }
         if (recent.isNotEmpty()) {
           Column(modifier = Modifier.padding(bottom = 12.dp)) {
             Text(s.recentFiles.uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 4.dp))
@@ -259,7 +260,7 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> 
         Text(s.pinned.uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 2.dp))
       }
       items(pinned, key = { "pin-${it.id}" }) { tool ->
-        ToolCard(tool, indonesian, pinnedIds, onOpenTool, onTogglePin = { scope.launch { Pins.toggle(context, tool.id) } })
+        ToolCard(tool, indonesian, pinnedIds, onOpenTool, modifier = Modifier, onTogglePin = { scope.launch { Pins.toggle(context, tool.id) } })
       }
       item(span = { GridItemSpan(maxLineSpan) }) {
         Text(s.allTools.uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 2.dp))
@@ -272,25 +273,25 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> 
       }
     } else {
       items(rest, key = { it.id }) { tool ->
-        ToolCard(tool, indonesian, pinnedIds, onOpenTool, onTogglePin = { scope.launch { Pins.toggle(context, tool.id) } })
+        ToolCard(tool, indonesian, pinnedIds, onOpenTool, modifier = Modifier, onTogglePin = { scope.launch { Pins.toggle(context, tool.id) } })
       }
     }
   }
 }
 
 @Composable
-private fun ToolCard(tool: Tool, indonesian: Boolean, pinnedIds: List<String>, onOpen: (String) -> Unit, onTogglePin: () -> Unit) {
+private fun ToolCard(tool: Tool, indonesian: Boolean, pinnedIds: List<String>, onOpen: (String) -> Unit, modifier: Modifier = Modifier, onTogglePin: () -> Unit) {
   val pinned = tool.id in pinnedIds
-  val icon = TOOL_ICONS[tool.id] ?: Icons.Default.Description
+  val icon = toolIcon(tool.id)
   val pinTint by animateColorAsState(
     if (pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
     label = "pinTint",
   )
   Surface(
     onClick = { onOpen(tool.id) },
-    shape = RoundedCornerShape(18.dp),
+    shape = RoundedCornerShape(Dimens.CardRadius),
     tonalElevation = 2.dp,
-    modifier = Modifier.fillMaxWidth(),
+    modifier = modifier.fillMaxWidth(),
   ) {
     Column(Modifier.padding(12.dp)) {
       Row(verticalAlignment = Alignment.CenterVertically) {
@@ -299,7 +300,7 @@ private fun ToolCard(tool: Tool, indonesian: Boolean, pinnedIds: List<String>, o
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(22.dp))
           }
         }
-        IconButton(onClick = onTogglePin) {
+        IconButton(onClick = onTogglePin, modifier = Modifier.size(Dimens.TouchMin)) {
           Icon(
             if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
             contentDescription = if (pinned) (if (indonesian) "Lepas sematan" else "Unpin") else (if (indonesian) "Sematkan" else "Pin"),
@@ -318,7 +319,7 @@ private fun RecentCard(entry: com.nekonaru.pedeef.data.FileEntry, onClick: () ->
   val date = remember { java.text.SimpleDateFormat("d MMM", java.util.Locale.getDefault()).format(java.util.Date(entry.modified)) }
   Surface(
     onClick = onClick,
-    shape = RoundedCornerShape(16.dp),
+    shape = RoundedCornerShape(Dimens.CardRadiusSm),
     tonalElevation = 2.dp,
     modifier = Modifier.width(150.dp),
   ) {
@@ -338,11 +339,27 @@ private fun RecentCard(entry: com.nekonaru.pedeef.data.FileEntry, onClick: () ->
         modifier = Modifier.padding(top = 8.dp),
       )
       Text(
-        "${date}  �  ${com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)}",
+        "${date}  -  ${com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)}",
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(top = 2.dp),
       )
+    }
+  }
+}
+
+/** Placeholder shown while the recent files scan is still running. */
+@Composable
+private fun RecentSkeleton() {
+  Surface(
+    shape = RoundedCornerShape(Dimens.CardRadiusSm),
+    tonalElevation = 2.dp,
+    modifier = Modifier.width(150.dp),
+  ) {
+    Column(Modifier.padding(Dimens.Md)) {
+      Box(Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant))
+      Box(Modifier.fillMaxWidth().padding(top = Dimens.Md).height(12.dp).clip(RoundedCornerShape(Dimens.Xs)).background(MaterialTheme.colorScheme.surfaceVariant))
+      Box(Modifier.fillMaxWidth(0.6f).padding(top = Dimens.Sm).height(10.dp).clip(RoundedCornerShape(Dimens.Xs)).background(MaterialTheme.colorScheme.surfaceVariant))
     }
   }
 }

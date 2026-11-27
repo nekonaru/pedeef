@@ -66,6 +66,7 @@ import com.nekonaru.pedeef.ui.kit.GroupLabel
 import com.nekonaru.pedeef.ui.kit.InfoDialog
 import com.nekonaru.pedeef.ui.kit.ListRow
 import com.nekonaru.pedeef.ui.kit.fmtSize
+import com.nekonaru.pedeef.ui.theme.CaveatBrand
 import com.nekonaru.pedeef.ui.theme.Dimens
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -192,7 +193,7 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(72.dp).clip(RoundedCornerShape(18.dp)),
           )
-          Text("Pedeef", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = Dimens.Md))
+          Text("Pedeef", style = CaveatBrand, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = Dimens.Md))
           Text(
             s.homeTagline,
             style = MaterialTheme.typography.bodyMedium,
@@ -379,7 +380,7 @@ private fun SchemeDot(color: Int, name: String, selected: Boolean, onClick: () -
   Column(horizontalAlignment = Alignment.CenterHorizontally) {
     Box(
       Modifier
-        .size(44.dp)
+        .size(Dimens.TouchMin)
         .background(androidx.compose.ui.graphics.Color(color), CircleShape)
         .clip(CircleShape)
         .clickable(onClick = onClick),
