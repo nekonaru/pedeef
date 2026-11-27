@@ -2,6 +2,25 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v2.1.0
+
+Rilis desain dan kenyamanan: token gerak bersama, ikon alat yang lebih jelas, kontrol viewer yang lebih tenang, dan umpan balik yang lebih cepat di semua layar.
+
+### Peningkatan
+
+- **Sistem desain:** satu skala jarak dan radius, satu kosakata gerak yang mengikuti pengaturan animasi sistem, serta tulisan tangan untuk nama aplikasi.
+- **Ikon alat:** ke-75 alat punya ikon tersendiri, dijaga oleh unit test.
+- **Home:** tombol hapus pencarian, label offline, aksi cepat berikon, skeleton file terbaru, dan pemisah tanggal yang sudah benar di kartu terbaru.
+- **Viewer:** aksi sekunder pindah ke menu, kontrol yang hilang saat membaca dan muncul kembali saat disentuh, indikator halaman beranimasi, label dua halaman, dan bottom sheet bookmark.
+- **Layar lain:** breadcrumb seksi di alat, breadcrumb jalur di Files, bottom sheet untuk privasi dan lisensi, umpan balik progres di Batch dan Scanner, serta konfirmasi Snackbar menggantikan teks inline.
+- **Navigasi:** posisi tab tersimpan, back prediktif di Android 13, dan transisi layar berarah.
+
+### Perbaikan bug
+
+- **Viewer dua halaman:** tombol halaman berhenti di pasangan terakhir dan tidak menggulir melewati dokumen.
+- **Batch:** tombol jalankan dinonaktifkan saat batch berjalan sehingga dua proses tidak bisa tumpang tindih.
+- **File terbaru:** status pemuatan hilang meski pemindaian file gagal.
+
 ## v2.0.0
 
 Rilis mayor: 24 alat PDF baru, preset dan pemrosesan batch, workspace yang lebih kaya, serta viewer dua halaman.
