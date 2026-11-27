@@ -24,7 +24,9 @@ object FilesStore {
     val children = dir.listFiles()?.toList().orEmpty()
     return children
       .filter { !it.name.startsWith(".") }
-      .map { FileEntry(it.name, it, it.isDirectory, if (it.isDirectory) dirSize(it) else it.length(), it.lastModified()) }
+      // Folder counts are computed once per visible row by the UI. Walking here as well would
+      // scan every subfolder twice on each refresh.
+      .map { FileEntry(it.name, it, it.isDirectory, if (it.isDirectory) 0L else it.length(), it.lastModified()) }
       .sortedWith(compareByDescending<FileEntry> { it.isDir }.thenBy { it.name.lowercase() })
   }
 

@@ -250,7 +250,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
               IconButton(onClick = {
                 scope.launch(Dispatchers.IO) {
                   selected.forEach { runCatching { FilesStore.delete(root, java.io.File(it)) } }
-                  com.nekonaru.pedeef.data.Starred.prune(context, root.walkTopDown().filter { it.isFile }.map { it.absolutePath }.toSet())
+                  com.nekonaru.pedeef.data.Starred.remove(context, selected)
                   withContext(Dispatchers.Main) { selectionMode = false; selected = emptySet(); refreshTick++ }
                 }
               }) { Icon(Icons.Default.Delete, contentDescription = s.delete) }
@@ -404,7 +404,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
       onConfirm = {
         scope.launch(Dispatchers.IO) {
           runCatching { FilesStore.delete(root, entry.file) }
-          starred = com.nekonaru.pedeef.data.Starred.prune(context, root.walkTopDown().filter { it.isFile }.map { it.absolutePath }.toSet()).toSet()
+          starred = com.nekonaru.pedeef.data.Starred.remove(context, setOf(entry.file.absolutePath)).toSet()
           withContext(Dispatchers.Main) { deleteTarget = null; refreshTick++ }
         }
       },

@@ -101,7 +101,6 @@ import com.nekonaru.pedeef.ui.kit.LocalSnackbar
 import com.nekonaru.pedeef.ui.kit.PasswordDialog
 import com.nekonaru.pedeef.ui.kit.PdfRenderSession
 import com.nekonaru.pedeef.ui.kit.rememberPdfSession
-import com.nekonaru.pedeef.ui.kit.pageSizesOf
 import com.nekonaru.pedeef.ui.theme.LocalMotionSpec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -247,7 +246,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   LaunchedEffect(sizes != null) {
     if (resumed || sizes == null) return@LaunchedEffect
     resumed = true
-    val pos = com.nekonaru.pedeef.data.ReadingPositions.pageFor(context, resumeKey)
+    val pos = withContext(Dispatchers.IO) { com.nekonaru.pedeef.data.ReadingPositions.pageFor(context, resumeKey) }
     if (pos != null && pos in 2..sizes.size) listState.scrollToItem(pos - 1)
   }
   LaunchedEffect(firstVisible, resumed) {
@@ -578,7 +577,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
 @Composable
 private fun PageItem(session: PdfRenderSession?, index: Int, size: Pair<Int, Int>, viewport: androidx.compose.ui.unit.Dp, zoomFactor: Float, targetWidthPx: Int, isMatch: Boolean, highlights: List<android.graphics.RectF> = emptyList(), nightMode: Boolean = false) {
   val s = LocalPedeefStrings.current
-  val image by produceState<android.graphics.Bitmap?>(initialValue = null, session, index, targetWidthPx) {
+  val image by produceState<android.graphics.Bitmap?>(initialValue = null, session, index, targetWidthPx, zoomFactor) {
     value = null
     val active = session ?: return@produceState
     value = active.render(index, targetWidthPx)

@@ -37,7 +37,6 @@ import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.engine.Box as PdfBox
 import com.nekonaru.pedeef.tools.Opts
 import com.nekonaru.pedeef.tools.put
-import com.nekonaru.pedeef.ui.kit.rememberPageCount
 
 import com.nekonaru.pedeef.ui.kit.rememberPdfSession
 import com.nekonaru.pedeef.ui.kit.rememberSessionPageSizes

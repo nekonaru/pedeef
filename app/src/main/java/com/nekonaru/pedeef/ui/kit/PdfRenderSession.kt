@@ -4,15 +4,22 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
+import android.util.LruCache
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
-import android.util.LruCache
 import java.util.concurrent.atomic.AtomicInteger
 
 private val sessionCounter = AtomicInteger(0)
@@ -28,9 +35,17 @@ class PdfRenderSession(bytes: ByteArray, cacheDir: File, tag: String) : AutoClos
   private val lock = Mutex()
 
   init {
-    temp.writeBytes(bytes)
-    fd = ParcelFileDescriptor.open(temp, ParcelFileDescriptor.MODE_READ_ONLY)
-    renderer = PdfRenderer(fd)
+    var opened: ParcelFileDescriptor? = null
+    try {
+      temp.writeBytes(bytes)
+      opened = ParcelFileDescriptor.open(temp, ParcelFileDescriptor.MODE_READ_ONLY)
+      fd = opened
+      renderer = PdfRenderer(fd)
+    } catch (t: Throwable) {
+      runCatching { opened?.close() }
+      runCatching { temp.delete() }
+      throw t
+    }
   }
 
   private val cache = object : LruCache<String, Bitmap>(32 * 1024 * 1024) {
@@ -64,7 +79,7 @@ class PdfRenderSession(bytes: ByteArray, cacheDir: File, tag: String) : AutoClos
         val shrink = minOf(1f, 3200f / maxOf(w0, h0))
         val w = maxOf(1, (w0 * shrink).toInt())
         val h = maxOf(1, (h0 * shrink).toInt())
-        val config = if (bucket <= 240) Bitmap.Config.RGB_565 else Bitmap.Config.ARGB_8888
+        val config = if (bucket == RenderMath.ThumbnailWidth) Bitmap.Config.RGB_565 else Bitmap.Config.ARGB_8888
         val bmp = Bitmap.createBitmap(w, h, config)
         bmp.eraseColor(Color.WHITE)
         page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
@@ -74,20 +89,35 @@ class PdfRenderSession(bytes: ByteArray, cacheDir: File, tag: String) : AutoClos
     }
   }
 
+  /** Blocks until any in-flight render finishes, then frees native resources. */
   override fun close() {
-    cache.evictAll()
-    runCatching { renderer.close() }
-    runCatching { fd.close() }
-    runCatching { temp.delete() }
+    runBlocking {
+      lock.withLock {
+        cache.evictAll()
+        runCatching { renderer.close() }
+        runCatching { fd.close() }
+        runCatching { temp.delete() }
+      }
+    }
   }
 }
 
-/** Remembers one render session for the lifetime of the given bytes, closing it on dispose. */
+/** Remembers one render session for the given bytes, built off the main thread and closed on dispose. */
 @Composable
 fun rememberPdfSession(bytes: ByteArray?, cacheDir: File, tag: String): PdfRenderSession? {
-  val session = remember(bytes, tag) { bytes?.let { PdfRenderSession(it, cacheDir, tag) } }
-  DisposableEffect(session) {
-    onDispose { session?.close() }
+  var session by remember { mutableStateOf<PdfRenderSession?>(null) }
+  val scope = remember { CoroutineScope(Dispatchers.IO + SupervisorJob()) }
+  DisposableEffect(bytes, tag) {
+    val job = scope.launch {
+      val created = bytes?.let { runCatching { PdfRenderSession(it, cacheDir, tag) }.getOrNull() }
+      withContext(Dispatchers.Main) { session = created }
+    }
+    onDispose {
+      job.cancel()
+      val closing = session
+      session = null
+      if (closing != null) scope.launch { closing.close() }
+    }
   }
   return session
 }
