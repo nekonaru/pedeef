@@ -97,6 +97,19 @@ private fun typography() = Typography(
   labelSmall = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 11.sp, letterSpacing = 0.4.sp),
 )
 
+/** Scales every type style by the user's text size choice. */
+private fun scaledTypography(scale: Float): Typography {
+  val t = typography()
+  fun TextStyle.scaled() = copy(fontSize = fontSize * scale)
+  return Typography(
+    displayLarge = t.displayLarge.scaled(), displayMedium = t.displayMedium.scaled(), displaySmall = t.displaySmall.scaled(),
+    headlineLarge = t.headlineLarge.scaled(), headlineMedium = t.headlineMedium.scaled(), headlineSmall = t.headlineSmall.scaled(),
+    titleLarge = t.titleLarge.scaled(), titleMedium = t.titleMedium.scaled(), titleSmall = t.titleSmall.scaled(),
+    bodyLarge = t.bodyLarge.scaled(), bodyMedium = t.bodyMedium.scaled(), bodySmall = t.bodySmall.scaled(),
+    labelLarge = t.labelLarge.scaled(), labelMedium = t.labelMedium.scaled(), labelSmall = t.labelSmall.scaled(),
+  )
+}
+
 // Brand schemes: Ember (warm orange), Cherry (deep red), Arctic (cool blue).
 
 private val emberLight = lightColorScheme(
@@ -241,6 +254,11 @@ fun PedeefTheme(settings: SettingsState, content: @Composable () -> Unit) {
     else -> animationScale
   }
   CompositionLocalProvider(LocalMotionSpec provides MotionSpec(effectiveScale.coerceIn(0f, 2f))) {
-    MaterialTheme(colorScheme = colors, typography = typography(), content = content)
+    val fontScale = when (settings.fontScale) {
+      "small" -> 0.9f
+      "large" -> 1.15f
+      else -> 1f
+    }
+    MaterialTheme(colorScheme = colors, typography = scaledTypography(fontScale), content = content)
   }
 }

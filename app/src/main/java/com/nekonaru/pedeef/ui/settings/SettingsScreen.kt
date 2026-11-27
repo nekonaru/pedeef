@@ -2,6 +2,8 @@ package com.nekonaru.pedeef.ui.settings
 
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,6 +26,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material3.AlertDialog
@@ -61,6 +64,7 @@ import com.nekonaru.pedeef.data.UpdateCheck
 import com.nekonaru.pedeef.data.UpdateResult
 import com.nekonaru.pedeef.i18n.Id
 import com.nekonaru.pedeef.i18n.LocalPedeefStrings
+import com.nekonaru.pedeef.ui.kit.LocalSnackbar
 import com.nekonaru.pedeef.ui.kit.ConfirmDialog
 import com.nekonaru.pedeef.ui.kit.Group
 import com.nekonaru.pedeef.ui.kit.GroupLabel
@@ -71,6 +75,9 @@ import com.nekonaru.pedeef.ui.theme.Dimens
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import java.io.File
 
 /** Single source of truth for the displayed version (build.gradle.kts versionName). */
@@ -144,6 +151,38 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
   var showSponsor by remember { mutableStateOf(false) }
   var updateStatus by remember { mutableStateOf<UpdateResult?>(null) }
   var checking by remember { mutableStateOf(false) }
+  var backupJson by remember { mutableStateOf("") }
+  val showMessage = LocalSnackbar.current ?: { _: String -> Unit }
+  val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+    if (uri != null) scope.launch(Dispatchers.IO) {
+      runCatching { context.contentResolver.openOutputStream(uri)?.use { it.write(backupJson.toByteArray()) } }
+      withContext(Dispatchers.Main) { showMessage(s.done) }
+    }
+  }
+  val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    if (uri != null) scope.launch(Dispatchers.IO) {
+      val raw = runCatching { context.contentResolver.openInputStream(uri)?.use { it.readBytes() }?.toString(Charsets.UTF_8) }.getOrNull()
+      if (!raw.isNullOrBlank()) {
+        val parsed = runCatching { Json.parseToJsonElement(raw) as? JsonObject }.getOrNull()
+        var restored: SettingsState? = null
+        if (parsed != null) {
+          com.nekonaru.pedeef.data.Workflows.importJson(context, raw)
+          runCatching { parsed["settings"]?.let { restored = Json.decodeFromString<SettingsState>(it.toString()) } }
+          runCatching {
+            parsed["presets"]?.let { element ->
+              val incoming = Json.decodeFromString<List<com.nekonaru.pedeef.data.Preset>>(element.toString())
+              incoming.forEach { com.nekonaru.pedeef.data.Presets.save(context, it) }
+            }
+          }
+        }
+        withContext(Dispatchers.Main) {
+          val state = restored
+          if (state != null) update { state }
+          showMessage(s.done)
+        }
+      }
+    }
+  }
 
   // Size/count walks run on a background thread so opening Settings never stalls the UI.
   val totalSize by androidx.compose.runtime.produceState(initialValue = 0L, refresh) {
@@ -247,7 +286,59 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
             }
             Switch(checked = settings.nightMode, onCheckedChange = { v -> update { it.copy(nightMode = v) } })
           }
+          Column {
+            Text(s.motionSetting, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = Dimens.Sm)) {
+              listOf("system" to s.motionSystem, "reduced" to s.motionReduced, "full" to s.motionFull).forEachIndexed { i, (key, label) ->
+                SegmentedButton(
+                  selected = settings.motion == key,
+                  onClick = { update { it.copy(motion = key) } },
+                  shape = SegmentedButtonDefaults.itemShape(i, 3),
+                  modifier = Modifier.weight(1f),
+                ) { Text(label) }
+              }
+            }
+          }
+          Column {
+            Text(s.fontScale, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = Dimens.Sm)) {
+              listOf("small" to s.fontSmall, "normal" to s.fontNormal, "large" to s.fontLarge).forEachIndexed { i, (key, label) ->
+                SegmentedButton(
+                  selected = settings.fontScale == key,
+                  onClick = { update { it.copy(fontScale = key) } },
+                  shape = SegmentedButtonDefaults.itemShape(i, 3),
+                  modifier = Modifier.weight(1f),
+                ) { Text(label) }
+              }
+            }
+          }
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+              Text(s.gesturesSetting, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+              Text(s.autoCleanup, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Switch(checked = settings.gestures, onCheckedChange = { v -> update { it.copy(gestures = v) } })
+          }
         }
+      }
+
+      GroupLabel(s.backupRestore)
+      Group {
+        ListRow(Icons.Default.SaveAlt, s.exportBackup, null, onClick = {
+          scope.launch(Dispatchers.IO) {
+            val json = """
+              {"settings":${kotlinx.serialization.json.Json.encodeToString(settings)},
+               "presets":${Json.encodeToString(com.nekonaru.pedeef.data.Presets.load(context))},
+               "workflows":${com.nekonaru.pedeef.data.Workflows.exportJson(context)}}
+            """.trimIndent()
+            withContext(Dispatchers.Main) { backupJson = json; exportLauncher.launch("pedeef-backup.json") }
+          }
+        })
+        ListRow(Icons.Default.FolderOpen, s.importBackup, null, onClick = { importLauncher.launch("application/json") })
+        ListRow(Icons.Default.Delete, s.clearHistoryAll, null, onClick = {
+          com.nekonaru.pedeef.data.OperationHistory.clear(context)
+          showMessage(s.done)
+        })
       }
 
       GroupLabel(s.language)

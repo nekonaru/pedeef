@@ -13,6 +13,7 @@ data class Operation(
   val toolName: String,
   val time: Long,
   val outputs: List<String>,
+  val opts: String = "{}",
 )
 
 /** A small local log of recent runs, used by History and by "repeat with same options". */

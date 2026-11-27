@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -70,6 +72,7 @@ import com.nekonaru.pedeef.data.FilesStore
 import com.nekonaru.pedeef.data.FileEntry
 import com.nekonaru.pedeef.data.PublicFiles
 import com.nekonaru.pedeef.i18n.LocalPedeefStrings
+import com.nekonaru.pedeef.ui.kit.LocalSnackbar
 import com.nekonaru.pedeef.tools.ToolContext
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.Lifecycle
@@ -101,6 +104,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   // (language is handled by the localizer; no other per-locale branches here)
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
+  val showMessage = LocalSnackbar.current ?: { _: String -> Unit }
   val privateRoot = remember { FilesStore.root(context) }
   var granted by remember { mutableStateOf(PublicFiles.hasAccess(context)) }
   var usePrivate by remember { mutableStateOf(false) }
@@ -120,6 +124,10 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
   var query by remember { mutableStateOf("") }
   var refreshTick by remember { mutableStateOf(0) }
   var sort by remember { mutableStateOf("name") } // name | recent | size | extension
+  var smart by remember { mutableStateOf("all") } // all | recent | starred | large | pdf | images
+  var showBin by remember { mutableStateOf(false) }
+  var showRename by remember { mutableStateOf(false) }
+  var renamePattern by remember { mutableStateOf("document-{n}") }
   var selectionMode by remember { mutableStateOf(false) }
   var selected by remember { mutableStateOf<Set<String>>(emptySet()) }
   var starred by remember { mutableStateOf(com.nekonaru.pedeef.data.Starred.load(context).toSet()) }
@@ -253,7 +261,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
                     val target = java.io.File(path)
                     if (target.isDirectory) target.walkTopDown().filter { it.isFile }.map { it.absolutePath }.toList() else listOf(path)
                   }.toSet()
-                  selected.forEach { runCatching { FilesStore.delete(root, java.io.File(it)) } }
+                  selected.forEach { path -> runCatching { java.io.File(path) }.getOrNull()?.let { com.nekonaru.pedeef.data.RecycleBin.trash(context, root, it) } }
                   val next = com.nekonaru.pedeef.data.Starred.remove(context, removed)
                   withContext(Dispatchers.Main) { starred = next.toSet(); selectionMode = false; selected = emptySet(); refreshTick++ }
                 }
@@ -269,6 +277,18 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
               }
             }
             if (!selectionMode) IconButton(onClick = { selectionMode = true }) { Icon(Icons.Default.Checklist, contentDescription = s.selectAll) }
+            if (selectionMode && selected.isNotEmpty()) {
+              IconButton(onClick = {
+                scope.launch(Dispatchers.IO) {
+                  val files = selected.mapNotNull { path -> runCatching { java.io.File(path) }.getOrNull() }.filter { it.isFile }
+                  val zipped = com.nekonaru.pedeef.engine.zipFiles(files.map { com.nekonaru.pedeef.engine.Named(it.name, it.readBytes()) })
+                  com.nekonaru.pedeef.data.FilesStore.saveBytes(root, null, "selection", "zip", zipped)
+                  withContext(Dispatchers.Main) { showMessage(s.exportZip) }
+                }
+              }) { Icon(Icons.Default.SaveAlt, contentDescription = s.exportZip) }
+              IconButton(onClick = { showRename = true }) { Icon(Icons.Default.Edit, contentDescription = s.batchRename) }
+            }
+            if (!selectionMode) IconButton(onClick = { showBin = true }) { Icon(Icons.Default.Delete, contentDescription = s.recycleBin) }
             IconButton(onClick = { showNewFolder = true }) { Icon(Icons.Default.CreateNewFolder, contentDescription = s.newFolder) }
           },
         )
@@ -280,6 +300,18 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
           singleLine = true,
           modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
         )
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          listOf(
+            "all" to s.filesTitle,
+            "recent" to s.smartRecent,
+            "starred" to s.smartStarred,
+            "large" to s.smartLarge,
+            "pdf" to s.smartPdf,
+            "images" to s.smartImages,
+          ).forEach { (key, label) ->
+            FilterChip(selected = smart == key, onClick = { smart = key }, label = { Text(label) })
+          }
+        }
       }
     },
   ) { padding ->
@@ -289,11 +321,19 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
         return@Box
       }
       val list = items
-      if (list == null) {
+      val shown = when (smart) {
+        "starred" -> list?.filter { it.file.absolutePath in starred }
+        "large" -> list?.filter { it.size > 10L * 1024 * 1024 }
+        "pdf" -> list?.filter { it.name.endsWith(".pdf", true) }
+        "images" -> list?.filter { Regex("\\.(jpg|jpeg|png)$", RegexOption.IGNORE_CASE).matches(it.name) }
+        "recent" -> list?.sortedByDescending { it.modified }?.take(30)
+        else -> list
+      }
+      if (shown == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         return@Box
       }
-      if (list.isEmpty()) {
+      if (shown.isEmpty()) {
         Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
           Box(Modifier.size(88.dp).background(MaterialTheme.colorScheme.surfaceVariant, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
             Icon(Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(44.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -303,7 +343,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
         return@Box
       }
       LazyColumn(contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        items(list, key = { entry -> entry.file.absolutePath }) { entry ->
+        items(shown, key = { entry -> entry.file.absolutePath }) { entry ->
           Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable {
@@ -373,6 +413,69 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
     )
   }
 
+  // Recycle bin
+  if (showBin) {
+    AlertDialog(
+      onDismissRequest = { showBin = false },
+      title = { Text(s.recycleBin) },
+      text = {
+        Column(Modifier.verticalScroll(rememberScrollState())) {
+          val binned = com.nekonaru.pedeef.data.RecycleBin.list(context)
+          if (binned.isEmpty()) Text(s.filesEmpty)
+          binned.forEach { file ->
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+              Text(file.name, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+              TextButton(onClick = {
+                scope.launch(Dispatchers.IO) {
+                  com.nekonaru.pedeef.data.RecycleBin.restore(context, root, file)
+                  withContext(Dispatchers.Main) { refreshTick++ }
+                }
+              }) { Text(s.restore) }
+            }
+          }
+        }
+      },
+      confirmButton = {
+        TextButton(onClick = {
+          com.nekonaru.pedeef.data.RecycleBin.empty(context)
+          showBin = false
+          refreshTick++
+        }) { Text(s.emptyBin) }
+      },
+      dismissButton = { TextButton(onClick = { showBin = false }) { Text(s.cancel) } },
+    )
+  }
+
+  // Batch rename
+  if (showRename) {
+    AlertDialog(
+      onDismissRequest = { showRename = false },
+      title = { Text(s.batchRename) },
+      text = {
+        Column {
+          Text(s.renamePattern, style = MaterialTheme.typography.bodyMedium)
+          OutlinedTextField(value = renamePattern, onValueChange = { renamePattern = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
+          Text(s.renamePreview, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+      },
+      confirmButton = {
+        TextButton(onClick = {
+          selected.forEachIndexed { index, path ->
+            val file = runCatching { java.io.File(path) }.getOrNull() ?: return@forEachIndexed
+            val name = renamePattern.replace("{n}", "${index + 1}")
+            val entry = FileEntry(file.name, file, file.isDirectory, if (file.isDirectory) 0L else file.length(), file.lastModified())
+            runCatching { FilesStore.rename(root, entry, name) }
+          }
+          showRename = false
+          selectionMode = false
+          selected = emptySet()
+          refreshTick++
+        }) { Text(s.apply) }
+      },
+      dismissButton = { TextButton(onClick = { showRename = false }) { Text(s.cancel) } },
+    )
+  }
+
   // Rename dialog
   renameTarget?.let { entry ->
     AlertDialog(
@@ -409,7 +512,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
           } else {
             setOf(entry.file.absolutePath)
           }
-          runCatching { FilesStore.delete(root, entry.file) }
+          runCatching { com.nekonaru.pedeef.data.RecycleBin.trash(context, root, entry.file) }
           val next = com.nekonaru.pedeef.data.Starred.remove(context, removed)
           withContext(Dispatchers.Main) { starred = next.toSet(); deleteTarget = null; refreshTick++ }
         }
