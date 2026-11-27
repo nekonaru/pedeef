@@ -31,6 +31,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -63,7 +64,6 @@ import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.ui.kit.ConfirmDialog
 import com.nekonaru.pedeef.ui.kit.Group
 import com.nekonaru.pedeef.ui.kit.GroupLabel
-import com.nekonaru.pedeef.ui.kit.InfoDialog
 import com.nekonaru.pedeef.ui.kit.ListRow
 import com.nekonaru.pedeef.ui.kit.fmtSize
 import com.nekonaru.pedeef.ui.theme.CaveatBrand
@@ -340,8 +340,22 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
       onDismiss = { showClear = false },
     )
   }
-  if (showPrivacy) InfoDialog(s.privacyPolicy, if (indonesian) PRIVACY_ID else PRIVACY_EN) { showPrivacy = false }
-  if (showLicenses) InfoDialog(s.openSource, if (indonesian) LICENSES_ID else LICENSES_EN) { showLicenses = false }
+  if (showPrivacy) {
+    ModalBottomSheet(onDismissRequest = { showPrivacy = false }) {
+      Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Dimens.Xl, vertical = Dimens.Md)) {
+        Text(s.privacyPolicy, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+        Text(if (indonesian) PRIVACY_ID else PRIVACY_EN, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = Dimens.Md))
+      }
+    }
+  }
+  if (showLicenses) {
+    ModalBottomSheet(onDismissRequest = { showLicenses = false }) {
+      Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Dimens.Xl, vertical = Dimens.Md)) {
+        Text(s.openSource, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+        Text(if (indonesian) LICENSES_ID else LICENSES_EN, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = Dimens.Md))
+      }
+    }
+  }
 
   if (showSponsor) {
     AlertDialog(
