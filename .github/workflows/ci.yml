@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Explicit opt-in for CI artifacts. CI never publishes this APK as an official release.
-      PEDEEF_ALLOW_DEBUG_SIGNING: "true"
+      ORG_GRADLE_PROJECT_PEDEEF_ALLOW_DEBUG_SIGNING: "true"
     steps:
       - uses: actions/checkout@v4
 
@@ -55,7 +55,7 @@ jobs:
         run: chmod +x gradlew && ./gradlew :app:assembleDebug --console=plain
 
       - name: Build release APK
-        run: chmod +x gradlew && PEDEEF_ALLOW_DEBUG_SIGNING=true ./gradlew :app:assembleRelease --console=plain
+        run: chmod +x gradlew && ORG_GRADLE_PROJECT_PEDEEF_ALLOW_DEBUG_SIGNING=true ./gradlew :app:assembleRelease --console=plain
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
