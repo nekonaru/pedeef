@@ -35,6 +35,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -91,6 +92,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nekonaru.pedeef.engine.mentionsEncrypt
 import com.nekonaru.pedeef.engine.unlockBytes
@@ -101,6 +103,7 @@ import com.nekonaru.pedeef.ui.kit.LocalSnackbar
 import com.nekonaru.pedeef.ui.kit.PasswordDialog
 import com.nekonaru.pedeef.ui.kit.PdfRenderSession
 import com.nekonaru.pedeef.ui.kit.rememberPdfSession
+import com.nekonaru.pedeef.ui.theme.Dimens
 import com.nekonaru.pedeef.ui.theme.LocalMotionSpec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -242,6 +245,9 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
 
   // Resume reading: reopen at the page the user left off on (keyed by name + size).
   val resumeKey = remember(working, name) { name + "#" + working.size }
+  var readerBookmarks by remember(resumeKey) { mutableStateOf(com.nekonaru.pedeef.data.UserBookmarks.pages(context, resumeKey)) }
+  var showText by remember { mutableStateOf(false) }
+  var reflowText by remember { mutableStateOf("") }
   var resumed by remember(working) { mutableStateOf(false) }
   LaunchedEffect(sizes != null) {
     if (resumed || sizes == null) return@LaunchedEffect
@@ -260,6 +266,12 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   LaunchedEffect(matches) {
     val m = matches ?: return@LaunchedEffect
     if (m.isNotEmpty()) scrollToPage(m[matchIndex.coerceIn(0, m.size - 1)])
+  }
+  LaunchedEffect(showText) {
+    if (!showText || reflowText.isNotEmpty()) return@LaunchedEffect
+    reflowText = withContext(Dispatchers.Default) {
+      runCatching { com.nekonaru.pedeef.engine.extractText(working) }.getOrDefault(s.cannotOpenPdf)
+    }
   }
   LaunchedEffect(pageTextIndex) {
     val i = pageTextIndex ?: return@LaunchedEffect
@@ -407,6 +419,17 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
                   trailingIcon = { Checkbox(checked = keepControls, onCheckedChange = { keepControls = it; poke() }) },
                   onClick = { keepControls = !keepControls; poke() },
                 )
+                DropdownMenuItem(
+                  text = { Text(if (currentPage in readerBookmarks) s.removeBookmark else s.addBookmark) },
+                  enabled = n > 0,
+                  onClick = {
+                    menuExpanded = false
+                    readerBookmarks = com.nekonaru.pedeef.data.UserBookmarks.toggle(context, resumeKey, currentPage)
+                    showMessage(s.savedTo)
+                    poke()
+                  },
+                )
+                DropdownMenuItem(text = { Text(s.textReflow) }, onClick = { menuExpanded = false; showText = true; poke() })
                 DropdownMenuItem(text = { Text(s.print) }, onClick = { menuExpanded = false; printPdf() })
                 DropdownMenuItem(text = { Text(s.copyPageText) }, enabled = n > 0, onClick = {
                   menuExpanded = false; copyToken++; pageTextIndex = (currentPage - 1).coerceAtLeast(0)
@@ -515,6 +538,14 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
                 Text("${page + 1}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
               }
             }
+          }
+        }
+      }
+      if (showText) {
+        ModalBottomSheet(onDismissRequest = { showText = false }) {
+          Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Dimens.Xl, vertical = Dimens.Md)) {
+            Text(s.textReflow, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Text(reflowText, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = Dimens.Md))
           }
         }
       }
