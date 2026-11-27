@@ -40,7 +40,9 @@ object Workflows {
   fun exportJson(context: Context): String = json.encodeToString(load(context))
 
   fun importJson(context: Context, raw: String): List<Workflow> = runCatching {
-    val incoming = json.decodeFromString<List<Workflow>>(raw)
+    val parsed = kotlinx.serialization.json.Json.parseToJsonElement(raw)
+    val element = if (parsed is kotlinx.serialization.json.JsonObject) parsed["workflows"] ?: parsed else parsed
+    val incoming = json.decodeFromString<List<Workflow>>(element.toString())
     save(context, load(context) + incoming)
   }.getOrDefault(load(context))
 }

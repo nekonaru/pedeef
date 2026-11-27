@@ -135,7 +135,7 @@ private sealed interface PageSizes {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMode: () -> Unit = {}) {
+fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMode: () -> Unit = {}, gesturesEnabled: Boolean = true) {
   val s = LocalPedeefStrings.current
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
@@ -175,7 +175,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   var interaction by remember { mutableStateOf(0) }
   fun poke() { interaction++; controlsVisible = true }
   LaunchedEffect(interaction, menuExpanded, showBookmarks, showThumbs, keepControls) {
-    if (menuExpanded || showBookmarks || showThumbs || keepControls) return@LaunchedEffect
+    if (!gesturesEnabled || menuExpanded || showBookmarks || showThumbs || keepControls) return@LaunchedEffect
     delay(3500L)
     controlsVisible = false
   }
@@ -246,8 +246,9 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   // Resume reading: reopen at the page the user left off on (keyed by name + size).
   val resumeKey = remember(working, name) { name + "#" + working.size }
   var readerBookmarks by remember(resumeKey) { mutableStateOf(com.nekonaru.pedeef.data.UserBookmarks.pages(context, resumeKey)) }
-  var showText by remember { mutableStateOf(false) }
-  var reflowText by remember { mutableStateOf("") }
+  var showText by remember(payloadVersion) { mutableStateOf(false) }
+  var reflowText by remember(payloadVersion) { mutableStateOf("") }
+  var showReaderBookmarks by remember { mutableStateOf(false) }
   var resumed by remember(working) { mutableStateOf(false) }
   LaunchedEffect(sizes != null) {
     if (resumed || sizes == null) return@LaunchedEffect
@@ -267,6 +268,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     val m = matches ?: return@LaunchedEffect
     if (m.isNotEmpty()) scrollToPage(m[matchIndex.coerceIn(0, m.size - 1)])
   }
+  LaunchedEffect(payloadVersion) { reflowText = "" }
   LaunchedEffect(showText) {
     if (!showText || reflowText.isNotEmpty()) return@LaunchedEffect
     reflowText = withContext(Dispatchers.Default) {
@@ -429,6 +431,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
                     poke()
                   },
                 )
+                DropdownMenuItem(text = { Text(s.readerBookmarks) }, onClick = { menuExpanded = false; showReaderBookmarks = true; poke() })
                 DropdownMenuItem(text = { Text(s.textReflow) }, onClick = { menuExpanded = false; showText = true; poke() })
                 DropdownMenuItem(text = { Text(s.print) }, onClick = { menuExpanded = false; printPdf() })
                 DropdownMenuItem(text = { Text(s.copyPageText) }, enabled = n > 0, onClick = {
@@ -536,6 +539,19 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
                 Icon(Icons.Default.BookmarkBorder, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(title, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.padding(start = 10.dp).weight(1f))
                 Text("${page + 1}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+            }
+          }
+        }
+      }
+      if (showReaderBookmarks) {
+        ModalBottomSheet(onDismissRequest = { showReaderBookmarks = false }) {
+          Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Dimens.Xl, vertical = Dimens.Md)) {
+            Text(s.readerBookmarks, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            if (readerBookmarks.isEmpty()) Text(s.filesEmpty, modifier = Modifier.padding(top = Dimens.Md))
+            readerBookmarks.forEach { page ->
+              TextButton(onClick = { scrollToPage(page - 1); showReaderBookmarks = false; poke() }) {
+                Text("${s.pageName} $page")
               }
             }
           }

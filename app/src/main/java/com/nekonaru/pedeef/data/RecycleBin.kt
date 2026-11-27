@@ -3,7 +3,7 @@ package com.nekonaru.pedeef.data
 import android.content.Context
 import java.io.File
 
-/** A local recycle bin. Files are renamed and moved inside the app tree, never deleted on trash. */
+/** A local recycle bin. Files are copied into app storage, then removed from their original path. */
 object RecycleBin {
   fun root(context: Context): File = File(context.filesDir, "RecycleBin").apply { mkdirs() }
 
@@ -18,11 +18,27 @@ object RecycleBin {
     val bin = root(context)
     val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.US).format(java.util.Date())
     val target = File(bin, "${FilesStore.sanitizeName(file.name)}-$stamp")
-    return runCatching { file.renameTo(target) }.getOrDefault(false)
+    return runCatching {
+      if (file.isDirectory) {
+        target.mkdirs()
+        file.walkTopDown().forEach { child ->
+          if (child.isFile) {
+            val destination = File(target, child.relativeTo(file).path)
+            destination.parentFile?.mkdirs()
+            child.copyTo(destination, overwrite = true)
+          }
+        }
+        file.deleteRecursively()
+      } else {
+        file.copyTo(target, overwrite = true)
+        file.delete()
+      }
+      true
+    }.getOrDefault(false)
   }
 
   fun list(context: Context): List<File> =
-    root(context).listFiles()?.filter { it.isFile }?.sortedByDescending { it.lastModified() }.orEmpty()
+    root(context).listFiles()?.toList()?.sortedByDescending { it.lastModified() }.orEmpty()
 
   fun restore(context: Context, root: File, file: File): Boolean {
     if (!inside(root(context), file)) return false
@@ -30,10 +46,31 @@ object RecycleBin {
     var target = File(root, name)
     var n = 2
     while (target.exists()) {
-      target = File(root, "${name.substringBeforeLast('.', name)} ($n).${name.substringAfterLast('.', "")}".trimEnd('.'))
+      val dot = name.lastIndexOf('.')
+      val base = if (dot > 0) name.substring(0, dot) else name
+      val ext = if (dot > 0) name.substring(dot) else ""
+      target = File(root, "$base ($n)$ext")
       n++
     }
-    return runCatching { file.renameTo(target) }.getOrDefault(false)
+    return runCatching {
+      if (!file.renameTo(target)) {
+        if (file.isDirectory) {
+          target.mkdirs()
+          file.walkTopDown().forEach { child ->
+            if (child.isFile) {
+              val destination = File(target, child.relativeTo(file).path)
+              destination.parentFile?.mkdirs()
+              child.copyTo(destination, overwrite = true)
+            }
+          }
+          file.deleteRecursively()
+        } else {
+          file.copyTo(target, overwrite = true)
+          file.delete()
+        }
+      }
+      true
+    }.getOrDefault(false)
   }
 
   fun empty(context: Context) {

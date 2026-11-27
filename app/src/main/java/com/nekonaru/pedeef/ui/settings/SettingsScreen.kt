@@ -77,6 +77,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import java.io.File
 
 /** Single source of truth for the displayed version (build.gradle.kts versionName). */
@@ -162,8 +163,23 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
     if (uri != null) scope.launch(Dispatchers.IO) {
       val raw = runCatching { context.contentResolver.openInputStream(uri)?.use { it.readBytes() }?.toString(Charsets.UTF_8) }.getOrNull()
       if (!raw.isNullOrBlank()) {
-        com.nekonaru.pedeef.data.Workflows.importJson(context, raw)
-        withContext(Dispatchers.Main) { showMessage(s.done) }
+        val parsed = runCatching { Json.parseToJsonElement(raw) as? JsonObject }.getOrNull()
+        var restored: SettingsState? = null
+        if (parsed != null) {
+          com.nekonaru.pedeef.data.Workflows.importJson(context, raw)
+          runCatching { parsed["settings"]?.let { restored = Json.decodeFromString<SettingsState>(it.toString()) } }
+          runCatching {
+            parsed["presets"]?.let { element ->
+              val incoming = Json.decodeFromString<List<com.nekonaru.pedeef.data.Preset>>(element.toString())
+              incoming.forEach { com.nekonaru.pedeef.data.Presets.save(context, it) }
+            }
+          }
+        }
+        withContext(Dispatchers.Main) {
+          val state = restored
+          if (state != null) update { state }
+          showMessage(s.done)
+        }
       }
     }
   }
@@ -321,7 +337,6 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
         ListRow(Icons.Default.FolderOpen, s.importBackup, null, onClick = { importLauncher.launch("application/json") })
         ListRow(Icons.Default.Delete, s.clearHistoryAll, null, onClick = {
           com.nekonaru.pedeef.data.OperationHistory.clear(context)
-          com.nekonaru.pedeef.data.Workflows.save(context, emptyList())
           showMessage(s.done)
         })
       }

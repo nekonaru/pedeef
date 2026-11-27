@@ -450,13 +450,15 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
         title = { Text(s.history) },
         text = {
           Column(Modifier.verticalScroll(rememberScrollState())) {
-            if (history.isEmpty()) Text(s.filesEmpty)
-            history.forEach { op ->
+            val mine = history.filter { it.toolId == tool.id }
+            if (mine.isEmpty()) Text(s.filesEmpty)
+            mine.forEach { op ->
               androidx.compose.material3.TextButton(onClick = {
                 opts = runCatching { Json.parseToJsonElement(op.opts) as? JsonObject ?: opts }.getOrDefault(opts)
                 showHistory = false
+                showMessage(s.repeatRun)
               }) {
-                Text("${op.toolName}  -  ${java.text.SimpleDateFormat("d MMM HH:mm", java.util.Locale.ROOT).format(java.util.Date(op.time))}")
+                Text("${s.repeatRun}  -  ${java.text.SimpleDateFormat("d MMM HH:mm", java.util.Locale.ROOT).format(java.util.Date(op.time))}")
               }
             }
           }

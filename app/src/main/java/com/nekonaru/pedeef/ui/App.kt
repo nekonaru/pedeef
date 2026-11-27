@@ -239,6 +239,7 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
             onBack = { ViewerPayload.clear(); nav.popBackStack() },
             nightMode = settings.nightMode,
             onToggleNightMode = { update { s -> s.copy(nightMode = !s.nightMode) } },
+            gesturesEnabled = settings.gestures,
           )
         }
       }

@@ -277,7 +277,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
               }
             }
             if (!selectionMode) IconButton(onClick = { selectionMode = true }) { Icon(Icons.Default.Checklist, contentDescription = s.selectAll) }
-            if (!selectionMode && selected.isNotEmpty()) {
+            if (selectionMode && selected.isNotEmpty()) {
               IconButton(onClick = {
                 scope.launch(Dispatchers.IO) {
                   val files = selected.mapNotNull { path -> runCatching { java.io.File(path) }.getOrNull() }.filter { it.isFile }
@@ -302,7 +302,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
         )
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           listOf(
-            "all" to s.allTools,
+            "all" to s.filesTitle,
             "recent" to s.smartRecent,
             "starred" to s.smartStarred,
             "large" to s.smartLarge,
