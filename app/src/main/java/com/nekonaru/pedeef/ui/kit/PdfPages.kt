@@ -5,73 +5,82 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import com.nekonaru.pedeef.engine.withTempPdf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/** Page sizes of a PDF held in memory, as [w, h] in points (no rendering). */
+/** Page sizes of a PDF held in memory, as [w, h] in points. */
 suspend fun pageSizesOf(bytes: ByteArray, cacheDir: File): List<Pair<Int, Int>> = withContext(Dispatchers.IO) {
-  withTempPdf(bytes, cacheDir, "sizes") { tmp ->
-    val pfd = android.os.ParcelFileDescriptor.open(tmp, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
-    pfd.use { fd ->
-      android.graphics.pdf.PdfRenderer(fd).use { r ->
-        (0 until r.pageCount).map { i -> r.openPage(i).use { it.width to it.height } }
-      }
-    }
-  }
+  PdfRenderSession(bytes, cacheDir, "sizes").use { it.pageSizes() }
 }
 
-/** Renders page `index` of a PDF in memory at `widthPx`, or null if the page cannot be rendered. */
+/** Renders page `index`, or null when the page cannot be rendered. */
 suspend fun renderPage(bytes: ByteArray, index: Int, widthPx: Int, cacheDir: File): Bitmap? = withContext(Dispatchers.IO) {
-  runCatching {
-    withTempPdf(bytes, cacheDir, "page") { tmp ->
-      val pfd = android.os.ParcelFileDescriptor.open(tmp, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
-      pfd.use { fd ->
-        android.graphics.pdf.PdfRenderer(fd).use { r ->
-          r.openPage(index).use { p ->
-            val k = minOf(widthPx.toFloat() / p.width, 3f)
-            val w0 = maxOf(1, (p.width * k).toInt())
-            val h0 = maxOf(1, (p.height * k).toInt())
-            val shrink = minOf(1f, 3200f / maxOf(w0, h0))
-            val bmp = Bitmap.createBitmap(maxOf(1, (w0 * shrink).toInt()), maxOf(1, (h0 * shrink).toInt()), Bitmap.Config.ARGB_8888)
-            bmp.eraseColor(android.graphics.Color.WHITE)
-            p.render(bmp, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-            bmp
-          }
-        }
-      }
-    }
-  }.getOrNull()
+  runCatching { PdfRenderSession(bytes, cacheDir, "page").use { it.render(index, widthPx) } }.getOrNull()
 }
 
 @Composable
 fun rememberPageSizes(bytes: ByteArray?, cacheDir: File): List<Pair<Int, Int>>? {
-  val state = produceState<List<Pair<Int, Int>>?>(initialValue = null, bytes) {
+  val session = rememberPdfSession(bytes, cacheDir, "sizes")
+  val state = produceState<List<Pair<Int, Int>>?>(initialValue = null, session) {
     value = null
-    val b = bytes ?: return@produceState
-    value = runCatching { pageSizesOf(b, cacheDir) }.getOrNull()
+    val s = session ?: return@produceState
+    value = runCatching { s.pageSizes() }.getOrNull()
   }
   return state.value
 }
 
 @Composable
 fun rememberPageImage(bytes: ByteArray?, index: Int, widthPx: Int, cacheDir: File): ImageBitmap? {
-  val state = produceState<ImageBitmap?>(initialValue = null, bytes, index, widthPx) {
+  val session = rememberPdfSession(bytes, cacheDir, "editor")
+  val state = produceState<ImageBitmap?>(initialValue = null, session, index, widthPx) {
     value = null
-    val b = bytes ?: return@produceState
+    val s = session ?: return@produceState
     if (index < 0) return@produceState
-    value = renderPage(b, index, widthPx, cacheDir)?.asImageBitmap()
+    value = s.render(index, widthPx)?.asImageBitmap()
   }
   return state.value
 }
 
 @Composable
 fun rememberPageCount(bytes: ByteArray?, cacheDir: File): Int? {
-  val state = produceState<Int?>(initialValue = null, bytes) {
+  val session = rememberPdfSession(bytes, cacheDir, "count")
+  val state = produceState<Int?>(initialValue = null, session) {
     value = null
-    val b = bytes ?: return@produceState
-    value = runCatching { pageSizesOf(b, cacheDir).size }.getOrNull()
+    val s = session ?: return@produceState
+    value = runCatching { s.pageSizes().size }.getOrNull()
+  }
+  return state.value
+}
+
+/** Session based variants let one editor share a single temp file and renderer. */
+@Composable
+fun rememberSessionPageSizes(session: PdfRenderSession?): List<Pair<Int, Int>>? {
+  val state = produceState<List<Pair<Int, Int>>?>(initialValue = null, session) {
+    value = null
+    val s = session ?: return@produceState
+    value = runCatching { s.pageSizes() }.getOrNull()
+  }
+  return state.value
+}
+
+@Composable
+fun rememberSessionPageCount(session: PdfRenderSession?): Int? {
+  val state = produceState<Int?>(initialValue = null, session) {
+    value = null
+    val s = session ?: return@produceState
+    value = runCatching { s.pageSizes().size }.getOrNull()
+  }
+  return state.value
+}
+
+@Composable
+fun rememberSessionPageImage(session: PdfRenderSession?, index: Int, widthPx: Int): ImageBitmap? {
+  val state = produceState<ImageBitmap?>(initialValue = null, session, index, widthPx) {
+    value = null
+    val s = session ?: return@produceState
+    if (index < 0) return@produceState
+    value = s.render(index, widthPx)?.asImageBitmap()
   }
   return state.value
 }

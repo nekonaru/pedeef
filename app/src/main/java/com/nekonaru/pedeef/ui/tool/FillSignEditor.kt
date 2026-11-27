@@ -59,8 +59,10 @@ import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.engine.SignItem
 import com.nekonaru.pedeef.tools.Opts
 import com.nekonaru.pedeef.tools.put
-import com.nekonaru.pedeef.ui.kit.rememberPageImage
-import com.nekonaru.pedeef.ui.kit.rememberPageSizes
+
+import com.nekonaru.pedeef.ui.kit.rememberPdfSession
+import com.nekonaru.pedeef.ui.kit.rememberSessionPageSizes
+import com.nekonaru.pedeef.ui.kit.rememberSessionPageImage
 import java.io.File
 import java.util.UUID
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -76,7 +78,8 @@ fun FillSignEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opt
     Text(s.pickFiles, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     return
   }
-  val sizes = rememberPageSizes(bytes, cacheDir) ?: return
+  val session = rememberPdfSession(bytes, cacheDir, "fillsign")
+  val sizes = rememberSessionPageSizes(session) ?: return
   val count = sizes.size
   var page by remember(bytes) { mutableStateOf(0) }
   var pendingKind by remember { mutableStateOf<String?>(null) } // text | signature | picture
@@ -93,7 +96,7 @@ fun FillSignEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opt
   fun addItem(item: SignItem) = apply(items + item)
 
   val pageItems = items.filter { it.page == page }
-  val image = rememberPageImage(bytes, page, 900, cacheDir)
+  val image = rememberSessionPageImage(session, page, 900)
   val ratio = sizes[page].let { it.first.toFloat() / it.second.toFloat() }
 
   val savedSignature = remember(page) { File(context.filesDir, "signature.png") }

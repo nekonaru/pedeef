@@ -249,9 +249,13 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
               IconButton(onClick = { selected = if (selected.size == items?.size) emptySet() else (items ?: emptyList()).map { it.file.absolutePath }.toSet() }) { Icon(Icons.Default.SelectAll, contentDescription = s.selectAll) }
               IconButton(onClick = {
                 scope.launch(Dispatchers.IO) {
+                  val removed = selected.flatMap { path ->
+                    val target = java.io.File(path)
+                    if (target.isDirectory) target.walkTopDown().filter { it.isFile }.map { it.absolutePath }.toList() else listOf(path)
+                  }.toSet()
                   selected.forEach { runCatching { FilesStore.delete(root, java.io.File(it)) } }
-                  com.nekonaru.pedeef.data.Starred.prune(context, root.walkTopDown().filter { it.isFile }.map { it.absolutePath }.toSet())
-                  withContext(Dispatchers.Main) { selectionMode = false; selected = emptySet(); refreshTick++ }
+                  val next = com.nekonaru.pedeef.data.Starred.remove(context, removed)
+                  withContext(Dispatchers.Main) { starred = next.toSet(); selectionMode = false; selected = emptySet(); refreshTick++ }
                 }
               }) { Icon(Icons.Default.Delete, contentDescription = s.delete) }
             }
@@ -300,9 +304,6 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
       }
       LazyColumn(contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         items(list, key = { entry -> entry.file.absolutePath }) { entry ->
-          val itemCount by produceState(initialValue = 0, entry.file.path) {
-            value = if (entry.isDir) withContext(Dispatchers.IO) { FilesStore.countIn(entry.file) } else 0
-          }
           Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable {
@@ -323,7 +324,7 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
               Text(entry.name, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
               Text(
-                (if (entry.isDir) ((if (itemCount >= 10_000) "10,000+ " else "$itemCount ") + (if (itemCount == 1) s.fileOne else s.fileMany)) else com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)),
+                (if (entry.isDir) ((if (entry.size >= 10_000) "10,000+ " else "${entry.size} ") + (if (entry.size == 1L) s.fileOne else s.fileMany)) else com.nekonaru.pedeef.ui.kit.fmtSize(entry.size)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
               )
@@ -403,9 +404,14 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
       danger = true,
       onConfirm = {
         scope.launch(Dispatchers.IO) {
+          val removed = if (entry.isDir) {
+            entry.file.walkTopDown().filter { it.isFile }.map { it.absolutePath }.toSet()
+          } else {
+            setOf(entry.file.absolutePath)
+          }
           runCatching { FilesStore.delete(root, entry.file) }
-          starred = com.nekonaru.pedeef.data.Starred.prune(context, root.walkTopDown().filter { it.isFile }.map { it.absolutePath }.toSet()).toSet()
-          withContext(Dispatchers.Main) { deleteTarget = null; refreshTick++ }
+          val next = com.nekonaru.pedeef.data.Starred.remove(context, removed)
+          withContext(Dispatchers.Main) { starred = next.toSet(); deleteTarget = null; refreshTick++ }
         }
       },
       onDismiss = { deleteTarget = null },

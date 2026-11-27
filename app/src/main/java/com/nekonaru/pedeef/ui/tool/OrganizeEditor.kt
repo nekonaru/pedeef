@@ -36,8 +36,9 @@ import com.nekonaru.pedeef.tools.Opts
 import com.nekonaru.pedeef.tools.put
 import com.nekonaru.pedeef.tools.str
 import com.nekonaru.pedeef.engine.PageOrder
-import com.nekonaru.pedeef.ui.kit.rememberPageCount
-import com.nekonaru.pedeef.ui.kit.rememberPageImage
+import com.nekonaru.pedeef.ui.kit.rememberPdfSession
+import com.nekonaru.pedeef.ui.kit.rememberSessionPageCount
+import com.nekonaru.pedeef.ui.kit.rememberSessionPageImage
 import java.io.File
 import kotlinx.serialization.json.decodeFromJsonElement
 
@@ -48,7 +49,8 @@ fun OrganizeEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opt
     Text(s.pickFiles, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     return
   }
-  val count = rememberPageCount(bytes, cacheDir) ?: return
+  val session = rememberPdfSession(bytes, cacheDir, "organize")
+  val count = rememberSessionPageCount(session) ?: return
   var order by remember(bytes) {
     val saved = opts["order"]?.let { runCatching { kotlinx.serialization.json.Json.decodeFromJsonElement<List<PageOrder>>(it) }.getOrNull() }
     mutableStateOf(saved?.takeIf { it.size == count } ?: (0 until count).map { PageOrder(it) })
@@ -72,7 +74,7 @@ fun OrganizeEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opt
       modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
     ) {
       itemsIndexed(order, key = { i, _ -> i }) { index, page ->
-        val image = rememberPageImage(bytes, page.i, 220, cacheDir)
+        val image = rememberSessionPageImage(session, page.i, 120)
         Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), tonalElevation = 1.dp) {
           Column(
             horizontalAlignment = Alignment.CenterHorizontally,

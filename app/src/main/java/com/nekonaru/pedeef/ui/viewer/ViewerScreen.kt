@@ -89,6 +89,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.nekonaru.pedeef.engine.mentionsEncrypt
@@ -98,7 +99,8 @@ import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.tools.ToolContext
 import com.nekonaru.pedeef.ui.kit.LocalSnackbar
 import com.nekonaru.pedeef.ui.kit.PasswordDialog
-import com.nekonaru.pedeef.ui.kit.pageSizesOf
+import com.nekonaru.pedeef.ui.kit.PdfRenderSession
+import com.nekonaru.pedeef.ui.kit.rememberPdfSession
 import com.nekonaru.pedeef.ui.theme.LocalMotionSpec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -228,8 +230,12 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     else -> bytes
   }
 
-  val sizesState = produceState<PageSizes?>(initialValue = null, working) {
-    value = runCatching { PageSizes.Ok(pageSizesOf(working, ToolContext.cacheDir)) }.getOrDefault(PageSizes.Failed)
+  val session = rememberPdfSession(working, ToolContext.cacheDir, "viewer")
+  val density = LocalDensity.current.density
+  val sizesState = produceState<PageSizes?>(initialValue = null, session) {
+    value = null
+    val s = session ?: return@produceState
+    value = runCatching { PageSizes.Ok(s.pageSizes()) }.getOrDefault(PageSizes.Failed)
   }
   val sizes = (sizesState.value as? PageSizes.Ok)?.list
   val sizesFailed = sizesState.value == PageSizes.Failed
@@ -239,9 +245,9 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   var resumed by remember(working) { mutableStateOf(false) }
   LaunchedEffect(sizes != null) {
     if (resumed || sizes == null) return@LaunchedEffect
-    resumed = true
-    val pos = com.nekonaru.pedeef.data.ReadingPositions.pageFor(context, resumeKey)
+    val pos = withContext(Dispatchers.IO) { com.nekonaru.pedeef.data.ReadingPositions.pageFor(context, resumeKey) }
     if (pos != null && pos in 2..sizes.size) listState.scrollToItem(pos - 1)
+    resumed = true
   }
   LaunchedEffect(firstVisible, resumed) {
     // Do not save page 1 over the stored position before the resume scroll has landed.
@@ -459,6 +465,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
         .background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
       val viewport = maxWidth
+      val pageWidthPx = com.nekonaru.pedeef.ui.kit.RenderMath.targetPageWidth(viewport.value, zoomFactor, density)
       if (sizes == null) {
         if (sizesFailed) {
           Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.Center) {
@@ -481,12 +488,12 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
           if (spread) {
             items((sizes.size + 1) / 2) { pair ->
               Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PageItem(working, pair * 2, sizes[pair * 2], viewport, zoomFactor, matches?.contains(pair * 2) == true, highlights?.get(pair * 2) ?: emptyList(), nightMode)
-                if (pair * 2 + 1 < sizes.size) PageItem(working, pair * 2 + 1, sizes[pair * 2 + 1], viewport, zoomFactor, matches?.contains(pair * 2 + 1) == true, highlights?.get(pair * 2 + 1) ?: emptyList(), nightMode)
+                PageItem(session, pair * 2, sizes[pair * 2], viewport, zoomFactor, pageWidthPx, matches?.contains(pair * 2) == true, highlights?.get(pair * 2) ?: emptyList(), nightMode)
+                if (pair * 2 + 1 < sizes.size) PageItem(session, pair * 2 + 1, sizes[pair * 2 + 1], viewport, zoomFactor, pageWidthPx, matches?.contains(pair * 2 + 1) == true, highlights?.get(pair * 2 + 1) ?: emptyList(), nightMode)
               }
             }
           } else {
-            items(sizes.size) { i -> PageItem(working, i, sizes[i], viewport, zoomFactor, matches?.contains(i) == true, highlights?.get(i) ?: emptyList(), nightMode) }
+            items(sizes.size) { i -> PageItem(session, i, sizes[i], viewport, zoomFactor, pageWidthPx, matches?.contains(i) == true, highlights?.get(i) ?: emptyList(), nightMode) }
           }
         }
       }
@@ -534,14 +541,14 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
                   columns = GridCells.Adaptive(64.dp),
                   contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp),
                 ) {
-                  items(sizes.size) { i -> ThumbItem(working, i, i == currentPage - 1, nightMode) { scrollToPage(i) } }
+                  items(sizes.size) { i -> ThumbItem(session, i, i == currentPage - 1, nightMode) { scrollToPage(i) } }
                 }
               } else {
                 LazyRow(
                   horizontalArrangement = Arrangement.spacedBy(10.dp),
                   contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                 ) {
-                  items(sizes.size) { i -> ThumbItem(working, i, i == currentPage - 1, nightMode) { scrollToPage(i) } }
+                  items(sizes.size) { i -> ThumbItem(session, i, i == currentPage - 1, nightMode) { scrollToPage(i) } }
                 }
               }
             }
@@ -568,10 +575,12 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
 }
 
 @Composable
-private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewport: androidx.compose.ui.unit.Dp, zoomFactor: Float, isMatch: Boolean, highlights: List<android.graphics.RectF> = emptyList(), nightMode: Boolean = false) {
+private fun PageItem(session: PdfRenderSession?, index: Int, size: Pair<Int, Int>, viewport: androidx.compose.ui.unit.Dp, zoomFactor: Float, targetWidthPx: Int, isMatch: Boolean, highlights: List<android.graphics.RectF> = emptyList(), nightMode: Boolean = false) {
   val s = LocalPedeefStrings.current
-  val image by produceState<android.graphics.Bitmap?>(initialValue = null, bytes, index, zoomFactor) {
-    value = com.nekonaru.pedeef.ui.kit.renderPage(bytes, index, (1200 * zoomFactor).toInt(), ToolContext.cacheDir)
+  val image by produceState<android.graphics.Bitmap?>(initialValue = null, session, index, targetWidthPx, zoomFactor) {
+    value = null
+    val active = session ?: return@produceState
+    value = active.render(index, targetWidthPx)
   }
   val ratio = size.first.toFloat() / size.second.toFloat()
   Box(Modifier.width(viewport * zoomFactor).aspectRatio(ratio)) {
@@ -607,10 +616,12 @@ private fun PageItem(bytes: ByteArray, index: Int, size: Pair<Int, Int>, viewpor
 }
 
 @Composable
-private fun ThumbItem(bytes: ByteArray, index: Int, selected: Boolean, nightMode: Boolean = false, onClick: () -> Unit) {
+private fun ThumbItem(session: PdfRenderSession?, index: Int, selected: Boolean, nightMode: Boolean = false, onClick: () -> Unit) {
   val s = LocalPedeefStrings.current
-  val image by produceState<android.graphics.Bitmap?>(initialValue = null, bytes, index) {
-    value = com.nekonaru.pedeef.ui.kit.renderPage(bytes, index, 180, ToolContext.cacheDir)
+  val image by produceState<android.graphics.Bitmap?>(initialValue = null, session, index) {
+    value = null
+    val active = session ?: return@produceState
+    value = active.render(index, com.nekonaru.pedeef.ui.kit.RenderMath.ThumbnailWidth)
   }
   Column(
     horizontalAlignment = Alignment.CenterHorizontally,
