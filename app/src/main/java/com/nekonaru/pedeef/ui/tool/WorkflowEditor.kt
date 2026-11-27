@@ -68,9 +68,9 @@ fun WorkflowEditor(opts: Opts, onChange: (Opts) -> Unit) {
           }
           if (tool.opts.isNotEmpty()) {
             Spacer8()
-            Options(tool.opts, step.opts, indonesian) { newOpts ->
+            Options(tool.opts, step.opts, indonesian, onChange = { newOpts ->
               apply(steps.mapIndexed { j, st -> if (j == i) st.copy(opts = newOpts) else st })
-            }
+            })
           }
         }
       }

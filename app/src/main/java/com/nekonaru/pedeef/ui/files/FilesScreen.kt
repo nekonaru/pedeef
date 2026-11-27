@@ -228,7 +228,15 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
     topBar = {
       Column {
         TopAppBar(
-          title = { Text(if (selectionMode) "${selected.size} ${s.selected}" else s.filesTitle) },
+          title = {
+            Column {
+              Text(if (selectionMode) "${selected.size} ${s.selected}" else s.filesTitle)
+              val path = if (currentDir == root) "" else relPath(root, currentDir)
+              if (!selectionMode && path.isNotEmpty()) {
+                Text(path, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+              }
+            }
+          },
           navigationIcon = {
             if (selectionMode) {
               IconButton(onClick = { selectionMode = false; selected = emptySet() }) { Icon(Icons.Default.Close, contentDescription = s.cancel) }
@@ -260,13 +268,6 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
             IconButton(onClick = { showNewFolder = true }) { Icon(Icons.Default.CreateNewFolder, contentDescription = s.newFolder) }
           },
         )
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
-          Text(
-            if (currentDir == root) s.filesTitle else relPath(root, currentDir),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
-        }
         OutlinedTextField(
           value = query,
           onValueChange = { query = it },

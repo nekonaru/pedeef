@@ -4,6 +4,11 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,10 +66,12 @@ import com.nekonaru.pedeef.tools.Input
 import com.nekonaru.pedeef.tools.Tool
 import com.nekonaru.pedeef.tools.toolById
 import com.nekonaru.pedeef.ui.kit.Btn
+import com.nekonaru.pedeef.ui.kit.LocalSnackbar
 import com.nekonaru.pedeef.ui.kit.PasswordDialog
 import com.nekonaru.pedeef.ui.kit.Options
 import com.nekonaru.pedeef.ui.kit.Spinner
 import com.nekonaru.pedeef.ui.kit.fmtSize
+import com.nekonaru.pedeef.tools.SECTIONS
 import com.nekonaru.pedeef.tools.defaults
 import com.nekonaru.pedeef.tools.str
 import kotlinx.coroutines.Dispatchers
@@ -93,7 +100,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
   var busy by remember { mutableStateOf(false) }
   var error by remember { mutableStateOf<String?>(null) }
   var results by remember { mutableStateOf<List<Output>?>(null) }
-  var savedMessage by remember { mutableStateOf<String?>(null) }
+  val showMessage = LocalSnackbar.current ?: { _: String -> Unit }
   var presets by remember { mutableStateOf(com.nekonaru.pedeef.data.Presets.load(context)) }
   var presetMenu by remember { mutableStateOf(false) }
   var locked by remember { mutableStateOf<List<Pair<String, ByteArray>>?>(null) } // queued locked PDFs: name to bytes
@@ -127,7 +134,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
     opts = defaults(tool.opts)
     results = null
     error = null
-    savedMessage = null
+
   }
 
   fun addFiles(new: List<PickedFile>, merge: Boolean = false) {
@@ -192,7 +199,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
     scope.launch {
       busy = true
       error = null
-      savedMessage = null
+  
       try {
         val outs = withContext(Dispatchers.Default) {
           when (tool.input) {
@@ -231,7 +238,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
           saved to (public != null)
         }.getOrNull()
       }
-      savedMessage = if (done == null) s.genericError else String.format(java.util.Locale.getDefault(), s.savedNFiles, done.first)
+      showMessage(if (done == null) s.genericError else String.format(java.util.Locale.getDefault(), s.savedNFiles, done.first))
     }
   }
 
@@ -267,6 +274,14 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
         .padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+      SECTIONS.getOrNull(tool.section)?.let { sec ->
+        Text(
+          (if (indonesian) sec.second.second else sec.second.first).uppercase(),
+          style = MaterialTheme.typography.labelMedium,
+          fontWeight = FontWeight.SemiBold,
+          color = MaterialTheme.colorScheme.primary,
+        )
+      }
       Text(tool.desc(indonesian), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
       // Step 1: pick files (not shown for tools that take no file)
@@ -308,9 +323,12 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
         "organize" -> OrganizeEditor(picked.firstOrNull()?.bytes, opts, com.nekonaru.pedeef.tools.ToolContext.cacheDir) { opts = it }
         "redact" -> RedactEditor(picked.firstOrNull()?.bytes, opts, com.nekonaru.pedeef.tools.ToolContext.cacheDir) { opts = it }
         "fillSign" -> FillSignEditor(picked.firstOrNull()?.bytes, opts, com.nekonaru.pedeef.tools.ToolContext.cacheDir) { opts = it }
-        "crop" -> Column { Options(tool.opts, opts, indonesian) { opts = it }; if (opts.str("mode") != "resize") CropEditor(picked.firstOrNull()?.bytes, opts, com.nekonaru.pedeef.tools.ToolContext.cacheDir) { opts = it } }
+        "crop" -> Column {
+          Options(tool.opts, opts, indonesian, onChange = { opts = it }, positionHint = s.positionHint)
+          if (opts.str("mode") != "resize") CropEditor(picked.firstOrNull()?.bytes, opts, com.nekonaru.pedeef.tools.ToolContext.cacheDir) { opts = it }
+        }
         "workflow" -> WorkflowEditor(opts) { opts = it }
-        else -> if (tool.opts.isNotEmpty()) Options(tool.opts, opts, indonesian) { opts = it }
+        else -> if (tool.opts.isNotEmpty()) Options(tool.opts, opts, indonesian, onChange = { opts = it }, positionHint = s.positionHint)
       }
 
       if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
@@ -321,7 +339,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
           val stamp = java.text.SimpleDateFormat("MMdd-HHmm", java.util.Locale.US).format(java.util.Date())
           val name = tool.title(indonesian) + " " + stamp
           presets = com.nekonaru.pedeef.data.Presets.save(context, com.nekonaru.pedeef.data.Preset("${tool.id}-${System.currentTimeMillis()}", name, tool.id, opts))
-          savedMessage = s.savedTo
+          showMessage(s.savedTo)
         }, modifier = Modifier.weight(1f)) { Text(s.savePreset) }
         Box(modifier = Modifier.weight(1f)) {
           OutlinedButton(onClick = { presetMenu = true }, modifier = Modifier.fillMaxWidth()) { Text(s.loadPreset) }
@@ -349,6 +367,11 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
       )
 
       // Results
+      AnimatedVisibility(
+        visible = results != null,
+        enter = expandVertically() + fadeIn(androidx.compose.animation.core.tween(220)),
+        exit = shrinkVertically() + fadeOut(androidx.compose.animation.core.tween(120)),
+      ) {
       results?.let { outs ->
         Text(s.resultReady, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         for (o in outs) {
@@ -365,7 +388,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
           }
         }
         Btn(text = s.save + " (" + outs.size + ")", onClick = { saveAll() }, modifier = Modifier.fillMaxWidth())
-        savedMessage?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary) }
+      }
       }
 
       Box(Modifier.padding(bottom = 32.dp))

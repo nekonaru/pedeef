@@ -1,5 +1,6 @@
 package com.nekonaru.pedeef.ui.batch
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +14,8 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -48,6 +51,7 @@ fun BatchScreen(onBack: () -> Unit) {
   var selectedId by remember { mutableStateOf<String?>(null) }
   var expanded by remember { mutableStateOf(false) }
   var progress by remember { mutableStateOf("") }
+  var running by remember { mutableStateOf(false) }
   var done by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { presets = Presets.load(context) }
@@ -77,21 +81,33 @@ fun BatchScreen(onBack: () -> Unit) {
       Button(
         onClick = {
           val preset = selected ?: return@Button
+          if (running) return@Button
           scope.launch {
             done = false
+            running = true
             progress = s.batchProgress
-            val result = withContext(Dispatchers.IO) {
-              runBatch(context, preset.id, preset.opts.toString())
+            try {
+              val result = withContext(Dispatchers.IO) {
+                runBatch(context, preset.id, preset.opts.toString())
+              }
+              progress = result
+              done = true
+            } catch (_: Throwable) {
+              progress = s.genericError
+              done = false
+            } finally {
+              running = false
             }
-            progress = result
-            done = true
           }
         },
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-        enabled = selected != null,
+        enabled = selected != null && !running,
       ) { Text(s.batchRun) }
+      if (running) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 16.dp))
       if (progress.isNotEmpty()) Text(progress, Modifier.padding(top = 12.dp))
-      if (done) Text(s.batchDone, Modifier.padding(top = 8.dp))
+      AnimatedVisibility(visible = done) {
+        Text(s.batchDone, Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+      }
     }
   }
 }
