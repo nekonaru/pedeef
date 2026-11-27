@@ -32,7 +32,9 @@ class MainActivity : ComponentActivity() {
     // Clear temp files left by a kill: they hold plaintext document content. Off the main thread.
     scope.launch(kotlinx.coroutines.Dispatchers.IO) {
       cacheDir.listFiles()?.forEach { f ->
-        if (f.isFile && listOf("ocr-", "redact-", "export-", "viewer-", "page-", "pagetext-", "search-", "searchhl-", "sizes-", "thread", "share-", "incoming-", "print-", "blank-", "dup-", "filter-", "trim-", "lint-", "report-", "compare-").any { f.name.startsWith(it) }) f.delete()
+        // Every render session temp file ends in .pdf. Clean all of them so a new tag cannot
+        // leave a plaintext copy behind after a kill.
+        if (f.isFile && (f.name.endsWith(".pdf", true) || listOf("ocr-", "redact-", "export-", "viewer-", "page-", "pagetext-", "search-", "searchhl-", "sizes-", "thread", "share-", "incoming-", "print-", "blank-", "dup-", "filter-", "trim-", "lint-", "report-", "compare-").any { f.name.startsWith(it) })) f.delete()
         if (f.isDirectory && f.name == "share") f.deleteRecursively()
       }
     }
