@@ -25,32 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountTree
-import androidx.compose.material.icons.filled.Bookmarks
-import androidx.compose.material.icons.filled.CallSplit
-import androidx.compose.material.icons.filled.Compress
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Crop
-import androidx.compose.material.icons.filled.FlipToBack
-import androidx.compose.material.icons.filled.FormatColorFill
-import androidx.compose.material.icons.filled.FormatColorText
-import androidx.compose.material.icons.filled.FormatListNumbered
-import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.MergeType
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.Reorder
-import androidx.compose.material.icons.filled.Rotate90DegreesCw
-import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.DocumentScanner
-import androidx.compose.material.icons.filled.Draw
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.FolderZip
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Subject
-import androidx.compose.material.icons.filled.TextFields
-import androidx.compose.material.icons.filled.VerticalSplit
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ArrowForward
@@ -109,8 +85,11 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> 
   var history by remember { mutableStateOf(com.nekonaru.pedeef.data.SearchHistory.load(context)) }
   var recentLoading by remember { mutableStateOf(true) }
   val recent by androidx.compose.runtime.produceState<List<com.nekonaru.pedeef.data.FileEntry>>(initialValue = emptyList()) {
-    value = withContext(Dispatchers.IO) { com.nekonaru.pedeef.data.RecentFiles.list(context) }
-    recentLoading = false
+    try {
+      value = withContext(Dispatchers.IO) { com.nekonaru.pedeef.data.RecentFiles.list(context) }
+    } finally {
+      recentLoading = false
+    }
   }
 
   val q = query.trim().lowercase()
@@ -224,7 +203,7 @@ fun HomeScreen(onOpenTool: (String) -> Unit, onScan: () -> Unit, onBatch: () -> 
         Box(Modifier.height(12.dp))
         // Recent files strip
         if (recentLoading && recent.isEmpty()) {
-          Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Md), modifier = Modifier.padding(bottom = Dimens.Md)) {
+          Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Md), modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(bottom = Dimens.Md)) {
             repeat(2) { RecentSkeleton() }
           }
         }
