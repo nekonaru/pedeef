@@ -2,6 +2,30 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v3.0.0
+
+Rilis mayor: 24 alat PDF tambahan, workflow tersimpan, workspace lebih cerdas, dan kontrol pembaca ekstra. Semua tetap berjalan di perangkat.
+
+### Fitur baru
+
+- **24 alat baru.** Ekspor teks, HTML, Markdown, dan ZIP, tambah gambar, gabung rentang halaman, urutkan, putar rentang, tukar halaman, pisah orientasi, alat bookmark, tautan, catatan tempel, cap tanggal, sampul, alat tanda tangan, proteksi cepat, verifikasi checksum, dan laporan file duplikat.
+- **Workflow.** Simpan rangkaian alat, pakai ulang, dan simpan default per alat.
+- **Riwayat operasi.** 20 proses terakhir tersimpan lokal dan bisa diulang dengan opsi sama.
+- **Workspace cerdas.** Filter Terbaru, Berbintang, Besar, PDF, dan Gambar, tempat sampah dengan pemulihan, ganti nama massal, serta ekspor ZIP untuk pilihan.
+- **Ekstra pembaca.** Bookmark baca, tampilan teks, serta ekspor dan impor cadangan pengaturan, preset, dan workflow.
+
+### Peningkatan
+
+- **Katalog alat:** 99 alat, satu ikon per alat, tes katalog dan string diperbarui; suite kini 63 tes.
+- **Pengaturan:** kontrol animasi, ukuran teks, dan gerakan halaman.
+- **Migrasi data:** JSON pengaturan lama tetap terbaca dengan field baru.
+
+### Perbaikan bug
+
+- **Alat halaman:** sampul dan pemisah orientasi menjaga isi halaman, bukan membuat halaman kosong.
+- **Tanda tangan:** kolom tanda tangan terdeteksi lewat jenis field, bukan hanya subtipe anotasi.
+- **Tempat sampah:** berfungsi lintas penyimpanan publik dan privat serta mendukung folder.
+
 ## v2.2.0
 
 Rilis performa: fitur yang sudah ada kini memakai satu renderer PDF bersama, menyimpan halaman yang sudah dirender, dan menghindari kerja disk berulang.

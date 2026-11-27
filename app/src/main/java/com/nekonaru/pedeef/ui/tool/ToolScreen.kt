@@ -236,7 +236,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
             toolName = tool.title(indonesian),
             time = System.currentTimeMillis(),
             outputs = outs.map { it.name + "." + it.ext },
-            opts = opts.toString(),
+            opts = JsonObject(opts.filterKeys { it.lowercase() !in setOf("password", "owner", "open") }).toString(),
           ),
         )
       } catch (e: UserError) {
@@ -390,7 +390,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
       // v3 defaults, workflow and history
       Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
         OutlinedButton(onClick = {
-          ToolDefaults.save(context, tool.id, opts.toString())
+          ToolDefaults.save(context, tool.id, JsonObject(opts.filterKeys { it.lowercase() !in setOf("password", "owner", "open") }).toString())
           showMessage(s.savedTo)
         }, modifier = Modifier.weight(1f)) { Text(s.saveAsDefault, maxLines = 1, overflow = TextOverflow.Ellipsis) }
         OutlinedButton(onClick = {
@@ -399,7 +399,7 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
             Workflow(
               id = "wf-${System.currentTimeMillis()}",
               name = tool.title(indonesian),
-              steps = listOf(WorkflowStep("step-1", tool.id, opts)),
+              steps = listOf(WorkflowStep("step-1", tool.id, JsonObject(opts.filterKeys { it.lowercase() !in setOf("password", "owner", "open") }))),
             ),
           )
           showMessage(s.savedTo)

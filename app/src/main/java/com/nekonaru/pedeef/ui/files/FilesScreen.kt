@@ -281,9 +281,15 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
               IconButton(onClick = {
                 scope.launch(Dispatchers.IO) {
                   val files = selected.mapNotNull { path -> runCatching { java.io.File(path) }.getOrNull() }.filter { it.isFile }
-                  val zipped = com.nekonaru.pedeef.engine.zipFiles(files.map { com.nekonaru.pedeef.engine.Named(it.name, it.readBytes()) })
-                  com.nekonaru.pedeef.data.FilesStore.saveBytes(root, null, "selection", "zip", zipped)
-                  withContext(Dispatchers.Main) { showMessage(s.exportZip) }
+                  if (files.sumOf { it.length() } > 256L * 1024 * 1024) {
+                    withContext(Dispatchers.Main) { showMessage(s.fileTooLarge) }
+                    return@launch
+                  }
+                  val zipped = runCatching {
+                    com.nekonaru.pedeef.engine.zipFiles(files.map { com.nekonaru.pedeef.engine.Named(it.name, it.readBytes()) })
+                  }.getOrNull()
+                  if (zipped != null) com.nekonaru.pedeef.data.FilesStore.saveBytes(root, null, "selection", "zip", zipped)
+                  withContext(Dispatchers.Main) { showMessage(if (zipped == null) s.genericError else s.exportZip) }
                 }
               }) { Icon(Icons.Default.SaveAlt, contentDescription = s.exportZip) }
               IconButton(onClick = { showRename = true }) { Icon(Icons.Default.Edit, contentDescription = s.batchRename) }
