@@ -25,7 +25,7 @@
     android:roundIcon="@mipmap/ic_launcher_round"
     android:label="Pedeef"
     android:supportsRtl="true"
-    android:enableOnBackInvokedCallback="false"
+    android:enableOnBackInvokedCallback="true"
     android:dataExtractionRules="@xml/backup_rules"
     android:theme="@style/AppTheme">
 

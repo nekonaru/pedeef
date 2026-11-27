@@ -9,11 +9,16 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
@@ -28,6 +33,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
 import androidx.navigation.navArgument
@@ -39,11 +46,14 @@ import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.i18n.Strings
 import com.nekonaru.pedeef.ui.files.FilesScreen
 import com.nekonaru.pedeef.ui.home.HomeScreen
+import com.nekonaru.pedeef.ui.kit.LocalSnackbar
 import com.nekonaru.pedeef.ui.scan.ScannerScreen
 import com.nekonaru.pedeef.ui.settings.SettingsScreen
 import com.nekonaru.pedeef.ui.tool.ToolScreen
+import com.nekonaru.pedeef.ui.theme.LocalMotionSpec
 import com.nekonaru.pedeef.ui.theme.PedeefTheme
 import com.nekonaru.pedeef.ui.viewer.ViewerScreen
+import kotlinx.coroutines.launch
 
 /** Bytes handed to the viewer between navigation calls (too big for route arguments). */
 object ViewerPayload {
@@ -117,14 +127,24 @@ private enum class Tab { Tools, Files, Settings }
 
 @Composable
 private fun AppShell(nav: NavHostController, strings: Strings, settings: SettingsState, update: ((SettingsState) -> SettingsState) -> Unit) {
-  var tab by remember { mutableStateOf(Tab.Tools) }
+  var tab by rememberSaveable { mutableStateOf(Tab.Tools) }
   val onTab: (Tab) -> Unit = { tab = it }
   val backStack by nav.currentBackStackEntryAsState()
   val showBar = backStack?.destination?.route == "shell"
+  val motion = LocalMotionSpec.current
+  val snackbarHostState = remember { SnackbarHostState() }
+  val scope = rememberCoroutineScope()
+  val showMessage: (String) -> Unit = { message ->
+    scope.launch { snackbarHostState.currentSnackbarData?.dismiss(); snackbarHostState.showSnackbar(message) }
+  }
+  fun openViewer(bytes: ByteArray, name: String, persisted: Boolean = true) {
+    ViewerPayload.set(bytes, name, persisted)
+    nav.navigate("viewer")
+  }
   LaunchedEffect(ViewerPayload.version, backStack?.destination?.route, settings.onboardingDone) {
     // If an incoming PDF was saved by the launcher (or reopened from a tool), jump straight into the viewer.
     if (com.nekonaru.pedeef.ui.ViewerPayload.bytes != null && nav.currentDestination?.route == "shell" && settings.onboardingDone) {
-      nav.navigate("viewer")
+      openViewer(ViewerPayload.bytes!!, ViewerPayload.name, ViewerPayload.persisted)
     }
   }
   LaunchedEffect(ShortcutRoute.version, backStack?.destination?.route, settings.onboardingDone) {
@@ -136,8 +156,10 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
       nav.navigate(target)
     }
   }
+  CompositionLocalProvider(LocalSnackbar provides showMessage) {
   androidx.compose.material3.Scaffold(
     modifier = Modifier.safeDrawingPadding(),
+    snackbarHost = { SnackbarHost(snackbarHostState) },
     bottomBar = {
       if (showBar) NavigationBar {
         NavigationBarItem(
@@ -174,7 +196,20 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
         composable("shell") {
           AnimatedContent(
             targetState = tab,
-            transitionSpec = { fadeIn(tween(160)) togetherWith fadeOut(tween(110)) },
+            transitionSpec = {
+              val forward = targetState.ordinal >= initialState.ordinal
+              (
+                fadeIn(tween(motion.medium)) + slideInHorizontally(
+                  initialOffsetX = { width -> if (forward) width else -width },
+                  animationSpec = tween(motion.medium),
+                )
+                ) togetherWith (
+                fadeOut(tween(motion.short)) + slideOutHorizontally(
+                  targetOffsetX = { width -> if (forward) -width else width },
+                  animationSpec = tween(motion.short),
+                )
+                )
+            },
             label = "tab",
           ) { current ->
             when (current) {
@@ -182,15 +217,9 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
                 onOpenTool = { nav.navigate("tool/$it") },
                 onScan = { nav.navigate("scan") },
               onBatch = { nav.navigate("batch") },
-                onOpenViewer = { bytes, name ->
-                  ViewerPayload.set(bytes, name, persisted = true)
-                  nav.navigate("viewer")
-                },
+                onOpenViewer = { bytes, name -> openViewer(bytes, name) },
               )
-              Tab.Files -> FilesScreen(onOpenViewer = { bytes, name ->
-                ViewerPayload.set(bytes, name, persisted = true)
-                nav.navigate("viewer")
-              })
+              Tab.Files -> FilesScreen(onOpenViewer = { bytes, name -> openViewer(bytes, name) })
               Tab.Settings -> SettingsScreen(settings = settings, update = update)
             }
           }
@@ -201,16 +230,10 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
           ToolScreen(
             toolId = id,
             onBack = { nav.popBackStack() },
-            onOpenViewer = { bytes, name ->
-              ViewerPayload.set(bytes, name, persisted = true)
-              nav.navigate("viewer")
-            },
+            onOpenViewer = { bytes, name -> openViewer(bytes, name) },
           )
         }
-        composable("scan") { ScannerScreen(onBack = { nav.popBackStack() }, onOpenViewer = { bytes, name ->
-          ViewerPayload.set(bytes, name, persisted = true)
-          nav.navigate("viewer")
-        }) }
+        composable("scan") { ScannerScreen(onBack = { nav.popBackStack() }, onOpenViewer = { bytes, name -> openViewer(bytes, name) }) }
         composable("viewer") {
           ViewerScreen(
             onBack = { ViewerPayload.clear(); nav.popBackStack() },
@@ -220,5 +243,6 @@ private fun AppShell(nav: NavHostController, strings: Strings, settings: Setting
         }
       }
     }
+  }
   }
 }
