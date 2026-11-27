@@ -37,8 +37,10 @@ import com.nekonaru.pedeef.engine.Box as PdfBox
 import com.nekonaru.pedeef.tools.Opts
 import com.nekonaru.pedeef.tools.put
 import com.nekonaru.pedeef.tools.str
-import com.nekonaru.pedeef.ui.kit.rememberPageImage
-import com.nekonaru.pedeef.ui.kit.rememberPageSizes
+
+import com.nekonaru.pedeef.ui.kit.rememberPdfSession
+import com.nekonaru.pedeef.ui.kit.rememberSessionPageSizes
+import com.nekonaru.pedeef.ui.kit.rememberSessionPageImage
 import kotlinx.serialization.json.decodeFromJsonElement
 import java.io.File
 
@@ -55,7 +57,8 @@ private fun normBox(a: Offset, b: Offset): PdfBox? {
 fun CropEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opts) -> Unit) {
   val s = LocalPedeefStrings.current
   if (bytes == null || opts.str("mode") == "resize") return // the resize option speaks for itself
-  val sizes = rememberPageSizes(bytes, cacheDir) ?: return
+  val session = rememberPdfSession(bytes, cacheDir, "crop")
+  val sizes = rememberSessionPageSizes(session) ?: return
   val count = sizes.size
   var page by remember(bytes) { mutableStateOf(0) }
   var dragStart by remember(page) { mutableStateOf<Offset?>(null) }
@@ -66,7 +69,7 @@ fun CropEditor(bytes: ByteArray?, opts: Opts, cacheDir: File, onChange: (Opts) -
 
   fun apply(next: Map<String, PdfBox>) = onChange(opts.put("boxes", next))
 
-  val image = rememberPageImage(bytes, page, 900, cacheDir)
+  val image = rememberSessionPageImage(session, page, 900)
   val ratio = sizes[page].let { it.first.toFloat() / it.second.toFloat() }
   val indonesian = s === com.nekonaru.pedeef.i18n.Id
 
