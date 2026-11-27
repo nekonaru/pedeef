@@ -65,15 +65,24 @@ import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.tools.Input
 import com.nekonaru.pedeef.tools.Tool
 import com.nekonaru.pedeef.tools.toolById
+import com.nekonaru.pedeef.data.Operation
+import com.nekonaru.pedeef.data.OperationHistory
+import com.nekonaru.pedeef.data.ToolDefaults
+import com.nekonaru.pedeef.data.Workflow
+import com.nekonaru.pedeef.data.Workflows
+import com.nekonaru.pedeef.engine.WorkflowStep
 import com.nekonaru.pedeef.ui.kit.Btn
 import com.nekonaru.pedeef.ui.kit.LocalSnackbar
 import com.nekonaru.pedeef.ui.kit.PasswordDialog
 import com.nekonaru.pedeef.ui.kit.Options
 import com.nekonaru.pedeef.ui.kit.Spinner
 import com.nekonaru.pedeef.ui.kit.fmtSize
+import com.nekonaru.pedeef.ui.theme.Dimens
 import com.nekonaru.pedeef.tools.SECTIONS
 import com.nekonaru.pedeef.tools.defaults
 import com.nekonaru.pedeef.tools.str
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -96,7 +105,15 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
   val scope = rememberCoroutineScope()
 
   var picked by remember { mutableStateOf<List<PickedFile>>(emptyList()) }
-  var opts by remember { mutableStateOf(defaults(tool.opts)) }
+  var opts by remember {
+    mutableStateOf(
+      runCatching {
+        val saved = ToolDefaults.load(context)[tool.id]
+        if (saved.isNullOrBlank()) defaults(tool.opts)
+        else JsonObject(defaults(tool.opts) + (Json.parseToJsonElement(saved) as? JsonObject ?: JsonObject(emptyMap())))
+      }.getOrDefault(defaults(tool.opts))
+    )
+  }
   var busy by remember { mutableStateOf(false) }
   var error by remember { mutableStateOf<String?>(null) }
   var results by remember { mutableStateOf<List<Output>?>(null) }
@@ -105,6 +122,8 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
   var presetMenu by remember { mutableStateOf(false) }
   var locked by remember { mutableStateOf<List<Pair<String, ByteArray>>?>(null) } // queued locked PDFs: name to bytes
   var unlockError by remember { mutableStateOf<String?>(null) }
+  var history by remember { mutableStateOf(OperationHistory.load(context)) }
+  var showHistory by remember { mutableStateOf(false) }
 
   LaunchedEffect(picked) {
     if (tool.id == "metadata") {
@@ -209,6 +228,17 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
           }
         }
         results = outs
+        history = OperationHistory.add(
+          context,
+          Operation(
+            id = "${System.currentTimeMillis()}",
+            toolId = tool.id,
+            toolName = tool.title(indonesian),
+            time = System.currentTimeMillis(),
+            outputs = outs.map { it.name + "." + it.ext },
+            opts = opts.toString(),
+          ),
+        )
       } catch (e: UserError) {
         error = e.message
       } catch (e: Exception) {
@@ -357,6 +387,26 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
         }
       }
 
+      // v3 defaults, workflow and history
+      Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Sm)) {
+        OutlinedButton(onClick = {
+          ToolDefaults.save(context, tool.id, opts.toString())
+          showMessage(s.savedTo)
+        }, modifier = Modifier.weight(1f)) { Text(s.saveAsDefault, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        OutlinedButton(onClick = {
+          Workflows.add(
+            context,
+            Workflow(
+              id = "wf-${System.currentTimeMillis()}",
+              name = tool.title(indonesian),
+              steps = listOf(WorkflowStep("step-1", tool.id, opts)),
+            ),
+          )
+          showMessage(s.savedTo)
+        }, modifier = Modifier.weight(1f)) { Text(s.saveWorkflow, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        OutlinedButton(onClick = { showHistory = true }, modifier = Modifier.weight(1f)) { Text(s.history, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+      }
+
       // CTA
       Btn(
         text = tool.cta(indonesian),
@@ -392,6 +442,27 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
       }
 
       Box(Modifier.padding(bottom = 32.dp))
+    }
+
+    if (showHistory) {
+      androidx.compose.material3.AlertDialog(
+        onDismissRequest = { showHistory = false },
+        title = { Text(s.history) },
+        text = {
+          Column(Modifier.verticalScroll(rememberScrollState())) {
+            if (history.isEmpty()) Text(s.filesEmpty)
+            history.forEach { op ->
+              androidx.compose.material3.TextButton(onClick = {
+                opts = runCatching { Json.parseToJsonElement(op.opts) as? JsonObject ?: opts }.getOrDefault(opts)
+                showHistory = false
+              }) {
+                Text("${op.toolName}  -  ${java.text.SimpleDateFormat("d MMM HH:mm", java.util.Locale.ROOT).format(java.util.Date(op.time))}")
+              }
+            }
+          }
+        },
+        confirmButton = { androidx.compose.material3.TextButton(onClick = { showHistory = false }) { Text(s.ok) } },
+      )
     }
 
     // Password prompt for locked PDFs

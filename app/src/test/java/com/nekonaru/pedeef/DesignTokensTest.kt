@@ -40,5 +40,11 @@ class DesignTokensTest {
     assertEquals("Sembunyikan thumbnail", Id.hideThumbs)
     assertEquals("Enter a value from 0 to 100", En.positionHint)
     assertEquals("Masukkan nilai 0 sampai 100", Id.positionHint)
+    assertEquals("Workflows", En.workflows)
+    assertEquals("Workflow", Id.workflows)
+    assertEquals("Recycle bin", En.recycleBin)
+    assertEquals("Tempat sampah", Id.recycleBin)
+    assertEquals("Text view", En.textReflow)
+    assertEquals("Tampilan teks", Id.textReflow)
   }
 }
