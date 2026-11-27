@@ -36,5 +36,7 @@ class DesignTokensTest {
     assertEquals("Offline, di perangkat", Id.offlineBadge)
     assertEquals("Page %1\$d of %2\$d", En.progressPage)
     assertEquals("Halaman %1\$d dari %2\$d", Id.progressPage)
+    assertEquals("Hide thumbnails", En.hideThumbs)
+    assertEquals("Sembunyikan thumbnail", Id.hideThumbs)
   }
 }

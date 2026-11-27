@@ -172,6 +172,7 @@ fun ScannerScreen(onBack: () -> Unit, onOpenViewer: (ByteArray, String) -> Unit)
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
           CircularProgressIndicator()
           Text(busyLabel, modifier = Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+          Text(s.scanProcessing, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         return@Box
       }
@@ -201,6 +202,7 @@ fun ScannerScreen(onBack: () -> Unit, onOpenViewer: (ByteArray, String) -> Unit)
           if (indonesian) "Pindai dokumen dengan kamera atau impor gambar dari galeri. Semuanya diproses di ponselmu." else "Scan a document with the camera, or import images from the gallery. Everything runs on your phone.",
           style = MaterialTheme.typography.bodyLarge,
         )
+        Text(s.scanReady, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         Button(onClick = { startScanner() }, modifier = Modifier.fillMaxWidth()) {
           Icon(Icons.Default.DocumentScanner, contentDescription = null, modifier = Modifier.size(20.dp))
           Text(if (indonesian) "  Mulai memindai" else "  Start scan")

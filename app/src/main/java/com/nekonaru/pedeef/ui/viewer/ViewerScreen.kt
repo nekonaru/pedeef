@@ -56,6 +56,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -164,10 +165,12 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   val showMessage = LocalSnackbar.current ?: { _: String -> Unit }
   val motion = LocalMotionSpec.current
   var controlsVisible by remember { mutableStateOf(true) }
+  var keepControls by remember { mutableStateOf(false) }
   var menuExpanded by remember { mutableStateOf(false) }
   var interaction by remember { mutableStateOf(0) }
   fun poke() { interaction++; controlsVisible = true }
-  LaunchedEffect(interaction) {
+  LaunchedEffect(interaction, menuExpanded, showBookmarks, showThumbs, keepControls) {
+    if (menuExpanded || showBookmarks || showThumbs || keepControls) return@LaunchedEffect
     delay(3500L)
     controlsVisible = false
   }
@@ -382,16 +385,22 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
               IconButton(onClick = { poke(); menuExpanded = true }) {
                 Icon(Icons.Default.MoreVert, contentDescription = s.more)
               }
-              DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+              DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false; poke() }) {
                 if (outline.isNotEmpty()) {
                   DropdownMenuItem(text = { Text(s.bookmarks) }, onClick = { menuExpanded = false; showBookmarks = true })
                 }
                 if (!persisted) {
                   DropdownMenuItem(text = { Text(s.saveToFiles) }, onClick = { menuExpanded = false; saveToFiles() })
                 }
-                DropdownMenuItem(text = { Text(s.pageThumbs) }, onClick = { menuExpanded = false; showThumbs = true; gridThumbs = false })
-                DropdownMenuItem(text = { Text(s.thumbnails) }, onClick = { menuExpanded = false; showThumbs = true; gridThumbs = true })
-                DropdownMenuItem(text = { Text(s.spread) }, onClick = { menuExpanded = false; spread = !spread })
+                DropdownMenuItem(text = { Text(s.pageThumbs) }, onClick = { menuExpanded = false; showThumbs = true; gridThumbs = false; poke() })
+                DropdownMenuItem(text = { Text(s.thumbnails) }, onClick = { menuExpanded = false; showThumbs = true; gridThumbs = true; poke() })
+                DropdownMenuItem(text = { Text(s.hideThumbs) }, enabled = showThumbs, onClick = { menuExpanded = false; showThumbs = false; poke() })
+                DropdownMenuItem(text = { Text(s.spread) }, onClick = { menuExpanded = false; spread = !spread; poke() })
+                DropdownMenuItem(
+                  text = { Text(s.keepControls) },
+                  trailingIcon = { Checkbox(checked = keepControls, onCheckedChange = { keepControls = it; poke() }) },
+                  onClick = { keepControls = !keepControls; poke() },
+                )
                 DropdownMenuItem(text = { Text(s.print) }, onClick = { menuExpanded = false; printPdf() })
                 DropdownMenuItem(text = { Text(s.copyPageText) }, enabled = n > 0, onClick = {
                   menuExpanded = false; copyToken++; pageTextIndex = (currentPage - 1).coerceAtLeast(0)
@@ -409,7 +418,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp)) {
           OutlinedTextField(
             value = query,
-            onValueChange = { query = it },
+            onValueChange = { query = it; poke() },
             placeholder = { Text(s.viewerSearchHint) },
             singleLine = true,
             trailingIcon = { IconButton(onClick = { runSearch() }) { Icon(Icons.Default.Search, contentDescription = null) } },
@@ -545,11 +554,11 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
           Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)) {
             IconButton(onClick = { scrollToPage(if (spread) (currentPage - 3).coerceAtLeast(0) else (currentPage - 2).coerceAtLeast(0)) }, enabled = currentPage > 1) { Icon(Icons.Default.KeyboardArrowUp, contentDescription = null) }
             AnimatedContent(
-              targetState = if (spread && n > 1) String.format(java.util.Locale.ROOT, s.pagePair, currentPage, (currentPage + 1).coerceAtMost(n)) else "$currentPage ${s.pageOf} $n",
+              targetState = if (spread && n > 1) String.format(java.util.Locale.ROOT, s.pagePair, currentPage, (currentPage + 1).coerceAtMost(n)) else String.format(java.util.Locale.ROOT, s.progressPage, currentPage, n),
               transitionSpec = { androidx.compose.animation.fadeIn(tween(motion.short)) togetherWith androidx.compose.animation.fadeOut(tween(motion.short)) },
               label = "pageIndicator",
             ) { label -> Text(label, style = MaterialTheme.typography.labelLarge) }
-            IconButton(onClick = { scrollToPage(if (spread) (currentPage + 1).coerceAtMost(n - 1) else currentPage.coerceAtMost(n - 1)) }, enabled = currentPage < n) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null) }
+            IconButton(onClick = { scrollToPage(if (spread) (currentPage + 1).coerceAtMost(n - 1) else currentPage.coerceAtMost(n - 1)) }, enabled = if (spread) currentPage + 1 < n else currentPage < n) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null) }
           }
         }
       }
