@@ -38,5 +38,7 @@ class DesignTokensTest {
     assertEquals("Halaman %1\$d dari %2\$d", Id.progressPage)
     assertEquals("Hide thumbnails", En.hideThumbs)
     assertEquals("Sembunyikan thumbnail", Id.hideThumbs)
+    assertEquals("Enter a value from 0 to 100", En.positionHint)
+    assertEquals("Masukkan nilai 0 sampai 100", Id.positionHint)
   }
 }

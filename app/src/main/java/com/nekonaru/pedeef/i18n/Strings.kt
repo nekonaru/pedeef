@@ -52,7 +52,7 @@ class Strings(
   val developer: String, val viewOnGithub: String, val pageThumbs: String, val fileOne: String, val fileMany: String, val searchInFolder: String, val reset: String, val color: String, val pageName: String, val speakPage: String, val stopSpeech: String, val savePreset: String, val loadPreset: String, val presets: String, val batchRun: String, val batchSelect: String, val batchProgress: String, val batchDone: String, val star: String, val unstar: String, val selected: String, val selectAll: String, val quickActions: String, val searchHistory: String, val clearHistory: String, val spread: String, val thumbnails: String,
   // redesign
   val more: String, val clearSearch: String, val offlineBadge: String, val scanReady: String, val scanProcessing: String,
-  val keepControls: String, val progressPage: String, val pagePair: String, val hideThumbs: String,
+  val keepControls: String, val progressPage: String, val pagePair: String, val hideThumbs: String, val positionHint: String,
 )
 
 val En = Strings(
@@ -100,7 +100,7 @@ val En = Strings(
   "Developer", "View on GitHub", "Page thumbnails", "File", "Files", "Search in this folder", "Reset", "Color", "Page", "Read page aloud", "Stop reading", "Save preset", "Load preset", "Presets", "Run on folder", "Choose preset", "Progress", "Batch complete", "Star", "Unstar", "Selected", "Select all", "Quick actions", "Recent searches", "Clear history", "Two pages", "All pages",
   // redesign
   "More", "Clear search", "Offline, on device", "Ready to scan", "Processing scan",
-  "Keep controls visible", "Page %1\$d of %2\$d", "Pages %1\$d to %2\$d", "Hide thumbnails",
+  "Keep controls visible", "Page %1\$d of %2\$d", "Pages %1\$d to %2\$d", "Hide thumbnails", "Enter a value from 0 to 100",
 )
 
 val Id = Strings(
@@ -148,7 +148,7 @@ val Id = Strings(
   "Pengembang", "Lihat di GitHub", "Thumbnail halaman", "File", "File", "Cari di folder ini", "Atur ulang", "Warna", "Halaman", "Bacakan halaman", "Hentikan bacaan", "Simpan preset", "Muat preset", "Preset", "Jalankan di folder", "Pilih preset", "Progres", "Batch selesai", "Bintangi", "Hapus bintang", "Dipilih", "Pilih semua", "Aksi cepat", "Pencarian terakhir", "Hapus riwayat", "Dua halaman", "Semua halaman",
   // redesign
   "Lainnya", "Hapus pencarian", "Offline, di perangkat", "Siap memindai", "Memproses pindaian",
-  "Tampilkan kontrol terus", "Halaman %1\$d dari %2\$d", "Halaman %1\$d sampai %2\$d", "Sembunyikan thumbnail",
+  "Tampilkan kontrol terus", "Halaman %1\$d dari %2\$d", "Halaman %1\$d sampai %2\$d", "Sembunyikan thumbnail", "Masukkan nilai 0 sampai 100",
 )
 
 val LocalPedeefStrings = staticCompositionLocalOf { En }
