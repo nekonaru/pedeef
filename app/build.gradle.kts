@@ -29,7 +29,10 @@ android {
     } else {
       // Debug signing is never a silent fallback. It needs an explicit local opt-in so a release
       // cannot be published with a publicly known key by accident.
-      val releaseTaskRequested = gradle.startParameter.taskNames.any { it.lowercase().contains("release") }
+      val releaseTaskRequested = gradle.startParameter.taskNames.any { name ->
+        val n = name.lowercase()
+        n.contains("release") || n.endsWith(":assemble") || n.endsWith(":build") || n == "assemble" || n == "build"
+      }
       if (releaseTaskRequested && (findProperty("PEDEEF_ALLOW_DEBUG_SIGNING") as String?) != "true") {
         throw GradleException("Release signing is not configured. Set PEDEEF_UPLOAD_* properties or PEDEEF_ALLOW_DEBUG_SIGNING=true explicitly.")
       }

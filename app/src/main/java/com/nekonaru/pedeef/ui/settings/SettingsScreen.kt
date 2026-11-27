@@ -161,7 +161,18 @@ fun SettingsScreen(settings: SettingsState, update: ((SettingsState) -> Settings
   }
   val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
     if (uri != null) scope.launch(Dispatchers.IO) {
-      val raw = runCatching { context.contentResolver.openInputStream(uri)?.use { it.readBytes() }?.toString(Charsets.UTF_8) }.getOrNull()
+      val raw = runCatching {
+        context.contentResolver.openInputStream(uri)?.use { input ->
+          val buffer = ByteArray(4 * 1024 * 1024)
+          var total = 0
+          while (total < buffer.size) {
+            val read = input.read(buffer, total, buffer.size - total)
+            if (read < 0) break
+            total += read
+          }
+          String(buffer, 0, total, Charsets.UTF_8)
+        }
+      }.getOrNull()
       if (!raw.isNullOrBlank()) {
         val parsed = runCatching { Json.parseToJsonElement(raw) as? JsonObject }.getOrNull()
         var restored: SettingsState? = null
