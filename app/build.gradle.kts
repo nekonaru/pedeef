@@ -27,7 +27,12 @@ android {
       keyAlias = findProperty("PEDEEF_UPLOAD_KEY_ALIAS") as String?
       keyPassword = findProperty("PEDEEF_UPLOAD_KEY_PASSWORD") as String?
     } else {
-      println("WARNING: no PEDEEF_UPLOAD_* properties found. Release builds will be signed with the SDK debug key. Set them in ~/.gradle/gradle.properties to use your upload key.")
+      // Debug signing is never a silent fallback. It needs an explicit local opt-in so a release
+      // cannot be published with a publicly known key by accident.
+      if ((findProperty("PEDEEF_ALLOW_DEBUG_SIGNING") as String?) != "true") {
+        throw GradleException("Release signing is not configured. Set PEDEEF_UPLOAD_* properties or PEDEEF_ALLOW_DEBUG_SIGNING=true explicitly.")
+      }
+      println("WARNING: release builds are explicitly allowed to use the SDK debug key. Do not publish this APK as an official release.")
     }
   }
 
