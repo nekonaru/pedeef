@@ -127,7 +127,7 @@ private fun one(suffix: String, fn: (ByteArray, Opts) -> ByteArray) = { files: L
 private fun many(fn: (ByteArray, Opts) -> List<Named>) = { files: List<Named>, o: Opts -> fn(files[0].bytes, o).map { Output(it.name, it.bytes) } }
 
 /** Workflow steps are the tools themselves. Excluded: scanner, custom editors, non-PDF output, and password tools. */
-private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments", "multiSearch", "pageSizeReport", "blankPageReport", "extractComments", "checksumManifest", "integrityCheck", "extractTextPages", "protectDetailed", "unlockPassword")
+private val NOT_STEPS = setOf("scan", "workflow", "organize", "redact", "fillSign", "zip", "password", "unlock", "metadata", "pdfToImages", "extractText", "extractImages", "comparePdf", "reportPdf", "blankPdf", "lintPdf", "cariDuplikat", "hapusKosong", "bookmarks", "textToPdf", "grayscalePdf", "invertPdf", "extractAttachments", "multiSearch", "pageSizeReport", "blankPageReport", "extractComments", "checksumManifest", "integrityCheck", "extractTextPages", "protectDetailed", "unlockPassword", "pdfToTextZip", "pdfToTextFile", "pdfToHtml", "pdfToMarkdown", "appendImages", "imagesToPdfFit", "mergePageRanges", "splitByOrientation", "pagesToZip", "tableOfContents", "exportOutline", "verifySignature", "verifyChecksum", "duplicateFilesReport")
 fun stepTools() = TOOLS.filter { it.id !in NOT_STEPS }
 
 private fun runWorkflow(files: List<Named>, steps: List<WorkflowStep>): List<Output> {
@@ -852,6 +852,192 @@ val TOOLS: List<Tool> = listOf(
     "Satu ketukan: hapus metadata, anotasi, lampiran, JavaScript, dan XMP.",
     "Sanitize", "Bersihkan", "Sanitizing", "Membersihkan", Input.Pdf, noPreview = true,
     run = { files, _ -> listOf(Output("sanitized", sanitizeAll(files[0].bytes))) },
+  ),
+
+  // v3.0.0 expansion. Every tool below is on-device and uses the shared engine helpers.
+  Tool(
+    "pdfToTextZip", SECTION_NEW,
+    "PDF to Text ZIP", "PDF ke ZIP Teks",
+    "Extract page by page text into a ZIP file.", "Ekstrak teks per halaman ke dalam file ZIP.",
+    "Export ZIP", "Ekspor ZIP", "Exporting", "Mengekspor", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("pages-text", pdfToTextZip(files[0].baseName, files[0].bytes), ext = "zip")) },
+  ),
+  Tool(
+    "pdfToTextFile", SECTION_NEW,
+    "PDF to Text", "PDF ke Teks",
+    "Extract all readable text into one plain text file.", "Ekstrak semua teks yang bisa dibaca ke satu file teks.",
+    "Export text", "Ekspor teks", "Extracting", "Mengekstrak", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("document", extractText(files[0].bytes).toByteArray(Charsets.UTF_8), ext = "txt")) },
+  ),
+  Tool(
+    "pdfToHtml", SECTION_NEW,
+    "PDF to HTML", "PDF ke HTML",
+    "Export readable text as a simple HTML page.", "Ekspor teks yang bisa dibaca sebagai halaman HTML sederhana.",
+    "Export HTML", "Ekspor HTML", "Exporting", "Mengekspor", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("document", pdfToHtml(files[0].baseName, files[0].bytes), ext = "html")) },
+  ),
+  Tool(
+    "pdfToMarkdown", SECTION_NEW,
+    "PDF to Markdown", "PDF ke Markdown",
+    "Export readable text as a Markdown document.", "Ekspor teks yang bisa dibaca sebagai dokumen Markdown.",
+    "Export Markdown", "Ekspor Markdown", "Exporting", "Mengekspor", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("document", pdfToMarkdown(files[0].baseName, files[0].bytes), ext = "md")) },
+  ),
+  Tool(
+    "appendImages", SECTION_NEW,
+    "Append Images", "Tambah Gambar",
+    "Add images as new pages at the end of a PDF.", "Tambahkan gambar sebagai halaman baru di akhir PDF.",
+    "Append", "Tambah", "Appending", "Menambah", Input.Any, min = 2,
+    run = { files, _ ->
+      val pdf = files.firstOrNull { it.name.endsWith(".pdf", true) } ?: fail("Pick a base PDF.")
+      val images = files.filterNot { it.name == pdf.name }
+      if (images.isEmpty()) fail("Add at least one image.")
+      listOf(Output("appended", appendImages(pdf.bytes, images)))
+    },
+  ),
+  Tool(
+    "imagesToPdfFit", SECTION_NEW,
+    "Images to PDF Fit", "Gambar ke PDF Pas",
+    "Place images on pages while keeping their aspect ratio.", "Letakkan gambar di halaman dengan rasio tetap.",
+    "Build PDF", "Buat PDF", "Building", "Membuat", Input.Images,
+    run = { files, _ -> listOf(Output("images", imagesToPdf(imagesIn(files)))) },
+  ),
+  Tool(
+    "mergePageRanges", SECTION_NEW,
+    "Merge Page Ranges", "Gabung Rentang Halaman",
+    "Keep chosen page ranges from PDFs and merge them.", "Ambil rentang halaman tertentu dari PDF lalu gabungkan.",
+    "Merge ranges", "Gabung rentang", "Merging", "Menggabungkan", Input.Pdfs, min = 2,
+    opts = listOf(pageList("ranges", "Pages to keep", "Halaman yang diambil", "1-3,7")),
+    run = { files, o -> listOf(Output("ranges", mergePageRanges(files, o.str("ranges")))) },
+  ),
+  Tool(
+    "sortPages", SECTION_NEW,
+    "Sort Pages", "Urutkan Halaman",
+    "Order pages by width and height.", "Urutkan halaman berdasarkan lebar dan tinggi.",
+    "Sort pages", "Urutkan", "Sorting", "Mengurutkan", Input.Pdf,
+    run = { files, _ -> listOf(Output("sorted", sortPages(files[0].bytes))) },
+  ),
+  Tool(
+    "rotateRange", SECTION_NEW,
+    "Rotate Page Range", "Putar Rentang Halaman",
+    "Rotate only the pages you choose.", "Putar hanya halaman yang kamu pilih.",
+    "Rotate", "Putar", "Rotating", "Memutar", Input.Pdf,
+    opts = listOf(O.angle, pageList("pages", "Pages", "Halaman", "1,3-5")),
+    run = { files, o -> listOf(Output("rotated", rotate(files[0].bytes, o.str("angle").toIntOrNull() ?: 90, o.str("pages")))) },
+  ),
+  Tool(
+    "swapPages", SECTION_NEW,
+    "Swap Pages", "Tukar Halaman",
+    "Exchange the position of two pages.", "Tukar posisi dua halaman.",
+    "Swap", "Tukar", "Swapping", "Menukar", Input.Pdf,
+    opts = listOf(num("a", "First page", "Halaman pertama", "1", "1"), num("b", "Second page", "Halaman kedua", "2", "2")),
+    run = { files, o -> listOf(Output("swapped", swapPages(files[0].bytes, o.str("a").toIntOrNull() ?: 1, o.str("b").toIntOrNull() ?: 2))) },
+  ),
+  Tool(
+    "splitByOrientation", SECTION_NEW,
+    "Split by Orientation", "Pisah Berdasarkan Orientasi",
+    "Separate portrait and landscape pages into two PDFs.", "Pisahkan halaman portrait dan landscape menjadi dua PDF.",
+    "Split", "Pisah", "Splitting", "Memisah", Input.Pdf,
+    run = { files, _ -> splitByOrientation(files[0].bytes).map { Output(it.name, it.bytes) } },
+  ),
+  Tool(
+    "pagesToZip", SECTION_NEW,
+    "Pages to ZIP", "Halaman ke ZIP",
+    "Export every page as a JPEG inside one ZIP.", "Ekspor setiap halaman sebagai JPEG dalam satu ZIP.",
+    "Export ZIP", "Ekspor ZIP", "Exporting", "Mengekspor", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("pages", pagesToZip(files[0].baseName, files[0].bytes, ToolContext.cacheDir), ext = "zip")) },
+  ),
+  Tool(
+    "tableOfContents", SECTION_NEW,
+    "Table of Contents", "Daftar Isi",
+    "Turn existing bookmarks into a printable contents page.", "Ubah bookmark yang ada menjadi halaman daftar isi.",
+    "Build contents", "Buat daftar isi", "Building", "Membuat", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("contents", exportOutline(files[0].baseName, files[0].bytes))) },
+  ),
+  Tool(
+    "exportOutline", SECTION_NEW,
+    "Export Bookmarks", "Ekspor Bookmark",
+    "Export the outline as a small PDF list.", "Ekspor daftar bookmark sebagai PDF kecil.",
+    "Export", "Ekspor", "Exporting", "Mengekspor", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("outline", exportOutline(files[0].baseName, files[0].bytes))) },
+  ),
+  Tool(
+    "outlineFromText", SECTION_NEW,
+    "Bookmarks from Headings", "Bookmark dari Judul",
+    "Create bookmarks from numbered headings in the text layer.", "Buat bookmark dari judul bernomor di lapisan teks.",
+    "Create", "Buat", "Creating", "Membuat", Input.Pdf,
+    run = { files, _ -> listOf(Output("outlined", outlineFromText(files[0].bytes))) },
+  ),
+  Tool(
+    "addLink", SECTION_NEW,
+    "Add Link", "Tambah Tautan",
+    "Place a clickable web link on a page.", "Pasang tautan web yang bisa diketuk di halaman.",
+    "Add link", "Tambah tautan", "Adding", "Menambah", Input.Pdf,
+    opts = listOf(num("page", "Page", "Halaman", "1", "1"), text("url", "Link URL", "URL tautan", "https://", "https://")),
+    run = { files, o -> listOf(Output("linked", addLink(files[0].bytes, o.str("page").toIntOrNull() ?: 1, o.str("url")))) },
+  ),
+  Tool(
+    "stickyNote", SECTION_NEW,
+    "Sticky Note", "Catatan Tempel",
+    "Attach a short note annotation to a page.", "Tempelkan anotasi catatan singkat pada halaman.",
+    "Add note", "Tambah catatan", "Adding", "Menambah", Input.Pdf,
+    opts = listOf(num("page", "Page", "Halaman", "1", "1"), text("text", "Note", "Catatan", "", "Write a note")),
+    run = { files, o -> listOf(Output("noted", stickyNote(files[0].bytes, o.str("page").toIntOrNull() ?: 1, o.str("text")))) },
+  ),
+  Tool(
+    "dateStamp", SECTION_NEW,
+    "Date Stamp", "Cap Tanggal",
+    "Stamp the current date and time on every page.", "Cap tanggal dan jam saat ini di setiap halaman.",
+    "Stamp date", "Cap tanggal", "Stamping", "Mencap", Input.Pdf,
+    opts = listOf(text("prefix", "Prefix", "Awalan", "Scanned", ""), num("x", "Horizontal %", "Persen horizontal", "50", "0-100"), num("y", "Vertical %", "Persen vertikal", "90", "0-100")),
+    run = { files, o -> listOf(Output("dated", dateStamp(files[0].bytes, o.str("prefix"), (o.str("x").toFloatOrNull() ?: 50f).coerceIn(0f, 100f) / 100f, (o.str("y").toFloatOrNull() ?: 90f).coerceIn(0f, 100f) / 100f))) },
+  ),
+  Tool(
+    "coverPage", SECTION_NEW,
+    "Add Cover Page", "Tambah Sampul",
+    "Add a simple title page in front of the document.", "Tambah halaman judul sederhana di depan dokumen.",
+    "Add cover", "Tambah sampul", "Adding", "Menambah", Input.Pdf,
+    opts = listOf(text("title", "Title", "Judul", "Document", "Document title")),
+    run = { files, o -> listOf(Output("with-cover", coverPage(files[0].bytes, o.str("title")))) },
+  ),
+  Tool(
+    "verifySignature", SECTION_NEW,
+    "Check Signature", "Cek Tanda Tangan",
+    "Report whether the PDF contains a signature field.", "Laporkan apakah PDF memiliki kolom tanda tangan.",
+    "Check", "Cek", "Checking", "Memeriksa", Input.Pdf, noPreview = true,
+    run = { files, _ -> listOf(Output("signature", verifySignature(files[0].bytes))) },
+  ),
+  Tool(
+    "removeSignatures", SECTION_NEW,
+    "Remove Signatures", "Hapus Tanda Tangan",
+    "Remove signature annotations from all pages.", "Hapus anotasi tanda tangan dari semua halaman.",
+    "Remove", "Hapus", "Removing", "Menghapus", Input.Pdf,
+    run = { files, _ -> listOf(Output("unsigned", removeSignatures(files[0].bytes))) },
+  ),
+  Tool(
+    "permissionPreset", SECTION_NEW,
+    "Quick Protection", "Proteksi Cepat",
+    "Protect a PDF with a read only or print only preset.", "Lindungi PDF dengan preset hanya baca atau hanya cetak.",
+    "Protect", "Lindungi", "Protecting", "Melindungi", Input.Pdf,
+    opts = listOf(
+      seg("preset", "Preset", "Preset", listOf(Triple("read", "Read only", "Hanya baca"), Triple("print", "Print only", "Hanya cetak")), "read"),
+      OptDef.Text("password", "Password", "Kata sandi", "", "", 1, null, ""),
+    ),
+    run = { files, o -> listOf(Output("protected", permissionPreset(files[0].bytes, o.str("password"), o.str("preset")) ?: fail("Could not protect this PDF."))) },
+  ),
+  Tool(
+    "verifyChecksum", SECTION_NEW,
+    "Verify Checksum", "Verifikasi Checksum",
+    "Pick a checksum manifest first, then the files to verify.", "Pilih dulu manifest checksum, lalu file yang akan diverifikasi.",
+    "Verify", "Verifikasi", "Verifying", "Memverifikasi", Input.Any, min = 2, noPreview = true,
+    run = { files, o -> listOf(Output("checksum", verifyChecksum(files.drop(1), files[0].bytes))) },
+  ),
+  Tool(
+    "duplicateFilesReport", SECTION_NEW,
+    "Find Duplicate Files", "Cari File Duplikat",
+    "Group files that have the same content hash.", "Kelompokkan file yang punya hash konten sama.",
+    "Find", "Cari", "Finding", "Mencari", Input.Any, min = 2, noPreview = true,
+    run = { files, o -> listOf(Output("duplicates", duplicateFilesReport(files))) },
   ),
 )
 

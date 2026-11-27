@@ -14,6 +14,11 @@ data class SettingsState(
   val language: String = "system", // system | en | id
   val onboardingDone: Boolean = false,
   val nightMode: Boolean = false, // invert page colors in the viewer for dark reading
+  val motion: String = "system", // system | reduced | full
+  val fontScale: String = "normal", // small | normal | large
+  val autoCleanupDays: Int = 30,
+  val gestures: Boolean = true,
+  val customAccent: String = "", // optional hex color, empty means use the selected scheme
 )
 
 object Settings {
