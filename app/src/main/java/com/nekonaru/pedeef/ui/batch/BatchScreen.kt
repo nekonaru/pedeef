@@ -81,20 +81,27 @@ fun BatchScreen(onBack: () -> Unit) {
       Button(
         onClick = {
           val preset = selected ?: return@Button
+          if (running) return@Button
           scope.launch {
             done = false
             running = true
             progress = s.batchProgress
-            val result = withContext(Dispatchers.IO) {
-              runBatch(context, preset.id, preset.opts.toString())
+            try {
+              val result = withContext(Dispatchers.IO) {
+                runBatch(context, preset.id, preset.opts.toString())
+              }
+              progress = result
+              done = true
+            } catch (_: Throwable) {
+              progress = s.genericError
+              done = false
+            } finally {
+              running = false
             }
-            progress = result
-            running = false
-            done = true
           }
         },
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-        enabled = selected != null,
+        enabled = selected != null && !running,
       ) { Text(s.batchRun) }
       if (running) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 16.dp))
       if (progress.isNotEmpty()) Text(progress, Modifier.padding(top = 12.dp))

@@ -323,14 +323,12 @@ fun ToolScreen(toolId: String, onBack: () -> Unit, onOpenViewer: (ByteArray, Str
         "organize" -> OrganizeEditor(picked.firstOrNull()?.bytes, opts, com.nekonaru.pedeef.tools.ToolContext.cacheDir) { opts = it }
         "redact" -> RedactEditor(picked.firstOrNull()?.bytes, opts, com.nekonaru.pedeef.tools.ToolContext.cacheDir) { opts = it }
         "fillSign" -> FillSignEditor(picked.firstOrNull()?.bytes, opts, com.nekonaru.pedeef.tools.ToolContext.cacheDir) { opts = it }
-        "crop" -> Column { Options(tool.opts, opts, indonesian) { opts = it }; if (opts.str("mode") != "resize") CropEditor(picked.firstOrNull()?.bytes, opts, com.nekonaru.pedeef.tools.ToolContext.cacheDir) { opts = it } }
-        "workflow" -> WorkflowEditor(opts) { opts = it }
-        else -> if (tool.opts.isNotEmpty()) {
-          Options(tool.opts, opts, indonesian) { opts = it }
-          if (tool.opts.any { it.key == "x" || it.key == "y" }) {
-            Text(s.positionHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-          }
+        "crop" -> Column {
+          Options(tool.opts, opts, indonesian, onChange = { opts = it }, positionHint = s.positionHint)
+          if (opts.str("mode") != "resize") CropEditor(picked.firstOrNull()?.bytes, opts, com.nekonaru.pedeef.tools.ToolContext.cacheDir) { opts = it }
         }
+        "workflow" -> WorkflowEditor(opts) { opts = it }
+        else -> if (tool.opts.isNotEmpty()) Options(tool.opts, opts, indonesian, onChange = { opts = it }, positionHint = s.positionHint)
       }
 
       if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)

@@ -268,13 +268,6 @@ fun FilesScreen(onOpenViewer: (ByteArray, String) -> Unit) {
             IconButton(onClick = { showNewFolder = true }) { Icon(Icons.Default.CreateNewFolder, contentDescription = s.newFolder) }
           },
         )
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
-          Text(
-            if (currentDir == root) s.filesTitle else relPath(root, currentDir),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
-        }
         OutlinedTextField(
           value = query,
           onValueChange = { query = it },

@@ -162,7 +162,7 @@ fun Spinner() { CircularProgressIndicator(strokeWidth = 2.dp) }
 
 /** The generic form renderer for a tool's options. */
 @Composable
-fun Options(defs: List<OptDef>, value: Opts, indonesian: Boolean, onChange: (Opts) -> Unit) {
+fun Options(defs: List<OptDef>, value: Opts, indonesian: Boolean, onChange: (Opts) -> Unit, positionHint: String? = null) {
   Column(verticalArrangement = Arrangement.spacedBy(Dimens.Md)) {
     for (def in defs) {
       val visible = def.visible?.invoke(value) ?: true
@@ -204,6 +204,9 @@ fun Options(defs: List<OptDef>, value: Opts, indonesian: Boolean, onChange: (Opt
             visualTransformation = if (def.isPassword) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
             modifier = Modifier.fillMaxWidth().padding(top = Dimens.Xs),
           )
+          if (positionHint != null && (def.key == "x" || def.key == "y")) {
+            Text(positionHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+          }
         }
         is OptDef.Toggle -> {
           Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
