@@ -2,6 +2,25 @@
 
 Semua perubahan penting pada Pedeef dicatat di sini. Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com).
 
+## v2.2.0
+
+Rilis performa: fitur yang sudah ada kini memakai satu renderer PDF bersama, menyimpan halaman yang sudah dirender, dan menghindari kerja disk berulang.
+
+### Peningkatan
+
+- **Viewer:** satu file sementara dan satu `PdfRenderer` per dokumen, bukan per halaman, dengan cache bitmap terbatas dan render yang terserialisasi.
+- **Ukuran render:** halaman dirender sesuai ukuran layar dan zoom, bukan lebar tetap 1200 px; thumbnail dirender 120 px dengan format warna lebih ringan.
+- **Editor alat:** Organize, Redact, Fill, dan Crop memakai satu sesi render, sehingga menjelajah halaman tidak menulis ulang seluruh PDF.
+- **Files:** jumlah file folder dihitung sekali, bukan dua kali, dan penghapusan membersihkan path berbintang tanpa memindai seluruh pohon.
+- **Posisi baca:** JSON diurai sekali dan dibaca di luar main thread.
+- **Tes:** matematika ukuran render diuji di JVM; suite kini 60 tes.
+
+### Perbaikan bug
+
+- **PDF besar:** membuka dokumen tidak lagi menyalin seluruh file di main thread.
+- **Pembersihan renderer:** sesi ditutup setelah render berjalan selesai, dan pembatalan saat membuka tidak meninggalkan file sementara.
+- **Hapus folder:** file berbintang di dalam folder yang dihapus ikut dibersihkan.
+
 ## v2.1.0
 
 Rilis desain dan kenyamanan: token gerak bersama, ikon alat yang lebih jelas, kontrol viewer yang lebih tenang, dan umpan balik yang lebih cepat di semua layar.

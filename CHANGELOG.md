@@ -2,6 +2,25 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v2.2.0
+
+Performance release: existing features now share one PDF renderer, cache rendered pages and avoid repeated disk work.
+
+### Improvements
+
+- **Viewer:** one temp file and one `PdfRenderer` per document instead of one per page, with a bounded bitmap cache and serialized rendering.
+- **Render sizes:** pages render at the actual viewport size and zoom instead of a fixed 1200 px; thumbnails render at 120 px with a lighter color format.
+- **Editors:** Organize, Redact, Fill and Crop share one render session, so browsing pages no longer rewrites the whole PDF.
+- **Files:** folder counts are computed once instead of twice, and deleting files cleans starred paths without walking the whole tree.
+- **Reading position:** the JSON is parsed once and read off the main thread.
+- **Tests:** pure render sizing math is covered by JVM tests; the suite is now 60 tests.
+
+### Bug fixes
+
+- **Large PDFs:** opening a document no longer copies the whole file on the main thread.
+- **Renderer cleanup:** sessions close safely after in-flight renders finish, and a cancelled open no longer leaks a temp file.
+- **Folder deletion:** starred files inside a deleted folder are removed as well.
+
 ## v2.1.0
 
 Design and usability release: shared motion tokens, clearer tool icons, calmer viewer controls and faster feedback across every screen.
