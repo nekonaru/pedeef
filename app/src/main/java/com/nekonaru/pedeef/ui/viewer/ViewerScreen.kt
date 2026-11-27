@@ -8,6 +8,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -20,6 +26,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -42,13 +49,17 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -59,6 +70,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -74,6 +86,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -83,9 +96,12 @@ import com.nekonaru.pedeef.engine.unlockBytes
 import com.nekonaru.pedeef.engine.withTempPdf
 import com.nekonaru.pedeef.i18n.LocalPedeefStrings
 import com.nekonaru.pedeef.tools.ToolContext
+import com.nekonaru.pedeef.ui.kit.LocalSnackbar
 import com.nekonaru.pedeef.ui.kit.PasswordDialog
 import com.nekonaru.pedeef.ui.kit.pageSizesOf
+import com.nekonaru.pedeef.ui.theme.LocalMotionSpec
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -137,15 +153,27 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
   var speakToken by remember { mutableStateOf(0) }
   val speaker = remember { PageSpeaker(context, onDone = { speaking = false }) }
   androidx.compose.runtime.DisposableEffect(Unit) { onDispose { speaker.close() } }
-  var copyMessage by remember { mutableStateOf<String?>(null) }
+
   var showThumbs by remember { mutableStateOf(false) }
   var gridThumbs by remember { mutableStateOf(false) }
   var spread by remember { mutableStateOf(false) }
   var showBookmarks by remember { mutableStateOf(false) }
   var zoomLevel by remember { mutableStateOf(0) } // 0 = 100%, 1 = 125%, 2 = 150%
   val zoomFactor = when (zoomLevel) { 0 -> 1f; 1 -> 1.25f; else -> 1.5f }
-  var savedMessage by remember { mutableStateOf<String?>(null) }
+
   var persisted by remember(payloadVersion) { mutableStateOf(com.nekonaru.pedeef.ui.ViewerPayload.persisted) }
+  val showMessage = LocalSnackbar.current ?: { _: String -> Unit }
+  val motion = LocalMotionSpec.current
+  var controlsVisible by remember { mutableStateOf(true) }
+  var keepControls by remember { mutableStateOf(false) }
+  var menuExpanded by remember { mutableStateOf(false) }
+  var interaction by remember { mutableStateOf(0) }
+  fun poke() { interaction++; controlsVisible = true }
+  LaunchedEffect(interaction, menuExpanded, showBookmarks, showThumbs, keepControls) {
+    if (menuExpanded || showBookmarks || showThumbs || keepControls) return@LaunchedEffect
+    delay(3500L)
+    controlsVisible = false
+  }
   val listState = rememberLazyListState()
   fun scrollToPage(page: Int) {
     scope.launch { listState.animateScrollToItem(if (spread) page / 2 else page) }
@@ -241,7 +269,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     }
     pageText = extracted
     pageTextForIndex = i
-    if (extracted == null) copyMessage = s.genericError
+    if (extracted == null) showMessage(s.genericError)
   }
   LaunchedEffect(pageText, pageTextForIndex, pageTextIndex, speakToken) {
     if (!speaking || speakToken == 0) return@LaunchedEffect
@@ -260,7 +288,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
     if (pageTextForIndex != pageTextIndex) return@LaunchedEffect
     val text = pageText ?: run { copyToken = 0; return@LaunchedEffect }
     clipboard.setText(AnnotatedString(text))
-    copyMessage = s.pageTextCopied
+    showMessage(s.pageTextCopied)
     copyToken = 0
   }
 
@@ -275,7 +303,7 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
       if (result == null) {
         matches = null
         highlights = null
-        copyMessage = s.genericError
+        showMessage(s.genericError)
       } else {
         matches = result.pages
         highlights = result.boxes
@@ -312,12 +340,12 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
         }.getOrNull()
       }
       if (saved == null) {
-        savedMessage = s.genericError
+        showMessage(s.genericError)
         return@launch
       }
       persisted = true
       com.nekonaru.pedeef.ui.ViewerPayload.persisted = true
-      savedMessage = saved
+      showMessage(saved)
     }
   }
 
@@ -334,46 +362,63 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
 
   Scaffold(
     topBar = {
-      Column {
+      AnimatedVisibility(
+        visible = controlsVisible,
+        enter = slideInVertically(initialOffsetY = { -it }, animationSpec = tween(motion.medium)) + androidx.compose.animation.fadeIn(tween(motion.medium)),
+        exit = slideOutVertically(targetOffsetY = { -it }, animationSpec = tween(motion.short)) + androidx.compose.animation.fadeOut(tween(motion.short)),
+      ) {
+      Column(Modifier.pointerInput(Unit) { detectTapGestures { poke() } }) {
         TopAppBar(
           title = { Text(name, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
           navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = s.back) } },
           actions = {
-            if (outline.isNotEmpty()) {
-              IconButton(onClick = { showBookmarks = !showBookmarks }) { Icon(Icons.Default.Bookmarks, contentDescription = s.bookmarks) }
-            }
-            TextButton(onClick = { zoomLevel = (zoomLevel + 1) % 3 }) {
+            TextButton(onClick = { poke(); zoomLevel = (zoomLevel + 1) % 3 }) {
               Text("${(zoomFactor * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
-            IconButton(onClick = onToggleNightMode) {
+            IconButton(onClick = { poke(); onToggleNightMode() }) {
               Icon(
                 if (nightMode) Icons.Default.LightMode else Icons.Default.DarkMode,
                 contentDescription = s.nightMode,
               )
             }
-
-            if (!persisted) {
-              IconButton(onClick = { saveToFiles() }) { Icon(Icons.Default.SaveAlt, contentDescription = s.saveToFiles) }
+            Box {
+              IconButton(onClick = { poke(); menuExpanded = true }) {
+                Icon(Icons.Default.MoreVert, contentDescription = s.more)
+              }
+              DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false; poke() }) {
+                if (outline.isNotEmpty()) {
+                  DropdownMenuItem(text = { Text(s.bookmarks) }, onClick = { menuExpanded = false; showBookmarks = true })
+                }
+                if (!persisted) {
+                  DropdownMenuItem(text = { Text(s.saveToFiles) }, onClick = { menuExpanded = false; saveToFiles() })
+                }
+                DropdownMenuItem(text = { Text(s.pageThumbs) }, onClick = { menuExpanded = false; showThumbs = true; gridThumbs = false; poke() })
+                DropdownMenuItem(text = { Text(s.thumbnails) }, onClick = { menuExpanded = false; showThumbs = true; gridThumbs = true; poke() })
+                DropdownMenuItem(text = { Text(s.hideThumbs) }, enabled = showThumbs, onClick = { menuExpanded = false; showThumbs = false; poke() })
+                DropdownMenuItem(text = { Text(s.spread) }, onClick = { menuExpanded = false; spread = !spread; poke() })
+                DropdownMenuItem(
+                  text = { Text(s.keepControls) },
+                  trailingIcon = { Checkbox(checked = keepControls, onCheckedChange = { keepControls = it; poke() }) },
+                  onClick = { keepControls = !keepControls; poke() },
+                )
+                DropdownMenuItem(text = { Text(s.print) }, onClick = { menuExpanded = false; printPdf() })
+                DropdownMenuItem(text = { Text(s.copyPageText) }, enabled = n > 0, onClick = {
+                  menuExpanded = false; copyToken++; pageTextIndex = (currentPage - 1).coerceAtLeast(0)
+                })
+                DropdownMenuItem(text = { Text(if (speaking) s.stopSpeech else s.speakPage) }, enabled = n > 0, onClick = {
+                  menuExpanded = false
+                  if (speaking) { speaker.stop(); speaking = false }
+                  else { speaking = true; speakToken++; pageTextIndex = (currentPage - 1).coerceAtLeast(0) }
+                })
+                DropdownMenuItem(text = { Text(s.openElsewhere) }, onClick = { menuExpanded = false; shareExternally() })
+              }
             }
-            IconButton(onClick = { showThumbs = !showThumbs }) { Icon(Icons.Default.GridView, contentDescription = s.pageThumbs) }
-            IconButton(onClick = { gridThumbs = !gridThumbs; showThumbs = true }) { Icon(Icons.Default.Dashboard, contentDescription = s.thumbnails) }
-            IconButton(onClick = { spread = !spread }) { Icon(Icons.Default.ChromeReaderMode, contentDescription = s.spread) }
-            IconButton(onClick = { printPdf() }) { Icon(Icons.Default.Print, contentDescription = s.print) }
-            IconButton(onClick = { copyToken++; pageTextIndex = (currentPage - 1).coerceAtLeast(0) }, enabled = n > 0) { Icon(Icons.Default.ContentCopy, contentDescription = s.copyPageText) }
-            IconButton(
-              onClick = {
-                if (speaking) { speaker.stop(); speaking = false }
-                else { speaking = true; speakToken++; pageTextIndex = (currentPage - 1).coerceAtLeast(0) }
-              },
-              enabled = n > 0,
-            ) { Icon(if (speaking) Icons.Default.Stop else Icons.Default.VolumeUp, contentDescription = if (speaking) s.stopSpeech else s.speakPage) }
-            IconButton(onClick = { shareExternally() }) { Icon(Icons.Default.OpenInNew, contentDescription = s.openElsewhere) }
           },
         )
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp)) {
           OutlinedTextField(
             value = query,
-            onValueChange = { query = it },
+            onValueChange = { query = it; poke() },
             placeholder = { Text(s.viewerSearchHint) },
             singleLine = true,
             trailingIcon = { IconButton(onClick = { runSearch() }) { Icon(Icons.Default.Search, contentDescription = null) } },
@@ -399,21 +444,17 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
             }
           }
         }
-        copyMessage?.let {
-          Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp))
-        }
-        savedMessage?.let {
-          Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp))
-        }
         if (autoDecrypt is AutoDecrypt.Ok) {
           Text(s.decryptNotice, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp))
         }
+      }
       }
     },
   ) { padding ->
     BoxWithConstraints(
       Modifier
         .fillMaxSize()
+        .pointerInput(Unit) { detectTapGestures { poke() } }
         .padding(padding)
         .background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
@@ -449,18 +490,9 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
           }
         }
       }
-      // Bookmarks panel overlay (top-aligned)
-      androidx.compose.animation.AnimatedVisibility(
-        visible = showBookmarks,
-        modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp),
-        enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(160)),
-        exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(110)),
-      ) {
-        Surface(
-          color = MaterialTheme.colorScheme.surface.copy(alpha = 0.97f),
-          shape = RoundedCornerShape(18.dp),
-          modifier = Modifier.padding(8.dp).width(340.dp).heightIn(max = 420.dp),
-        ) {
+      // Bookmarks are presented as a draggable bottom sheet.
+      if (showBookmarks) {
+        ModalBottomSheet(onDismissRequest = { showBookmarks = false }) {
           LazyColumn(contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp)) {
             items(outline) { (title, page) ->
               Row(
@@ -480,6 +512,11 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
         }
       }
       // Bottom page indicator + optional thumbnail strip
+      AnimatedVisibility(
+        visible = controlsVisible,
+        enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(motion.medium)) + androidx.compose.animation.fadeIn(tween(motion.medium)),
+        exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(motion.short)) + androidx.compose.animation.fadeOut(tween(motion.short)),
+      ) {
       Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp)) {
         if (showThumbs && sizes != null) {
           androidx.compose.animation.AnimatedVisibility(
@@ -516,10 +553,15 @@ fun ViewerScreen(onBack: () -> Unit, nightMode: Boolean = false, onToggleNightMo
         ) {
           Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)) {
             IconButton(onClick = { scrollToPage(if (spread) (currentPage - 3).coerceAtLeast(0) else (currentPage - 2).coerceAtLeast(0)) }, enabled = currentPage > 1) { Icon(Icons.Default.KeyboardArrowUp, contentDescription = null) }
-            Text("$currentPage ${s.pageOf} $n", style = MaterialTheme.typography.labelLarge)
-            IconButton(onClick = { scrollToPage(if (spread) (currentPage + 1).coerceAtMost(n - 1) else currentPage.coerceAtMost(n - 1)) }, enabled = currentPage < n) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null) }
+            AnimatedContent(
+              targetState = if (spread && n > 1) String.format(java.util.Locale.ROOT, s.pagePair, currentPage, (currentPage + 1).coerceAtMost(n)) else String.format(java.util.Locale.ROOT, s.progressPage, currentPage, n),
+              transitionSpec = { androidx.compose.animation.fadeIn(tween(motion.short)) togetherWith androidx.compose.animation.fadeOut(tween(motion.short)) },
+              label = "pageIndicator",
+            ) { label -> Text(label, style = MaterialTheme.typography.labelLarge) }
+            IconButton(onClick = { scrollToPage(if (spread) (currentPage + 1).coerceAtMost(n - 1) else currentPage.coerceAtMost(n - 1)) }, enabled = if (spread) currentPage + 1 < n else currentPage < n) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null) }
           }
         }
+      }
       }
     }
   }

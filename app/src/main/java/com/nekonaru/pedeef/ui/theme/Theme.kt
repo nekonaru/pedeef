@@ -1,6 +1,9 @@
 package com.nekonaru.pedeef.ui.theme
 
 import android.os.Build
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -9,6 +12,8 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -26,30 +31,70 @@ val Poppins = FontFamily(
 )
 val Caveat = FontFamily(Font(R.font.caveat, FontWeight.Medium))
 
+/** Handwritten wordmark style. Used only for the app name, never for body text. */
+val CaveatBrand = TextStyle(fontFamily = Caveat, fontWeight = FontWeight.Medium, fontSize = 30.sp)
+
 /** Shared design tokens: one spacing scale, radii, and elevation rules for the whole app. */
 object Dimens {
+  val Xxs = 2.dp
   val Xs = 4.dp
   val Sm = 8.dp
   val Md = 12.dp
   val Lg = 16.dp
   val Xl = 24.dp
-  val CardRadius = 22.dp
+  val Xxl = 32.dp
+  val Xxxl = 48.dp
+  val CardRadius = 18.dp
+  val CardRadiusSm = 12.dp
+  val CardRadiusLg = 24.dp
   val ControlRadius = 14.dp
+  val SheetRadius = 28.dp
+  val ChipHeight = 32.dp
+  val IconSm = 18.dp
+  val IconMd = 22.dp
+  val IconLg = 28.dp
+  val TouchMin = 48.dp
   val LabelTop = 22.dp // gap above each section label
   val LabelBottom = 8.dp
 }
 
+/** One motion vocabulary. Durations are scaled by the system animation setting. */
+object Motion {
+  val Short = 120
+  val Medium = 220
+  val Long = 320
+  val Standard = FastOutSlowInEasing
+  val Decelerate = Easing { t -> 1f - (1f - t) * (1f - t) }
+  val Accelerate = Easing { t -> t * t }
+  val Linear = LinearEasing
+}
+
+/** Durations in milliseconds after applying the system animation scale. */
+data class MotionSpec(val scale: Float = 1f) {
+  fun time(base: Int): Int = (base * scale).toInt().coerceAtLeast(0)
+  val short: Int get() = time(Motion.Short)
+  val medium: Int get() = time(Motion.Medium)
+  val long: Int get() = time(Motion.Long)
+}
+
+val LocalMotionSpec = staticCompositionLocalOf { MotionSpec() }
+
 private fun typography() = Typography(
   displayLarge = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 32.sp, letterSpacing = (-0.5).sp),
   displayMedium = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 28.sp, letterSpacing = (-0.3).sp),
+  displaySmall = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 24.sp),
   headlineLarge = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, letterSpacing = (-0.3).sp),
   headlineMedium = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 20.sp),
+  headlineSmall = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 18.sp),
   titleLarge = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 20.sp),
   titleMedium = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 16.sp),
+  titleSmall = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 14.sp),
   bodyLarge = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Normal, fontSize = 16.sp),
   bodyMedium = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Normal, fontSize = 14.sp),
+  bodySmall = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Normal, fontSize = 12.sp),
   labelLarge = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 14.sp),
   labelMedium = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 12.sp, letterSpacing = 0.4.sp),
+  labelSmall = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 11.sp, letterSpacing = 0.4.sp),
 )
 
 // Brand schemes: Ember (warm orange), Cherry (deep red), Arctic (cool blue).
@@ -187,5 +232,10 @@ fun PedeefTheme(settings: SettingsState, content: @Composable () -> Unit) {
     dynamic -> if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
     else -> schemeFor(settings.scheme, dark)
   }
-  MaterialTheme(colorScheme = colors, typography = typography(), content = content)
+  val animationScale = runCatching {
+    android.provider.Settings.Global.getFloat(context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+  }.getOrDefault(1f)
+  CompositionLocalProvider(LocalMotionSpec provides MotionSpec(animationScale.coerceIn(0f, 2f))) {
+    MaterialTheme(colorScheme = colors, typography = typography(), content = content)
+  }
 }
