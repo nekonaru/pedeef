@@ -17,6 +17,9 @@ jobs:
   build:
     timeout-minutes: 30
     runs-on: ubuntu-latest
+    env:
+      # Explicit opt-in for CI artifacts. CI never publishes this APK as an official release.
+      PEDEEF_ALLOW_DEBUG_SIGNING: "true"
     steps:
       - uses: actions/checkout@v4
 
