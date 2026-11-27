@@ -2,6 +2,30 @@
 
 All notable changes to Pedeef are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com).
 
+## v3.0.0
+
+Major release: 24 more PDF tools, saved workflows, a smarter workspace and extra reader controls. All new work stays on the device.
+
+### New features
+
+- **24 new tools.** Text, HTML, Markdown and ZIP export, append images, merge page ranges, sort, rotate range, swap, split by orientation, outline tools, links, sticky notes, date stamp, cover page, signature tools, quick protection, checksum verification and duplicate file report.
+- **Workflows.** Save a tool chain, reuse it later and keep per-tool defaults.
+- **Operation history.** The last 20 runs are listed locally and can be repeated with the same options.
+- **Smart workspace.** Recent, Starred, Large, PDF and Images filters, a recycle bin with restore, batch rename and ZIP export of a selection.
+- **Reader extras.** Reading bookmarks, text view and backup export and import for settings, presets and workflows.
+
+### Improvements
+
+- **Tool catalog:** 99 tools, one icon per tool, catalog and string tests updated; the suite is now 63 tests.
+- **Settings:** animation, text size and page gesture controls.
+- **Data migration:** old settings JSON still loads with the new fields.
+
+### Bug fixes
+
+- **Page tools:** cover pages and orientation splits preserve page content instead of creating blank pages.
+- **Signatures:** signature fields are detected through their form field type, not only annotation subtype.
+- **Recycle bin:** trash works across public and private storage and supports folders.
+
 ## v2.2.0
 
 Performance release: existing features now share one PDF renderer, cache rendered pages and avoid repeated disk work.
